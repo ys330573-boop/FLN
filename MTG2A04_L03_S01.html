@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SwiftPAL · MTG2A04_L03_S01 · कितना पानी है?</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/Images/animation-v2/splashes.css">
+<link rel="preload" as="image" href="assets/Images/animation-v2/liquid-splash-sheet.png">
+</head>
+<body class="is-start">
+<div class="start-bg" aria-hidden="true"></div>
+<div class="end-bg" aria-hidden="true"></div>   <!-- [20a] body-level: position:fixed must NOT sit inside the transformed .stage or it gets hijacked to the stage box (leaves letterbox band) -->
+
+<!-- BOOT LOADER — [template] r4/P2: white boot screen, no-tap auto-dismiss (see boot()) -->
+<div class="boot-loader" id="bootLoader">
+  <img src="assets/UI/loader.gif" alt="">
+</div>
+
+
+<div class="stage-wrap"><div class="stage" id="stage">
+
+  <div class="stage-inner">
+    <!-- HEADER -->
+    <div class="header-row">
+      <div class="prompt-band"><div class="prompt-text" id="promptText">…</div></div>
+      <div class="audio-chip" id="audioChip" title="आवाज़ सुनो"><svg viewBox="0 0 62 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Audio"><g filter="url(#hdrChipShadow)"><rect x="8" y="4" width="46" height="44" rx="22" fill="url(#hdrChipGrad)"/><rect x="6" y="2" width="50" height="48" rx="24" stroke="white" stroke-width="4"/><path d="M29.8466 19.0574C29.8804 19.0524 29.9145 19.0496 29.9487 19.0488C30.6094 19.0317 31.0021 19.5124 31.0015 20.1414C31.0008 20.9661 31.0003 21.7911 31.0005 22.6158L31.001 27.7212L31.0009 30.5591C31.0009 31.0364 31.0122 31.5472 30.9863 32.0228C30.9662 32.2709 30.902 32.4608 30.7251 32.643C30.3831 32.9952 29.8337 33.0842 29.4386 32.7671C29.0784 32.4781 28.7473 32.1159 28.4181 31.7862L26.4414 29.8087C26.1771 29.5426 25.9071 29.2636 25.6339 29.0081C25.0227 28.9649 24.3645 29.017 23.7487 28.9979C23.445 28.9885 23.1625 29.0211 22.8589 28.9606C22.3751 28.8616 22.0618 28.4823 22.0642 27.9824C22.0706 26.5937 22.0287 25.1949 22.0828 23.8081C22.0884 23.6626 22.2302 23.4334 22.3309 23.3252C22.454 23.1907 22.6146 23.0963 22.792 23.0543C23.0567 22.9904 23.5328 23.016 23.8224 23.0128C24.4143 23.0063 25.0171 23.0277 25.609 23.0073C25.6794 22.9529 25.8505 22.7743 25.919 22.706L26.5305 22.0945L28.5396 20.0838C28.9157 19.7059 29.3217 19.1749 29.8466 19.0574Z" fill="white"/><path class="wv wv2" d="M36.2367 18.6905C36.8783 18.6449 37.3041 19.231 37.6725 19.6829C38.7675 21.0046 39.4982 22.5894 39.7923 24.2804C40.2503 26.8763 39.6548 29.5478 38.1378 31.7035C37.8393 32.1274 37.508 32.5324 37.149 32.9063C36.9404 33.1236 36.7646 33.2558 36.4622 33.3081C36.2013 33.3412 35.9378 33.2717 35.7272 33.1144C35.5185 32.9615 35.3816 32.7298 35.3483 32.4733C35.2786 31.9235 35.5696 31.6821 35.8914 31.3297C36.0448 31.1639 36.1901 30.9908 36.3269 30.811C38.3669 28.136 38.4986 24.4654 36.6555 21.6511C36.4826 21.3899 36.2966 21.1376 36.0984 20.8951C35.8252 20.5652 35.3947 20.2691 35.3472 19.8184C35.2845 19.2225 35.6439 18.768 36.2367 18.6905Z" fill="white"/><path class="wv wv1" d="M33.3868 21.5044C33.9769 21.4549 34.2563 21.7845 34.5981 22.1981C35.1982 22.924 35.6149 23.7691 35.8211 24.6886C36.171 26.2384 35.8867 27.8637 35.0314 29.2026C34.7421 29.6568 34.2333 30.3745 33.6937 30.4946C33.1633 30.5437 32.6759 30.2927 32.5495 29.7376C32.3921 29.0462 32.9849 28.6956 33.3274 28.1763C34.2088 26.833 34.1932 25.0908 33.288 23.7635C33.0747 23.4522 32.6159 23.0564 32.5518 22.7133C32.4377 22.1027 32.7745 21.619 33.3868 21.5044Z" fill="white"/></g><defs><filter id="hdrChipShadow" x="0" y="0" width="62" height="60" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="4"/><feGaussianBlur stdDeviation="2"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/></filter><linearGradient id="hdrChipGrad" x1="8" y1="26" x2="54" y2="26" gradientUnits="userSpaceOnUse"><stop stop-color="#1987FC"/><stop offset="1" stop-color="#1565F4"/></linearGradient></defs></svg></div>
+      <button class="hint-btn" id="hintBtn" title="संकेत">
+        <svg viewBox="25 17 22 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g class="bulb-rays" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+            <line x1="36" y1="14" x2="36" y2="10"/>
+            <line x1="25" y1="18" x2="22" y2="15"/>
+            <line x1="47" y1="18" x2="50" y2="15"/>
+            <line x1="21" y1="27" x2="17" y2="26.5"/>
+            <line x1="51" y1="27" x2="55" y2="26.5"/>
+          </g>
+          <path class="bulb" d="M42.7872 19.7599C41.561 18.7514 40.125 18.0293 38.5841 17.6464C37.0432 17.2635 35.4363 17.2294 33.8806 17.5466C31.8091 17.965 29.9086 18.9894 28.4202 20.4896C26.9317 21.9899 25.9225 23.8985 25.5206 25.9733C25.227 27.5289 25.2804 29.1301 25.6768 30.6628C26.0732 32.1954 26.8029 33.6217 27.8139 34.8399C28.7522 35.8987 29.29 37.2526 29.3339 38.6666V42.6666C29.3339 43.7275 29.7553 44.7449 30.5055 45.495C31.2556 46.2452 32.273 46.6666 33.3339 46.6666H38.6672C39.7281 46.6666 40.7455 46.2452 41.4957 45.495C42.2458 44.7449 42.6672 43.7275 42.6672 42.6666V38.9199C42.712 37.3588 43.2855 35.8592 44.2939 34.6666C46.0607 32.481 46.8936 29.6864 46.6115 26.8901C46.3293 24.0938 44.955 21.5219 42.7872 19.7333V19.7599ZM40.0006 42.6666C40.0006 43.0202 39.8601 43.3594 39.61 43.6094C39.36 43.8595 39.0209 43.9999 38.6672 43.9999H33.3339C32.9803 43.9999 32.6411 43.8595 32.3911 43.6094C32.141 43.3594 32.0006 43.0202 32.0006 42.6666V41.3333H40.0006V42.6666ZM42.2272 33.0133C40.8866 34.6034 40.1044 36.5893 40.0006 38.6666H37.3339V34.6666C37.3339 34.313 37.1934 33.9738 36.9434 33.7238C36.6933 33.4737 36.3542 33.3333 36.0006 33.3333C35.647 33.3333 35.3078 33.4737 35.0578 33.7238C34.8077 33.9738 34.6672 34.313 34.6672 34.6666V38.6666H32.0006C31.9654 36.6241 31.2098 34.6596 29.8672 33.1199C28.9814 32.0586 28.3858 30.7858 28.1383 29.4257C27.8909 28.0656 28.0001 26.6646 28.4554 25.3593C28.9106 24.054 29.6963 22.8889 30.7359 21.9777C31.7755 21.0665 33.0335 20.4402 34.3872 20.1599C35.5506 19.9204 36.7528 19.9429 37.9064 20.2259C39.06 20.5089 40.1361 21.0452 41.0566 21.7959C41.9771 22.5466 42.7189 23.4928 43.2281 24.566C43.7374 25.6391 44.0012 26.8121 44.0006 27.9999C44.0093 29.8262 43.3824 31.5987 42.2272 33.0133Z" fill="white"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- SLIDE STAGE (engine swaps slides here) -->
+    <div class="slide-stage">
+      <div class="slide-host" id="slideHost"></div>
+      <div class="nudge-hand" id="nudgeHand">
+        <img src="assets/UI/nudge_hand_new.svg" alt="">
+      </div>
+    </div>
+
+    <!-- Swiftie buddy: persistent, reacting character (replaces the static header photo + feedback popup) -->
+    <div class="mascot-wrap" id="swBuddy"><div class="mascot-circle"><img class="mascot-img" id="swBuddyImg" src="assets/UI/sw_head_talking.webp" alt=""></div></div>
+
+    <!-- Nav button — kit-style pill, floats bottom-right -->
+    <button class="nav-btn" id="navBtn" disabled>आगे</button>
+  </div>
+
+  <!-- FEEDBACK OVERLAY — kit-style card + clean Swiftee large -->
+  <div class="hint-overlay" id="hintOverlay">
+    <div class="hint-box" id="hintBox">
+      <img class="hint-mascot" id="hintMascot" src="assets/UI/sw_anim_rest.png" alt=""
+           onerror="this.style.display='none'">
+      <div class="hint-body">
+        <div class="hint-text" id="hintText"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAP-TO-START — uses provided title-screen art -->
+  <div class="start-gate" id="startGate">
+    <div class="sg-card">
+      <img class="sg-mascot" src="assets/UI/new_landing_swiftee_anim.webp" alt="Swiftee"
+           onerror="this.style.display='none'">
+      <div class="sg-content">
+        <div class="sg-title" id="sgTitle">कितना पानी है?</div>
+        <div class="sg-sub" id="sgSub"></div>   <!-- 16j: r4 landing had no subtitle line; populated from CARD.subtitle_hi in boot() -->
+
+        <!-- r4/#2: concept strip is now DATA-DRIVEN — the engine fills #sgHero from
+             CARD.landing_hero (kind:"concept_strip"). Each tile is a visual example of the
+             ordering task (no words); a new game just declares its cells in card.json. -->
+        <div class="sg-art" id="sgHero"></div>
+      </div>
+      <button class="sg-vo" id="sgVo" type="button" aria-label="सुनो"><svg viewBox="0 0 62 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Audio"><g filter="url(#sgChipShadow)"><rect x="8" y="4" width="46" height="44" rx="22" fill="url(#sgChipGrad)"/><rect x="6" y="2" width="50" height="48" rx="24" stroke="white" stroke-width="4"/><path d="M29.8466 19.0574C29.8804 19.0524 29.9145 19.0496 29.9487 19.0488C30.6094 19.0317 31.0021 19.5124 31.0015 20.1414C31.0008 20.9661 31.0003 21.7911 31.0005 22.6158L31.001 27.7212L31.0009 30.5591C31.0009 31.0364 31.0122 31.5472 30.9863 32.0228C30.9662 32.2709 30.902 32.4608 30.7251 32.643C30.3831 32.9952 29.8337 33.0842 29.4386 32.7671C29.0784 32.4781 28.7473 32.1159 28.4181 31.7862L26.4414 29.8087C26.1771 29.5426 25.9071 29.2636 25.6339 29.0081C25.0227 28.9649 24.3645 29.017 23.7487 28.9979C23.445 28.9885 23.1625 29.0211 22.8589 28.9606C22.3751 28.8616 22.0618 28.4823 22.0642 27.9824C22.0706 26.5937 22.0287 25.1949 22.0828 23.8081C22.0884 23.6626 22.2302 23.4334 22.3309 23.3252C22.454 23.1907 22.6146 23.0963 22.792 23.0543C23.0567 22.9904 23.5328 23.016 23.8224 23.0128C24.4143 23.0063 25.0171 23.0277 25.609 23.0073C25.6794 22.9529 25.8505 22.7743 25.919 22.706L26.5305 22.0945L28.5396 20.0838C28.9157 19.7059 29.3217 19.1749 29.8466 19.0574Z" fill="white"/><path class="wv wv2" d="M36.2367 18.6905C36.8783 18.6449 37.3041 19.231 37.6725 19.6829C38.7675 21.0046 39.4982 22.5894 39.7923 24.2804C40.2503 26.8763 39.6548 29.5478 38.1378 31.7035C37.8393 32.1274 37.508 32.5324 37.149 32.9063C36.9404 33.1236 36.7646 33.2558 36.4622 33.3081C36.2013 33.3412 35.9378 33.2717 35.7272 33.1144C35.5185 32.9615 35.3816 32.7298 35.3483 32.4733C35.2786 31.9235 35.5696 31.6821 35.8914 31.3297C36.0448 31.1639 36.1901 30.9908 36.3269 30.811C38.3669 28.136 38.4986 24.4654 36.6555 21.6511C36.4826 21.3899 36.2966 21.1376 36.0984 20.8951C35.8252 20.5652 35.3947 20.2691 35.3472 19.8184C35.2845 19.2225 35.6439 18.768 36.2367 18.6905Z" fill="white"/><path class="wv wv1" d="M33.3868 21.5044C33.9769 21.4549 34.2563 21.7845 34.5981 22.1981C35.1982 22.924 35.6149 23.7691 35.8211 24.6886C36.171 26.2384 35.8867 27.8637 35.0314 29.2026C34.7421 29.6568 34.2333 30.3745 33.6937 30.4946C33.1633 30.5437 32.6759 30.2927 32.5495 29.7376C32.3921 29.0462 32.9849 28.6956 33.3274 28.1763C34.2088 26.833 34.1932 25.0908 33.288 23.7635C33.0747 23.4522 32.6159 23.0564 32.5518 22.7133C32.4377 22.1027 32.7745 21.619 33.3868 21.5044Z" fill="white"/></g><defs><filter id="sgChipShadow" x="0" y="0" width="62" height="60" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/><feOffset dy="4"/><feGaussianBlur stdDeviation="2"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/><feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/></filter><linearGradient id="sgChipGrad" x1="8" y1="26" x2="54" y2="26" gradientUnits="userSpaceOnUse"><stop stop-color="#1987FC"/><stop offset="1" stop-color="#1565F4"/></linearGradient></defs></svg></button>
+      <button class="sg-btn" id="sgBtn">शुरू करें</button>
+    </div>
+  </div>
+
+  <!-- END / CELEBRATION -->
+  <div class="end-screen" id="endScreen">
+    <div class="confetti" id="confetti"></div>
+    <div class="end-title" id="endTitle"></div>
+    <div class="end-subtitle" id="endSubtitle"></div>
+    <img class="end-mascot" src="assets/UI/sw_lg_celebrating_anim.webp" alt="Swiftee"
+         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'end-mascot',textContent:'🎉'}))">
+    <button class="end-btn" id="endBtn">आगे बढ़ें →</button>
+  </div>
+
+  <!-- DEV VALIDATOR BANNER -->
+  <div class="dev-banner" id="devBanner"></div>
+
+</div></div>
+
+
+<!-- PHASE-TRANSITION PEEK GATE - [20a PT-3] BODY-LEVEL so position:fixed covers the FULL
+     viewport (a transformed ancestor like the scaled .stage would hijack fixed positioning
+     and shrink the gate with the stage - production pattern). -->
+<div class="phase-gate" id="phaseGate">
+    <div class="pg-title" id="phaseGateTitle"></div>
+    <img id="phaseGateImg" src="assets/UI/peeking.webp" alt="">   <!-- [20a landing-fix] reunited with #phaseGate (was orphaned in .stage → full-bleed on landing once the gate went transparent) -->
+</div>
+
+<!-- ============ CARD DATA (embedded; in prod the compiler does this) ============ -->
+<script type="application/json" id="cardData">
+{
+  "version": "0.2",
+  "skill_code": "MTG2A04_L03_S01",
+  "lo_code": "MTG2A04_L03",
+  "grade": "G2",
+  "attribute": "A04",
+  "skill_type": "CORE",
+  "part_label": "",
+  "theme": "toybox",
+  "landing_hero": {
+    "kind": "image",
+    "src": "assets/Images/animation-v2/jug-four-glasses.png"
+  },
+  "title": {
+    "hi": "कितना पानी है?",
+    "en": "Measuring capacity in non-standard units"
+  },
+  "subtitle_hi": "भरिए · गिनिए · बताइए",
+  "skill_description_hi": "किसी बर्तन की मात्रा (धारिता) एक जैसे छोटे बर्तन से मापता है - बार-बार वही गिलास/कप भरकर गिनता है और बताता है कि बर्तन में कितने गिलास/कप समाते हैं।",
+  "number_set": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "dt_fallback": null,
+  "phase_distribution": {
+    "tutorial": 4,
+    "guided": 2,
+    "practice": 4
+  },
+  "scaffold_rules": {
+    "nudge_timeout_ms": {
+      "guided": 7000,
+      "independent": 7000
+    },
+    "max_attempts": 3
+  },
+  "signals_expected": [
+    "slide_entered",
+    "slide_completed",
+    "capacity_compare_first_try",
+    "pour_done",
+    "capacity_count_first_try",
+    "shop_pick_first_try",
+    "phase_transition",
+    "mastery_score",
+    "lesson_completed"
+  ],
+  "slides": [
+    {
+      "id": "T1",
+      "phase": "tutorial",
+      "eis": "iconic",
+      "type": "CAP_COMPARE_PICK",
+      "prompt_hi": "ज़्यादा पानी किसमें, गिलास या मग?",
+      "audio": {
+        "prompt": "cap_p2_q",
+        "idle": "cap_p2_idle",
+        "correct": "cap_p2_ok",
+        "wrong": "cap_p2_wrong"
+      },
+      "data": {
+        "idle_ms": 7000
+      }
+    },
+    {
+      "id": "T2",
+      "phase": "tutorial",
+      "eis": "iconic",
+      "type": "CAP_METHOD",
+      "prompt_hi": "कौन-सा तरीका सही है?",
+      "audio": {
+        "intro": "cap_p3_a",
+        "explain": "cap_p3_b"
+      },
+      "data": {}
+    },
+    {
+      "id": "T3",
+      "phase": "tutorial",
+      "eis": "iconic",
+      "type": "CAP_POUR_IN_DEMO",
+      "prompt_hi": "कितने गिलास दूध?",
+      "audio": {
+        "intro": "cap_p4_a",
+        "conclude": "cap_p4_b"
+      },
+      "data": {
+        "count": 4,
+        "liquid": "milk"
+      }
+    },
+    {
+      "id": "T4",
+      "phase": "tutorial",
+      "eis": "iconic",
+      "type": "CAP_POUR_OUT_DEMO",
+      "prompt_hi": "कितने गिलास पानी?",
+      "audio": {
+        "intro": "cap_p5_a",
+        "conclude": "cap_p5_b"
+      },
+      "data": {
+        "count": 4,
+        "glasses": 6,
+        "liquid": "water"
+      }
+    },
+    {
+      "id": "G1",
+      "phase": "guided",
+      "eis": "enactive",
+      "type": "CAP_JAR_DRAG",
+      "prompt_hi": "जार का पूरा तेल कप में डालिए।",
+      "ask_prompt_hi": "इस जार में कितने कप तेल है?",
+      "audio": {
+        "intro": "cap_p7_a",
+        "your_turn": "cap_p7_b"
+      },
+      "data": {
+        "capacity": 4,
+        "cups": 6,
+        "liquid": "oil",
+        "idle_ms": 7000,
+        "ask": {
+          "values": [
+            1,
+            4,
+            6
+          ],
+          "answer": 4,
+          "q": "cap_p7_q",
+          "ok": "cap_p7_ok",
+          "h1": "cap_p7_h1",
+          "h2": "cap_p7_h2"
+        }
+      }
+    },
+    {
+      "id": "G2",
+      "phase": "guided",
+      "eis": "enactive",
+      "type": "CAP_TAP_POUR",
+      "prompt_hi": "कपों का दूध भगोने में डालिए।",
+      "ask_prompt_hi": "यह भगोना कितने कप दूध से पूरा भर गया?",
+      "audio": {
+        "intro": "cap_p8_a",
+        "your_turn": "cap_p8_b"
+      },
+      "data": {
+        "layout": "pan",
+        "capacity": 8,
+        "sources": 10,
+        "liquid": "milk",
+        "demo": true,
+        "idle_ms": 7000,
+        "ask": {
+          "values": [
+            1,
+            2,
+            8
+          ],
+          "answer": 8,
+          "q": "cap_p8_q",
+          "ok": "cap_p8_ok",
+          "h1": "cap_p8_h1",
+          "h2": "cap_p8_h2"
+        }
+      }
+    },
+    {
+      "id": "P1",
+      "phase": "practice",
+      "eis": "enactive",
+      "type": "CAP_TAP_SOURCE",
+      "prompt_hi": "बोतल पर टैप करिए।",
+      "ask_prompt_hi": "इस बोतल में पानी की मात्रा कितने गिलास के बराबर है?",
+      "audio": {
+        "intro": "cap_p9_a"
+      },
+      "data": {
+        "capacity": 3,
+        "glasses": 4,
+        "liquid": "water",
+        "idle_ms": 7000,
+        "ask": {
+          "values": [
+            1,
+            3,
+            4
+          ],
+          "answer": 3,
+          "q": "cap_p9_q",
+          "ok": "cap_p9_ok",
+          "h1": "cap_p9_h1",
+          "h2": "cap_p9_h2"
+        }
+      }
+    },
+    {
+      "id": "P2",
+      "phase": "practice",
+      "eis": "enactive",
+      "type": "CAP_TAP_POUR",
+      "prompt_hi": "मगों का तेल जग में डालिए।",
+      "ask_prompt_hi": "यह जग कितने मग तेल से पूरा भरा है?",
+      "audio": {
+        "intro": "cap_p10_a"
+      },
+      "data": {
+        "layout": "jug",
+        "capacity": 6,
+        "sources": 6,
+        "liquid": "oil",
+        "demo": false,
+        "idle_ms": 7000,
+        "ask": {
+          "values": [
+            4,
+            5,
+            6
+          ],
+          "answer": 6,
+          "q": "cap_p10_q",
+          "ok": "cap_p10_ok",
+          "h1": "cap_p10_h1",
+          "h2": "cap_p10_h2"
+        }
+      }
+    },
+    {
+      "id": "P3",
+      "phase": "practice",
+      "eis": "enactive",
+      "type": "CAP_SHOP",
+      "prompt_hi": "कितने गिलास भरें?",
+      "ask_prompt_hi": "किस बर्तन में ठीक 4 गिलास दूध है?",
+      "audio": {
+        "intro": "cap_p11_a",
+        "customers": [
+          "cap_p11_c1",
+          "cap_p11_c2",
+          "cap_p11_c3"
+        ],
+        "tap_all": "cap_p11_b",
+        "tap_vessel": "cap_p11_tap",
+        "q": "cap_p11_q",
+        "ok": "cap_p11_ok",
+        "w1": "cap_p11_w1",
+        "w2": {
+          "2": "cap_p11_w2_2",
+          "3": "cap_p11_w2_3"
+        }
+      },
+      "data": {
+        "target": 4,
+        "liquid": "milk",
+        "idle_ms": 7000,
+        "vessels": [
+          {
+            "key": "big",
+            "art": "shopb4",
+            "glasses": 4,
+            "result": "cap_p11_m_big",
+            "label": "4 गिलास"
+          },
+          {
+            "key": "mid",
+            "art": "shopb3",
+            "glasses": 3,
+            "result": "cap_p11_m_mid",
+            "label": "3 गिलास"
+          },
+          {
+            "key": "small",
+            "art": "shopb2",
+            "glasses": 2,
+            "result": "cap_p11_m_small",
+            "label": "2 गिलास"
+          }
+        ],
+        "wants": [
+          4,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "CEL",
+      "phase": "practice",
+      "eis": "enactive",
+      "type": "CELEBRATION",
+      "prompt_hi": "शाबाश! आपने सीख लिया है कि बर्तन की मात्रा कितनी है।",
+      "audio": {
+        "prompt": "cap_well_done"
+      },
+      "data": {
+        "end_subtitle": "एक ही कप से नापिए - और गिनिए!"
+      }
+    }
+  ],
+  "assets": {
+    "audio": {
+      "cap_landing": "assets/Audio/cap_landing.mp3",
+      "cap_pt_tutorial": "assets/Audio/cap_pt_tutorial.mp3",
+      "cap_pt_guided": "assets/Audio/cap_pt_guided.mp3",
+      "cap_pt_practice": "assets/Audio/cap_pt_practice.mp3",
+      "cap_p2_q": "assets/Audio/cap_p2_q.mp3",
+      "cap_p2_idle": "assets/Audio/cap_p2_idle.mp3",
+      "cap_p2_ok": "assets/Audio/cap_p2_ok.mp3",
+      "cap_p2_wrong": "assets/Audio/cap_p2_wrong.mp3",
+      "cap_p3_a": "assets/Audio/cap_p3_a.mp3",
+      "cap_p3_b": "assets/Audio/cap_p3_b.mp3",
+      "cap_p4_a": "assets/Audio/cap_p4_a.mp3",
+      "cap_p4_b": "assets/Audio/cap_p4_b.mp3",
+      "cap_p5_a": "assets/Audio/cap_p5_a.mp3",
+      "cap_p5_b": "assets/Audio/cap_p5_b.mp3",
+      "cap_p7_a": "assets/Audio/cap_p7_a.mp3",
+      "cap_p7_b": "assets/Audio/cap_p7_b.mp3",
+      "cap_p7_q": "assets/Audio/cap_p7_q.mp3",
+      "cap_p7_ok": "assets/Audio/cap_p7_ok.mp3",
+      "cap_p7_h1": "assets/Audio/cap_p7_h1.mp3",
+      "cap_p7_h2": "assets/Audio/cap_p7_h2.mp3",
+      "cap_p8_a": "assets/Audio/cap_p8_a.mp3",
+      "cap_p8_b": "assets/Audio/cap_p8_b.mp3",
+      "cap_p8_q": "assets/Audio/cap_p8_q.mp3",
+      "cap_p8_ok": "assets/Audio/cap_p8_ok.mp3",
+      "cap_p8_h1": "assets/Audio/cap_p8_h1.mp3",
+      "cap_p8_h2": "assets/Audio/cap_p8_h2.mp3",
+      "cap_p9_a": "assets/Audio/cap_p9_a.mp3",
+      "cap_p9_q": "assets/Audio/cap_p9_q.mp3",
+      "cap_p9_ok": "assets/Audio/cap_p9_ok.mp3",
+      "cap_p9_h1": "assets/Audio/cap_p9_h1.mp3",
+      "cap_p9_h2": "assets/Audio/cap_p9_h2.mp3",
+      "cap_p10_a": "assets/Audio/cap_p10_a.mp3",
+      "cap_p10_q": "assets/Audio/cap_p10_q.mp3",
+      "cap_p10_ok": "assets/Audio/cap_p10_ok.mp3",
+      "cap_p10_h1": "assets/Audio/cap_p10_h1.mp3",
+      "cap_p10_h2": "assets/Audio/cap_p10_h2.mp3",
+      "cap_p11_a": "assets/Audio/cap_p11_a.mp3",
+      "cap_p11_c1": "assets/Audio/cap_p11_c1.mp3",
+      "cap_p11_c2": "assets/Audio/cap_p11_c2.mp3",
+      "cap_p11_c3": "assets/Audio/cap_p11_c3.mp3",
+      "cap_p11_b": "assets/Audio/cap_p11_b.mp3",
+      "cap_p11_tap": "assets/Audio/cap_p11_tap.mp3",
+      "cap_p11_m_small": "assets/Audio/cap_p11_m_small.mp3",
+      "cap_p11_m_mid": "assets/Audio/cap_p11_m_mid.mp3",
+      "cap_p11_m_big": "assets/Audio/cap_p11_m_big.mp3",
+      "cap_p11_q": "assets/Audio/cap_p11_q.mp3",
+      "cap_p11_ok": "assets/Audio/cap_p11_ok.mp3",
+      "cap_p11_w1": "assets/Audio/cap_p11_w1.mp3",
+      "cap_p11_w2_2": "assets/Audio/cap_p11_w2_2.mp3",
+      "cap_p11_w2_3": "assets/Audio/cap_p11_w2_3.mp3",
+      "cap_well_done": "assets/Audio/cap_well_done.mp3",
+      "cap_p2_ok2": "assets/Audio/cap_p2_ok2.mp3",
+      "cap_p7_ok2": "assets/Audio/cap_p7_ok2.mp3",
+      "cap_p8_ok2": "assets/Audio/cap_p8_ok2.mp3",
+      "cap_p9_ok2": "assets/Audio/cap_p9_ok2.mp3",
+      "cap_p10_ok2": "assets/Audio/cap_p10_ok2.mp3",
+      "cap_p11_ok2": "assets/Audio/cap_p11_ok2.mp3",
+      "cap_num_1": "assets/Audio/cap_num_1.mp3",
+      "cap_num_2": "assets/Audio/cap_num_2.mp3",
+      "cap_num_3": "assets/Audio/cap_num_3.mp3",
+      "cap_num_4": "assets/Audio/cap_num_4.mp3",
+      "cap_num_5": "assets/Audio/cap_num_5.mp3",
+      "cap_num_6": "assets/Audio/cap_num_6.mp3",
+      "cap_num_7": "assets/Audio/cap_num_7.mp3",
+      "cap_num_8": "assets/Audio/cap_num_8.mp3",
+      "cap_num_9": "assets/Audio/cap_num_9.mp3",
+      "cap_num_10": "assets/Audio/cap_num_10.mp3",
+      "vo_landing": "assets/Audio/cap_landing.mp3",
+      "vo_pt_tutorial": "assets/Audio/cap_pt_tutorial.mp3",
+      "vo_pt_guided": "assets/Audio/cap_pt_guided.mp3",
+      "vo_pt_practice": "assets/Audio/cap_pt_practice.mp3",
+      "sfx_celebrate": "assets/Audio/sfx_celebrate.mp3",
+      "sfx_pour": "assets/Audio/sfx_pour.mp3"
+    },
+    "audio_text": {
+      "cap_landing": "नमस्ते दोस्त! मैं हूँ स्विफ्टी। आइए, देखते और सीखते हैं कि कौन-से बर्तन में कितना पानी है।",
+      "cap_pt_tutorial": "ध्यान से देखिए और मेरे साथ जानिए। चलिए, शुरू करें!",
+      "cap_pt_guided": "बहुत बढ़िया! अब हम साथ मिलकर शुरू करते हैं। चलिए, साथ में करें!",
+      "cap_pt_practice": "वाह! अब आपकी बारी।",
+      "cap_p2_q": "यहाँ एक गिलास और एक मग दिया हुआ है। इन दोनों में ज़्यादा पानी किसमें आएगा, गिलास में या मग में? सही बर्तन पर टैप करिए।",
+      "cap_p2_idle": "ज़्यादा पानी किसमें आएगा, गिलास में या मग में? सही बर्तन पर टैप करिए।",
+      "cap_p2_ok": "शाबाश! गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।",
+      "cap_p2_wrong": "गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।",
+      "cap_p3_a": "यहाँ हम सीखेंगे कि जब किसी बड़े बर्तन में पानी या किसी चीज़ की मात्रा मापनी हो, तो छोटे बर्तनों का सही उपयोग कैसे किया जाता है। यहाँ दो अलग-अलग तरीके दिए गए हैं। एक जगह तीन कप हैं, और दूसरी जगह दो कप और एक गिलास है।",
+      "cap_p3_b": "जब भी हम किसी बर्तन में पानी या किसी चीज़ की मात्रा को मापते हैं, तो मापने के लिए इस्तेमाल होने वाले बर्तन एक जैसे होने चाहिए। वरना हम मात्रा को सही तरीके से नहीं माप सकेंगे। इसलिए सही तरीका यह है, जिसमें सभी बर्तन एक जैसे हों।",
+      "cap_p4_a": "अब हम सीखते हैं, इस बोतल में दूध की मात्रा कितने गिलास है? यहाँ एक बोतल पूरी खाली है, और चार एक जैसे गिलास में दूध है। इन गिलासों का सारा दूध एक-एक करके बोतल में डालते हैं, और देखते हैं कि यह बोतल कितने गिलास से भरती है।",
+      "cap_p4_b": "यह बोतल चार गिलास से पूरी भर गई। तो इस बोतल में दूध की मात्रा चार एक जैसे गिलास के बराबर है।",
+      "cap_p5_a": "अब हम सीखते हैं, जग में पानी की मात्रा कितने गिलास है? यहाँ एक जग में पूरा पानी भरा हुआ है। इसका सारा पानी इन गिलासों में भरते हैं, और देखते हैं, कितने गिलास भरते हैं।",
+      "cap_p5_b": "यहाँ एक जग से चार गिलास पूरे भर गए। तो जग में पानी की मात्रा चार गिलास के बराबर है।",
+      "cap_p7_a": "यहाँ एक जार, तेल से पूरा भरा हुआ है, और कुछ एक जैसे खाली कप रखे हुए हैं। जार को ऐसे ले जाकर इन कपों को तेल से पूरा भरिए।",
+      "cap_p7_b": "अब आप करिए। जार में बचा हुआ तेल इन बचे हुए कपों में डालिए।",
+      "cap_p7_q": "इस जार में कितने कप तेल है? सही संख्या पर टैप करिए।",
+      "cap_p7_ok": "शाबाश! इस जार से चार कप पूरे भर गए।",
+      "cap_p7_h1": "दोबारा गिनिए कि कितने कप पूरे भरे हैं।",
+      "cap_p7_h2": "एक, दो, तीन, चार। कुल चार कप भरे हैं। सही संख्या यह है।",
+      "cap_p8_a": "यहाँ दस कप दूध से पूरे भरे हुए हैं, और एक छोटा भगोना पूरा खाली है। कपों का दूध एक-एक करके भगोने में डालिए, और देखिए कि भगोना कितने कप से भरता है।",
+      "cap_p8_b": "अब आप करिए। बचे हुए कपों का दूध भगोने में डालिए।",
+      "cap_p8_q": "यह भगोना कितने कप दूध से पूरा भर गया? सही संख्या पर टैप करिए।",
+      "cap_p8_ok": "शाबाश! यह भगोना आठ कप दूध से पूरा भर गया।",
+      "cap_p8_h1": "दोबारा गिनिए कि कितने कप खाली हुए हैं।",
+      "cap_p8_h2": "एक, दो, तीन, चार, पाँच, छह, सात, आठ। कुल आठ कप खाली हुए हैं। सही संख्या यह है।",
+      "cap_p9_a": "यहाँ एक बोतल पानी से पूरी भरी हुई है, और चार खाली गिलास रखे हुए हैं। बोतल में कितने गिलास पानी की मात्रा है, यह जानने के लिए बोतल से सारा पानी इन खाली गिलासों में डालना होगा। अब बोतल पर टैप करिए।",
+      "cap_p9_q": "इस बोतल में पानी की मात्रा कितने गिलास के बराबर है? सही संख्या पर टैप करिए।",
+      "cap_p9_ok": "शाबाश! इस बोतल में पानी की मात्रा कुल तीन गिलास के बराबर है।",
+      "cap_p9_h1": "दोबारा देखिए कि कितने गिलास पूरे भरे हैं।",
+      "cap_p9_h2": "एक, दो, तीन। कुल तीन गिलास भरे हैं। सही संख्या यह है।",
+      "cap_p10_a": "यहाँ एक खाली जग है, और छह छोटे मग हैं, जो तेल से पूरे भरे हुए हैं। मगों का तेल एक-एक करके जग में डालिए, और देखिए कितने मग से यह जग पूरा भरता है।",
+      "cap_p10_q": "यह जग कितने मग तेल से पूरा भरा है? सही संख्या पर टैप करिए।",
+      "cap_p10_ok": "शाबाश! यह जग छह मग तेल से पूरा भर गया।",
+      "cap_p10_h1": "दोबारा गिनिए कि कितने मग खाली हुए हैं।",
+      "cap_p10_h2": "एक, दो, तीन, चार, पाँच, छह। कुल छह मग खाली हुए हैं। सही संख्या यह है।",
+      "cap_p11_a": "सुबह का समय है। गाँव में दूधवाले की दुकान खुल गई है। तभी तीन लोग दूध लेने दुकान पर आते हैं।",
+      "cap_p11_c1": "मुझे चार गिलास दूध चाहिए।",
+      "cap_p11_c2": "मुझे दो गिलास दूध चाहिए।",
+      "cap_p11_c3": "मुझे तीन गिलास दूध चाहिए।",
+      "cap_p11_b": "यहाँ तीनों बर्तनों पर एक-एक करके टैप करिए, और फिर इनकी मात्रा मापते हैं।",
+      "cap_p11_tap": "अब इस बर्तन पर टैप करिए, और दूध को गिलासों में डालिए।",
+      "cap_p11_m_small": "इस छोटी बोतल में दो गिलास दूध है।",
+      "cap_p11_m_mid": "इस बीच वाली बोतल में तीन गिलास दूध है।",
+      "cap_p11_m_big": "इस बड़ी बोतल में चार गिलास दूध है।",
+      "cap_p11_q": "अब वह बर्तन चुनिए, जिसमें ठीक चार गिलास दूध है।",
+      "cap_p11_ok": "शाबाश! आपने सही बर्तन चुन लिया है।",
+      "cap_p11_w1": "दोबारा सोचिए। किस बर्तन की मात्रा चार गिलास के बराबर है?",
+      "cap_p11_w2_2": "इसमें दो गिलास दूध है। सही बर्तन, जिसमें चार गिलास दूध है, वह यह है।",
+      "cap_p11_w2_3": "इसमें तीन गिलास दूध है। सही बर्तन, जिसमें चार गिलास दूध है, वह यह है।",
+      "cap_well_done": "शाबाश! आपने सीख लिया है कि बर्तन की मात्रा कितनी है।",
+      "cap_p2_ok2": "गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।",
+      "cap_p7_ok2": "इस जार से चार कप पूरे भर गए।",
+      "cap_p8_ok2": "यह भगोना आठ कप दूध से पूरा भर गया।",
+      "cap_p9_ok2": "इस बोतल में पानी की मात्रा कुल तीन गिलास के बराबर है।",
+      "cap_p10_ok2": "यह जग छह मग तेल से पूरा भर गया।",
+      "cap_p11_ok2": "आपने सही बर्तन चुन लिया है।",
+      "cap_num_1": "एक",
+      "cap_num_2": "दो",
+      "cap_num_3": "तीन",
+      "cap_num_4": "चार",
+      "cap_num_5": "पाँच",
+      "cap_num_6": "छह",
+      "cap_num_7": "सात",
+      "cap_num_8": "आठ",
+      "cap_num_9": "नौ",
+      "cap_num_10": "दस"
+    },
+    "audio_cues": {
+      "cap_p2_q": [
+        {
+          "t": 571,
+          "k": "glass"
+        },
+        {
+          "t": 1343,
+          "k": "mug"
+        },
+        {
+          "t": 3952,
+          "k": "both"
+        }
+      ],
+      "cap_p2_wrong": [
+        {
+          "t": 2194,
+          "k": "mug"
+        }
+      ],
+      "cap_p3_a": [
+        {
+          "t": 14670,
+          "k": "box1"
+        },
+        {
+          "t": 17064,
+          "k": "box2"
+        }
+      ],
+      "cap_p3_b": [
+        {
+          "t": 8377,
+          "k": "same"
+        },
+        {
+          "t": 15734,
+          "k": "correct"
+        }
+      ],
+      "cap_p4_a": [
+        {
+          "t": 1742,
+          "k": "bottle"
+        },
+        {
+          "t": 8540,
+          "k": "glasses"
+        }
+      ],
+      "cap_p5_a": [
+        {
+          "t": 3377,
+          "k": "glasses"
+        },
+        {
+          "t": 5920,
+          "k": "jug"
+        }
+      ],
+      "cap_p7_a": [
+        {
+          "t": 7729,
+          "k": "demo"
+        }
+      ],
+      "cap_p7_h2": [
+        {
+          "t": 40,
+          "k": "n1"
+        },
+        {
+          "t": 797,
+          "k": "n2"
+        },
+        {
+          "t": 1489,
+          "k": "n3"
+        },
+        {
+          "t": 2313,
+          "k": "n4"
+        },
+        {
+          "t": 6426,
+          "k": "show"
+        }
+      ],
+      "cap_p8_a": [
+        {
+          "t": 545,
+          "k": "cups"
+        },
+        {
+          "t": 3750,
+          "k": "pan"
+        }
+      ],
+      "cap_p8_h2": [
+        {
+          "t": 40,
+          "k": "n1"
+        },
+        {
+          "t": 758,
+          "k": "n2"
+        },
+        {
+          "t": 1449,
+          "k": "n3"
+        },
+        {
+          "t": 2207,
+          "k": "n4"
+        },
+        {
+          "t": 2978,
+          "k": "n5"
+        },
+        {
+          "t": 3869,
+          "k": "n6"
+        },
+        {
+          "t": 4494,
+          "k": "n7"
+        },
+        {
+          "t": 5305,
+          "k": "n8"
+        },
+        {
+          "t": 9737,
+          "k": "show"
+        }
+      ],
+      "cap_p9_a": [
+        {
+          "t": 611,
+          "k": "bottle"
+        },
+        {
+          "t": 3922,
+          "k": "glasses"
+        }
+      ],
+      "cap_p9_h2": [
+        {
+          "t": 40,
+          "k": "n1"
+        },
+        {
+          "t": 771,
+          "k": "n2"
+        },
+        {
+          "t": 1476,
+          "k": "n3"
+        },
+        {
+          "t": 5761,
+          "k": "show"
+        }
+      ],
+      "cap_p10_a": [
+        {
+          "t": 532,
+          "k": "jug"
+        },
+        {
+          "t": 2300,
+          "k": "mugs"
+        }
+      ],
+      "cap_p10_h2": [
+        {
+          "t": 40,
+          "k": "n1"
+        },
+        {
+          "t": 758,
+          "k": "n2"
+        },
+        {
+          "t": 1449,
+          "k": "n3"
+        },
+        {
+          "t": 2260,
+          "k": "n4"
+        },
+        {
+          "t": 3045,
+          "k": "n5"
+        },
+        {
+          "t": 3962,
+          "k": "n6"
+        },
+        {
+          "t": 8194,
+          "k": "show"
+        }
+      ],
+      "cap_p11_a": [
+        {
+          "t": 6785,
+          "k": "people"
+        }
+      ],
+      "cap_p11_b": [
+        {
+          "t": 571,
+          "k": "vessels"
+        }
+      ],
+      "cap_p11_w2_2": [
+        {
+          "t": 6638,
+          "k": "show"
+        }
+      ],
+      "cap_p11_w2_3": [
+        {
+          "t": 6785,
+          "k": "show"
+        }
+      ]
+    },
+    "image": {
+      "cap_shop_bg": "assets/Images/cap_shop_bg.jpg",
+      "cap_shop_order": "assets/Images/cap_shop_order.jpg",
+      "cap_shop_front": "assets/Images/cap_shop_front.png",
+      "cap_shop_man": "assets/Images/cap_shop_man.png",
+      "cap_shop_woman": "assets/Images/cap_shop_woman.png",
+      "cap_shop_boy": "assets/Images/cap_shop_boy.png",
+      "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
+      "cap_landing_strip": "assets/Images/animation-v2/jug-four-glasses.png",
+      "cap_glass": "assets/Images/cap_glass.png",
+      "cap_mug": "assets/Images/cap_mug.png",
+      "cap_cup": "assets/Images/cap_cup.png"
+    }
+  }
+}
+</script>
+
+<!-- ============ ENGINE ============ -->
+<script src="app.js"></script>
+</body>
+</html>

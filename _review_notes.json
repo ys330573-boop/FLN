@@ -1,0 +1,33 @@
+{
+  "01": "LANDING. The strip shows the whole idea at a glance: the same cup, again and again, fills the jug. ✅ CHANGED from the KG finger-hand counting row — too young for Grade 2. Welcome VO plays automatically; tap the speaker to replay.",
+
+  "02": "PHASE 1 · TEACH — plays BY ITSELF; the child only watches (no tapping, never a test). A demo hand touches each cupful, a big count climbs 1→4 with each number spoken, then the conclusion names the word: “बर्तन में जितना समाता है, वही उसकी धारिता है।” ✅ FIXED: the first version said “this jug is being filled” while no jug was on screen — now past tense, so the four cupfuls ARE the record of the measurement. ❓ Please confirm धारिता is the word your Grade 2 classrooms use.",
+
+  "03": "PHASE 1 · TEACH — autonomous. Same method, but RICE. This is the slide aimed at the misconception named in the curriculum row (“children think capacity is only about water”), and it says so outright: “धारिता सिर्फ़ पानी की नहीं होती - चावल की भी होती है।” ❓ Clear enough for a 7-year-old, or would you word it differently?",
+
+  "04": "PHASE 1 · TEACH — autonomous. The SAME cup measures two vessels; the game counts both rows itself, matches them one-to-one, and explains why the comparison is fair. ✅ FIXED: the rows carry no vessel pictures, so the line now anchors them by position — ऊपर बोतल, नीचे जग. ❓ This is a short bridge off the PREVIOUS skill (comparing by capacity), not a re-teach — say so if you would rather cut it.",
+
+  "05": "PHASE 2 · GUIDED — learning by doing. The child taps कटोरी, बोतल, जग left to right and hears each one's capacity in cupfuls. This is the ONE screen where real, different vessels are visible. ❓ They render small on a wide stage; that size is set by the engine, not by this game, so I left it alone.",
+
+  "06": "PHASE 2 · GUIDED — THE SIGNATURE MINI-GAME. Tap each cup and it pours into the jug; the count climbs and is spoken; then “इसकी धारिता कितने कप है?” This IS the mastery bar — measure a vessel, tell its capacity in smaller units. Wrong tap = soft buzz, red ✗, that card locks, “फिर से कोशिश कीजिए” spoken. Right tap = confetti, then on. (Verified live in the browser.)",
+
+  "07": "PHASE 2 · GUIDED — a DIFFERENT gesture (drag, not tap). Count the milk cupfuls, then drag the number card into the box: “record the capacity”, exactly as SME pathway 2 describes. ℹ On drag screens the engine shows no hint button; if the child is stuck it reveals the answer after 3 tries instead.",
+
+  "08": "PHASE 2 · GUIDED — the fairness rule. Three identical cups and one tall glass: measuring only works if the unit is the same every time. ❓ INVENTED DISTRACTOR — the curriculum row names a water misconception, not a mixed-unit one, so this question is my own design drawn from SME pathways 1 and 3. Please vet it.",
+
+  "09": "PHASE 3 · PRACTICE — the child now works alone, with the hint ladder as the safety net (try again → hint → reveal, so nobody gets stuck). A PRODUCE item: “इस कटोरे की धारिता चार कप है। चार कप डालिए।” — given the capacity, the child POURS it, in sand. ✅ CHANGED from a pick-the-number question, which was making the game too pick-heavy overall. ❓ REGISTER CLASH (engine-level): the goal chip reads “डालो” (informal तुम) while this game is polite आप throughout. It is hardcoded in the shared engine, which is read-only in this kit — raising it as an engine ticket.",
+
+  "10": "PHASE 3 · PRACTICE. Pour again — rice, capacity 6. One step up from the guided 5.",
+
+  "11": "PHASE 3 · PRACTICE — produce again, larger: “इस जग की धारिता पाँच कप है। पाँच कप डालिए।” Same डालो register clash as page 9.",
+
+  "12": "PHASE 3 · PRACTICE — the reverse direction as a choice. The number 6 is the question; pick the measurement showing 6 cupfuls. Each option speaks its own count when tapped, which doubles as the hint.",
+
+  "13": "PHASE 3 · PRACTICE. Pour — milk, capacity 7.",
+
+  "14": "PHASE 3 · PRACTICE — the OTHER drag mode: here the number cards are the targets and the cup is dragged onto the right one. Sand, capacity 8 — top of the range.",
+
+  "15": "PHASE 3 · PRACTICE — the last measurement, capacity 8. The full mastery-bar performance: pour, count, tell.",
+
+  "16": "FINISH. “शाबाश! अब आप धारिता नाप सकते हैं!” with the closing reminder — एक ही कप से नापिए। No score, no timer, by design."
+}

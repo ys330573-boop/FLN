@@ -1,0 +1,9 @@
+{
+  "preview": "Images, pause, frame inspection, speed, reduced motion passed",
+  "landing": "Generated artwork loaded in the actual lesson",
+  "lessonDemo": "Actual narrated water-pouring slide displayed the sprite",
+  "water": "Correct atlas row, final levels, stream cleanup, completion callback passed",
+  "milk": "Correct atlas row, final levels, stream cleanup, completion callback passed",
+  "oil": "Correct atlas row, final levels, stream cleanup, completion callback passed",
+  "pageErrors": []
+}

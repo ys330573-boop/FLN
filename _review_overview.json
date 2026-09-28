@@ -1,0 +1,19 @@
+[
+  "WHAT IT TEACHES — धारिता (capacity): fill a vessel with the SAME small cup over and over, count the cupfuls, and that count IS the capacity. Built across 2–8 cupfuls, which reaches the curriculum row's mastery bar.",
+
+  "HOW IT IS SHAPED — 3 phases. Phase 1 the game teaches by itself and the child only watches. Phase 2 the child does it with support. Phase 3 the child works alone, with a hint ladder that always ends in a reveal so nobody gets stuck. No score, no timer.",
+
+  "FIVE DIFFERENT MINI-GAMES, not one repeated — pour-and-count (the signature one), record-the-number by dragging, pour-to-a-given-capacity, spot-the-unfair-cup, and read-a-measurement in reverse. Four different hand actions across 10 test screens; no single one is more than 60%.",
+
+  "THE MISCONCEPTION IN THE ROW — “children think capacity is only about water” — is designed against, not just noted: the lesson measures पानी, चावल, दूध and रेत, and page 3 says it outright.",
+
+  "✅ FIXED BEFORE YOU SAW IT (self-review pass): three teaching screens named a jug or bowl that was not on screen — reworded so the words match what the child can actually see; the compare screen now names its rows ऊपर बोतल / नीचे जग; two titles shortened to fit one line; and one pick question became a pour-it-yourself question, because the game was running pick-heavy.",
+
+  "❓ FOR YOU TO DECIDE — (1) is धारिता the right Grade 2 classroom word? (2) the fairness question on page 8 is my own invention, not from the curriculum row — please vet it. (3) page 4 is a short bridge off the previous skill; cut it if you would rather go straight to measuring.",
+
+  "TWO THINGS THE KIT WOULD NOT LET ME FIX — (a) every pouring screen shows the SAME jug, because the engine fixes that picture, while SME pathway 2 asked for a differently shaped jug; (b) the pour-it-yourself screens say डालो (informal) on the chip while the whole game is polite आप — also hardcoded in the engine. The engine is read-only in this kit, so both are written up as engine tickets rather than worked around.",
+
+  "कान से जाँचें / EAR-CHECK — all 65 Hindi lines are machine-generated (voice: Kore) and machine-checked for length and silence, but NO human has heard them yet. Please listen before this reaches children.",
+
+  "REGISTER — polite आप throughout (देखिए, डालिए, गिनिए), deliberately, and it matches the standard phase-change lines. Shown text always equals the spoken line."
+]

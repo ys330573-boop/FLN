@@ -1,0 +1,187 @@
+{
+ "schema": "swiftpal-build-report/1",
+ "generated_at": "2026-09-17T18:16:51",
+ "skill_code": "MTG2A04_L03_S01",
+ "engine_expected": "2026.07.16i-r4-unified",
+ "engine_file_sha256": {
+  "app.js": "7600fed1d2db64c44fd36f3e7929119bb12c9900e2f7654b2e01d564e867ded6",
+  "style.css": "658057cda2224de4086139d89df841f91fd95c9343d291f5240a251f55315527"
+ },
+ "receipt": {
+  "counts": "28 pass / 0 FAIL / 0 warn",
+  "delivery_mode": true,
+  "rows": [
+   {
+    "ok": true,
+    "label": "Playable HTML present",
+    "detail": "MTG2A04_L03_S01.html"
+   },
+   {
+    "ok": true,
+    "label": "Card data loads",
+    "detail": "from card.json"
+   },
+   {
+    "ok": true,
+    "label": "Slides present",
+    "detail": "15 slides"
+   },
+   {
+    "ok": true,
+    "label": "phase_distribution == #slides",
+    "detail": "15 vs 15"
+   },
+   {
+    "ok": true,
+    "label": "Mechanic variety: >=2 gesture families + >=1 produce, pick not dominant",
+    "detail": "OK — families {'pick': 6, 'drag': 2, 'build': 2}"
+   },
+   {
+    "ok": true,
+    "label": "Speak-word: every word option has a clip (opt.audio / phonemes)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "HTML wires engine + card",
+    "detail": "cardData + engine (split or inlined)"
+   },
+   {
+    "ok": true,
+    "label": "Built on the CURRENT unified engine",
+    "detail": "engine 2026.07.16i-r4-unified"
+   },
+   {
+    "ok": true,
+    "label": "Engine CONTENT in sync (verbatim, not just the stamp)",
+    "detail": "OK — shipped engine embeds the canonical app.js verbatim"
+   },
+   {
+    "ok": true,
+    "label": "style.css CONTENT in sync (verbatim, not just app.js)",
+    "detail": "OK — shipped CSS embeds the canonical style.css verbatim"
+   },
+   {
+    "ok": true,
+    "label": "CSS token: --bg:#FAF7F1 (the ONE stage background)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "CSS: toybox theme keeps background:var(--bg) (no re-tint)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Voice-over: all 65 lines have real audio",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Art: all 9 images generated (not emoji-fallback)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "No orphaned audio (every shipped clip is referenced)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Numerals: display fields are Arabic digits (policy)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Count VO: dynamic vo_num_1..8 / vo_total_N stems on disk",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Engine UI assets: all 7 referenced files in assets/UI",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "start_mascot not clipped at the bottom edge (feet visible)",
+    "detail": "bottom-row opaque 0%"
+   },
+   {
+    "ok": true,
+    "label": "SME review PPT generated",
+    "detail": "MTG2A04_L03_S01_review.pptx"
+   },
+   {
+    "ok": true,
+    "label": "Page-capture shots present (visual gate ran)",
+    "detail": "16 shots (expected ~16)"
+   },
+   {
+    "ok": true,
+    "label": "Optimized dist/ under 10 MB",
+    "detail": "8.52 MB"
+   },
+   {
+    "ok": true,
+    "label": "dist audio is real Ogg (not WAV-under-.ogg)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Voice roles: every slide SPEAKS its prompt (incl. celebration)",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Voice roles: question slides carry a spoken HINT",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Voice roles: question slides carry a spoken REVEAL",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Voice roles: landing greeting on disk",
+    "detail": "OK"
+   },
+   {
+    "ok": true,
+    "label": "Voice roles: phase-gate lines on disk",
+    "detail": "OK"
+   }
+  ]
+ },
+ "content": {
+  "slides": 15,
+  "mechanics": {
+   "DEMO_COUNT": 2,
+   "MEET_COMPARE": 1,
+   "MEET_ORDER": 1,
+   "COUNT_ACTION": 4,
+   "COUNT_DRAG_MATCH": 2,
+   "ODD_ONE_OUT": 1,
+   "MAKE_SET": 2,
+   "PICK_SET_BY_NUMBER": 1,
+   "CELEBRATION": 1
+  },
+  "phase_distribution": {
+   "tutorial": 3,
+   "guided": 4,
+   "practice": 8
+  }
+ },
+ "assets": {
+  "images": 9,
+  "audio_files": 65,
+  "audio_lines_authored": 65,
+  "audio_silent_pending": [],
+  "bytes_total": 36144315
+ },
+ "environment": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.10",
+  "gemini_key_present": false
+ }
+}
