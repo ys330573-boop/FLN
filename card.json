@@ -9,7 +9,7 @@
   "theme": "toybox",
   "landing_hero": {
     "kind": "image",
-    "src": "assets/Images/animation-v2/jug-four-glasses.png"
+    "src": "assets/Images/cap_landing_strip.png"
   },
   "title": {
     "hi": "कितना पानी है?",
@@ -688,7 +688,7 @@
       "cap_shop_woman": "assets/Images/cap_shop_woman.png",
       "cap_shop_boy": "assets/Images/cap_shop_boy.png",
       "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
-      "cap_landing_strip": "assets/Images/animation-v2/jug-four-glasses.png",
+      "cap_landing_strip": "assets/Images/cap_landing_strip.png",
       "cap_glass": "assets/Images/cap_glass.png",
       "cap_mug": "assets/Images/cap_mug.png",
       "cap_cup": "assets/Images/cap_cup.png"

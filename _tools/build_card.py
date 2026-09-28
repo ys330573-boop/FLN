@@ -254,7 +254,7 @@ async def main():
       "version": "0.2",
       "skill_code": "MTG2A04_L03_S01", "lo_code": "MTG2A04_L03", "grade": "G2", "attribute": "A04",
       "skill_type": "CORE", "part_label": "", "theme": "toybox",
-      "landing_hero": {"kind": "image", "src": "assets/Images/animation-v2/jug-four-glasses.png"},   # generated capacity artwork
+      "landing_hero": {"kind": "image", "src": "assets/Images/cap_landing_strip.png"},   # (animation-v2 art was never added: folder is empty)
       "title": {"hi": "कितना पानी है?", "en": "Measuring capacity in non-standard units"},
       "subtitle_hi": "भरिए · गिनिए · बताइए",
       "skill_description_hi": "किसी बर्तन की मात्रा (धारिता) एक जैसे छोटे बर्तन से मापता है - बार-बार वही गिलास/कप भरकर गिनता है और बताता है कि बर्तन में कितने गिलास/कप समाते हैं।",
@@ -268,7 +268,7 @@ async def main():
       "slides": SLIDES,
       "assets": {"audio": audio, "audio_text": audio_text, "audio_cues": cues,
                  "image": {"cap_shop_bg": "assets/Images/cap_shop_bg.jpg", "cap_shop_order": "assets/Images/cap_shop_order.jpg", "cap_shop_front": "assets/Images/cap_shop_front.png", "cap_shop_man": "assets/Images/cap_shop_man.png", "cap_shop_woman": "assets/Images/cap_shop_woman.png", "cap_shop_boy": "assets/Images/cap_shop_boy.png", "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
-                           "cap_landing_strip": "assets/Images/animation-v2/jug-four-glasses.png",
+                           "cap_landing_strip": "assets/Images/cap_landing_strip.png",
                            "cap_glass": "assets/Images/cap_glass.png", "cap_mug": "assets/Images/cap_mug.png", "cap_cup": "assets/Images/cap_cup.png"}},
     }
     js = json.dumps(card, ensure_ascii=False, indent=2)
