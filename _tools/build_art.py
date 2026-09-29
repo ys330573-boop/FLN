@@ -218,15 +218,16 @@ def milkcup_layers():
 WB_POLY = [[241,114],[234,180],[200,280],[162,378],[136,480],[133,585],[137,690],[142,796],[147,901],[153,1006],[161,1094],
            [330,1104],[500,1094],[517,1073],[522,968],[527,862],[532,757],[537,652],[541,547],[528,442],[498,341],[460,243],[437,140],[433,114]]
 
-def wglass_layers():
+def wglass_layers(liquid="water"):
     """"water glass.svg" (156x185): an EMPTY glass tumbler — 0 glass tint, 1-5 base, 6-7 wall shading,
     8-15 shine, 16-21 rim. Water = the glass outline (child 0), drawn over the tint/base, under the walls."""
     k, defs = svg_children("water glass.svg")
     assert len(k) == 22, "water glass art changed shape: %d parts" % len(k)
     d = re.search(r' d="([^"]+)"', k[0]).group(1)
-    water = ('<g opacity=".9"><path fill="url(#{U}lq)" d="%s"/><path fill="url(#{U}dp)" d="%s"/></g>' % (d, d))
-    surf = '<ellipse cx="77.8" cy="40" rx="76.5" ry="7.5" fill="#CDEEFF" stroke="#7FB9E0" stroke-width=".8"/>'
-    return "".join(k[0:6]), water, surf, "".join(k[6:22]), defs + grad("lq", "water") + depth()
+    _, sf, se, op = LIQ[liquid]
+    water = ('<g opacity="%s"><path fill="url(#{U}lq)" d="%s"/><path fill="url(#{U}dp)" d="%s"/></g>' % ("1" if liquid == "milk" else ".9", d, d))
+    surf = '<ellipse cx="77.8" cy="40" rx="76.5" ry="7.5" fill="%s" stroke="%s" stroke-width=".8"/>' % (sf, se)
+    return "".join(k[0:6]), water, surf, "".join(k[6:22]), defs + grad("lq", liquid) + depth()
 
 def wbottle_layers():
     """"water bottle.svg" (547x1151): an EMPTY glass bottle with a metal screw cap — 0-16 body + base,
@@ -270,6 +271,7 @@ def build():
     pb, pm, ps, pf, pd = pot_layers()
     mb, mm, ms, mf, md = milkcup_layers()
     gb2, gm2, gs2, gf2, gd2 = wglass_layers()
+    gb3, gm3, gs3, gf3, gd3 = wglass_layers("milk")
     bb2, bm2, bs2, bf2, bc2, bd2 = wbottle_layers()
     sb, sm_, ss, sf, sd = smallmug_layers()
     jb3, jm3, js3, jf3, jd3 = jug_layers("oil")
@@ -320,6 +322,11 @@ const CAP_ART = {
     poly:[[4.8,9.7],[0.3,20.1],[0,35.3],[0.6,65.6],[2.9,95.9],[6.9,126],[12.8,155.7],[18.6,169.7],[30.7,178.3],[45.5,181.8],[75.7,183.8],[106,182.3],[120.9,179.6],[134.4,172.9],[141.7,159.8],[148,130.1],[152.4,100.1],[154.8,69.9],[155.7,39.5],[155.5,24.4],[154.9,9.2],[78,16]],
     surfC:[77.8,40], yTop:10, yFill:30, yBot:183.8, xTop:[1,155], xBot:[46,106],
     lipR:[155,9.2], lipL:[1,9.2], mouth:[78,12] },
+  wglassMilk: { vb:[156,185], shift:[0,0],   /* "water glass.svg" filled with milk (page 4) */
+    back:`%s`, milk:`%s`, surf:`%s`, front:`%s`, cork:"", defs:`%s`,
+    poly:[[4.8,9.7],[0.3,20.1],[0,35.3],[0.6,65.6],[2.9,95.9],[6.9,126],[12.8,155.7],[18.6,169.7],[30.7,178.3],[45.5,181.8],[75.7,183.8],[106,182.3],[120.9,179.6],[134.4,172.9],[141.7,159.8],[148,130.1],[152.4,100.1],[154.8,69.9],[155.7,39.5],[155.5,24.4],[154.9,9.2],[78,16]],
+    surfC:[77.8,40], yTop:10, yFill:30, yBot:183.8, xTop:[1,155], xBot:[46,106],
+    lipR:[155,9.2], lipL:[1,9.2], mouth:[78,12] },
   wbottle: { vb:[547,1151], shift:[0,0],  /* "water bottle.svg" — cap animates off/on */
     back:`%s`, milk:`%s`, surf:`%s`, front:`%s`, cork:`%s`, defs:`%s`,
     poly:[[241,114],[234,180],[200,280],[162,378],[136,480],[133,585],[137,690],[142,796],[147,901],[153,1006],[161,1094],[330,1104],[500,1094],[517,1073],[522,968],[527,862],[532,757],[537,652],[541,547],[528,442],[498,341],[460,243],[437,140],[433,114]],
@@ -335,7 +342,7 @@ const CAP_ART = {
     back:`%s`, milk:`%s`, surf:`%s`, front:`%s`, cork:"", defs:`%s`,
     surfC:[41.5,26.2], yTop:3, yFill:9, yBot:82.5, xTop:[17,66], xBot:[20,61],
     lipR:[67.6,2.2], lipL:[30,4], mouth:[44,4] },
-  bottle: { vb:[298,812], shift:[0,0],
+  bottle: { vb:[298,812], shift:[0,0], corkUnder:true,   /* cork drawn under the glass, as in the original art */
     back:`%s`, milk:`%s`, surf:`%s`, front:`%s`, cork:`%s`,
     defs:`%s`,
     poly:[[84,52],[214,52],[219,80],[224,127],[248,169],[277,209],[292,255],[294,300],[294,745],[268,784],[219,791],[149,794],[78,791],[28,784],[6,739],[4,300],[6,249],[23,204],[53,165],[75,121],[80,80]],
@@ -350,6 +357,7 @@ const CAP_ART = {
        js(pb), js(pm), js(ps), js(pf), js(pd),
        js(mb), js(mm), js(ms), js(mf), js(md),
        js(gb2), js(gm2), js(gs2), js(gf2), js(gd2),
+       js(gb3), js(gm3), js(gs3), js(gf3), js(gd3),
        js(bb2), js(bm2), js(bs2), js(bf2), js(bc2), js(bd2),
        js(sb), js(sm_), js(ss), js(sf), js(sd),
        js(jb3), js(jm3), js(js3), js(jf3), js(jd3),

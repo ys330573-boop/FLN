@@ -1598,9 +1598,9 @@ body.vo-lock button.nav-btn{
 .cap-art .cap-cork{transform-box:view-box;transform-origin:149px 50px;}
 .cap-art .cap-cork.off{animation:capCorkOff .95s cubic-bezier(.3,.7,.4,1) forwards;}
 .cap-art .cap-cork.on{animation:capCorkOn .8s cubic-bezier(.5,0,.3,1) forwards;}
-@keyframes capCorkOff{0%{transform:translate(0,0) rotate(0);}28%{transform:translate(14px,-120px) rotate(-30deg);}
-  100%{transform:translate(-330px,690px) rotate(-90deg);}}   /* lands on the shelf, left of the bottle */
-@keyframes capCorkOn{0%{transform:translate(-330px,690px) rotate(-90deg);}62%{transform:translate(14px,-110px) rotate(-20deg);}
+@keyframes capCorkOff{0%{transform:translate(0,0) rotate(0);}28%{transform:translate(40px,-120px) rotate(30deg);}
+  100%{transform:translate(150px,712px) rotate(90deg) scale(.88);}}   /* rests on the shelf just BEHIND the bottle, half hidden by its right side */
+@keyframes capCorkOn{0%{transform:translate(150px,712px) rotate(90deg) scale(.88);}62%{transform:translate(40px,-110px) rotate(20deg);}
   100%{transform:translate(0,0) rotate(0);}}
 .cap-fx{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:22;}
 .cap-v.cap-art.cap-hl{filter:none;}
@@ -1648,7 +1648,9 @@ body.vo-lock button.nav-btn{
    the art. The header (title band + Swiftee) and nav sit on top of it. */
 .cap-scene.full{position:absolute;left:0;top:0;width:853px;height:480px;border:none;border-radius:0;box-shadow:none;
   transform-origin:0 0;transform:scale(1.5627);z-index:0;}
-.stage:has(.cap-scene.full) .header-row{z-index:6;}
+/* shop scene: the header row must NOT form its own stacking context (z-index there trapped the speaker chip
+   under Swiftee); its children already sit above the scene (scene z0 < prompt z1 < Swiftee z40 < chip z41) */
+.stage:has(.cap-scene.full) .header-row{z-index:auto;}
 .stage:has(.cap-scene.full) .mascot-wrap{z-index:40;}
 .stage:has(> .cap-scene.full) .slide-stage,.stage:has(> .cap-scene.full) .slide-host,.stage:has(> .cap-scene.full) .cap-stage{pointer-events:none;}
 .stage:has(> .cap-scene.full) .cap-modal{pointer-events:auto;}
@@ -1670,14 +1672,55 @@ body.vo-lock button.nav-btn{
 .cap-pourview.show{opacity:1;}
 .cap-pourview .cap-v{z-index:3;}
 /* [page 11] customers walk in one by one (behind the counter/frame layer) */
-.cap-scene.fig .cap-cust{position:absolute;z-index:1;transition:transform 1.7s cubic-bezier(.3,.55,.35,1);pointer-events:none;}
-.cap-scene.fig .cap-cust img{display:block;width:100%;height:100%;transform-origin:50% 100%;}
-.cap-scene.fig .cap-cust.walking img{animation:capWalk .33s ease-in-out infinite alternate;}
-.cap-scene.fig .cap-cust.arrived img{animation:capSettle .5s cubic-bezier(.34,1.5,.6,1);}
-.cap-scene.fig .cap-cust.talking img{animation:capTalk .6s ease-in-out infinite alternate;}
+
+
+
+
+
 @keyframes capWalk{0%{transform:translateY(0) rotate(-1.6deg);}100%{transform:translateY(-16px) rotate(1.6deg);}}
 @keyframes capSettle{0%{transform:scaleY(.96);}100%{transform:scaleY(1);}}
 @keyframes capTalk{0%{transform:scale(1);}100%{transform:scale(1.02) translateY(-3px);}}
 .cap-scene.fig .cap-shop-front{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:2;pointer-events:none;}
 .cap-scene.fig .cap-v{z-index:3;} .cap-scene.fig .cap-hit{z-index:6;} .cap-scene.fig .cap-bubble{z-index:8;}
+/* [page 11] customer faces: blinking eyelids + talking lips (overlay on the flat art) */
+.cap-scene.fig .cap-cust .cap-face{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;transform-origin:50% 100%;}
 
+
+
+.cap-face .cap-lid{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);visibility:hidden;}   /* hidden between blinks (no stray lash line) */
+.cap-face.blink .cap-lid{visibility:visible;}
+.cap-face.blink .cap-lid{animation:capBlink .2s ease-in-out;}
+@keyframes capBlink{0%{transform:scaleY(0);}45%,55%{transform:scaleY(1);}100%{transform:scaleY(0);}}
+.cap-face .cap-mshut{opacity:0;}
+.cap-face.shut .cap-mshut{opacity:1;}
+/* [page 11] walk cycle is frame-driven (app.js); the body wrapper carries walk / settle / breathe / talk */
+
+
+.cap-scene.fig .cap-cust img{display:block;width:100%;height:100%;}
+.cap-scene.fig .cap-cust .cap-face{animation:none !important;}
+
+
+@keyframes capArrive{0%{transform:translateY(-4px) rotate(-2.4deg);}45%{transform:translateY(3px) rotate(1.2deg) scaleY(.985);}100%{transform:none;}}
+@keyframes capBreathe{0%,100%{transform:scale(1,1);}50%{transform:scale(1.004,1.012) translateY(-2px);}}
+@keyframes capTalk2{0%{transform:rotate(0) translateY(0);}100%{transform:rotate(-.8deg) translateY(-4px) scaleY(1.008);}}
+/* [page 11] customers: every motion is driven per frame in app.js (one animator, no CSS animations to hand off) */
+.cap-scene.fig .cap-cust{position:absolute;z-index:1;pointer-events:none;will-change:transform;backface-visibility:hidden;}
+.cap-scene.fig .cap-cust .cap-body{position:absolute;inset:0;transform-origin:50% 88%;will-change:transform;backface-visibility:hidden;}
+/* [page 11] glasses that did not fit into the full bottle stay full, a little dimmed */
+.cap-pourview .cap-v.cap-spare{opacity:.55;filter:saturate(.8);transition:opacity .5s;}
+/* [page 11] deliver: drag the full bottles to the customers */
+.cap-scene.fig .cap-v.draggable{cursor:grab;touch-action:none;z-index:4;}
+.cap-scene.fig .cap-v.dragging{cursor:grabbing;z-index:9;filter:drop-shadow(0 18px 18px rgba(0,0,0,.28));}
+.cap-scene.fig .cap-drag-hand{position:absolute;width:130px;height:130px;z-index:12;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));}
+.cap-scene.fig .cap-cust.cap-hover-cust img{filter:drop-shadow(0 0 14px rgba(56,106,246,.9));}
+.cap-scene.fig .cap-cust.cap-target-cust img{animation:capCustGlow 1s ease-in-out infinite;}
+@keyframes capCustGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,190,0,.7));}50%{filter:drop-shadow(0 0 22px rgba(255,190,0,1));}}
+.cap-scene.fig .cap-bubble.done{border-color:var(--correct);background:#E9FBEF;}
+
+/* shelf: the supplied wooden plank in perspective ("Group (1).svg" -> cap_shelf.svg): a top face seen from above
+   (back edge narrower) + the front edge. Pulled up 12px so the vessels stand on the middle of the top face. */
+.cap-shelf{height:34px;margin-top:-12px;border-radius:0;box-shadow:none;
+  background:url("assets/Images/cap_shelf.svg") center/100% 100% no-repeat;filter:drop-shadow(0 6px 6px rgba(120,80,20,.18));}
+.cap-fx.front{z-index:7;opacity:.92;}   /* stream seen through the glass jug (page 10) */
+/* number cards: incorrect cards are never removed; at the reveal they stay visible but disabled */
+.cap-opts .opt-cell.cap-off-opt{pointer-events:none;opacity:.45 !important;filter:grayscale(.6);box-shadow:none !important;transition:opacity .35s;}
