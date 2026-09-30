@@ -1730,3 +1730,6 @@ body.vo-lock button.nav-btn{
    so the frame blends into the page instead of white bands */
 html:has(.cap-scene.full), body:has(.cap-scene.full){
   background:#7E421E linear-gradient(90deg,#6E3716 0%,#874922 18%,#7E421E 50%,#874922 82%,#6E3716 100%);}
+/* boot loader: asset preload progress bar (fills as every image + clip becomes ready) */
+.boot-progress{position:absolute;left:50%;bottom:14%;width:min(320px,60vw);height:8px;transform:translateX(-50%);border-radius:6px;background:rgba(21,101,244,.15);overflow:hidden;}
+.boot-progress i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#1987FC,#1565F4);transition:width .2s ease;}

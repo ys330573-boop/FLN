@@ -6682,6 +6682,27 @@ function boot(){
     // minimum beat so the ConveGenius mark is always seen; the watchdog still caps the worst case.
     const T0 = performance.now(), MIN_MS = 1600;
     let fired = false;   // .done is the CSS fade trigger, so it must NOT double as the dedup flag
+    /* PRELOAD EVERYTHING before the game starts: every image (decoded, so it paints on its first frame) and
+       every audio clip (buffered) that any screen uses — the card's asset map + the art the code/CSS/HTML
+       name directly. The loader stays up (with a progress bar) until all of it is ready, so no scene pops in
+       or stutters later. Each item has its own timeout and errors count as done, and a 30 s watchdog still
+       guarantees the child is never stranded on the loader. The objects are kept (window._capPreloaded) so
+       the browser keeps them in memory. */
+    const PRELOAD_EXTRA = ["assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
+    const urls = new Set(PRELOAD_EXTRA);
+    (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
+      if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })(CARD.assets);
+    const keep = window._capPreloaded = [];
+    const one = (u)=> new Promise(res => { let done = false; const fin = ()=>{ if(!done){ done = true; res(); } };
+      setTimeout(fin, 12000);                                       // a slow / missing file never blocks the start
+      if(/\.(mp3|ogg|m4a)$/i.test(u)){ const a = new Audio(); a.preload = "auto"; keep.push(a);
+        a.addEventListener("canplaythrough", fin, { once: true }); a.addEventListener("error", fin, { once: true }); a.src = u; a.load(); }
+      else { const im = new Image(); keep.push(im); im.onload = ()=>{ (im.decode ? im.decode() : Promise.resolve()).then(fin, fin); }; im.onerror = fin; im.src = u; } });
+    const list = [...urls]; let loaded = 0;
+    const bar = document.createElement("div"); bar.className = "boot-progress"; bar.innerHTML = "<i></i>"; bl.appendChild(bar);
+    const fill = bar.firstChild;
+    const all = Promise.all(list.map(u => one(u).then(()=>{ loaded++; fill.style.width = (100 * loaded / list.length).toFixed(1) + "%"; })))
+      .then(()=> document.fonts && document.fonts.ready);
     const ready = ()=>{
       if(fired) return;   // load event + watchdog both land here → dedup
       fired = true;
@@ -6692,9 +6713,10 @@ function boot(){
         setTimeout(()=> bl.remove(), 450);
       }, Math.max(0, MIN_MS - (performance.now() - T0)));
     };
-    if(document.readyState === "complete") ready();
-    else window.addEventListener("load", ready);
-    setTimeout(ready, 2500);   // watchdog: never strand the child on the loader
+    // start only when the page has loaded AND every asset above is ready
+    const pageLoaded = new Promise(r => { if(document.readyState === "complete") r(); else window.addEventListener("load", r, { once: true }); });
+    Promise.all([pageLoaded, all]).then(ready, ready);
+    setTimeout(ready, 30000);   // watchdog: never strand the child on the loader
   })();
   // landing VO best-effort on first interaction too (some browsers block autoplay pre-gesture)
   window.addEventListener("pointerdown", function once(){ window.removeEventListener("pointerdown", once);
