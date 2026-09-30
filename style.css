@@ -1724,3 +1724,9 @@ body.vo-lock button.nav-btn{
 .cap-fx.front{z-index:7;opacity:.92;}   /* stream seen through the glass jug (page 10) */
 /* number cards: incorrect cards are never removed; at the reveal they stay visible but disabled */
 .cap-opts .opt-cell.cap-off-opt{pointer-events:none;opacity:.45 !important;filter:grayscale(.6);box-shadow:none !important;transition:opacity .35s;}
+/* [page 11] a delivered bottle held by the customer (it rides in .cap-body) */
+.cap-scene.fig .cap-cust .cap-v.cap-held{position:absolute;pointer-events:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.25));}
+/* [page 11] shop scene: the space around the 16:9 game (left/right or top/bottom) is the shop's wood colour,
+   so the frame blends into the page instead of white bands */
+html:has(.cap-scene.full), body:has(.cap-scene.full){
+  background:#7E421E linear-gradient(90deg,#6E3716 0%,#874922 18%,#7E421E 50%,#874922 82%,#6E3716 100%);}

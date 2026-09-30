@@ -86,6 +86,14 @@ def main():
         src = os.path.join(ROOT, "assets", "Images", "_%s.png" % n)
         Image.open(src).convert("RGB").save(os.path.join(ROOT, "assets", "Images", "cap_shop_%s.jpg" % n), quality=85, optimize=True)
         os.remove(src)
+    # order view: the village behind the counter is "ASSETE MAP/game bg.png" (supplied), with the Figma frame +
+    # counter (cap_shop_front.png) laid over it — same 1920x1080 layout, only the picture in the window changes
+    gbg = os.path.join(ROOT, "ASSETE MAP", "game bg.png")
+    if os.path.exists(gbg):
+        bg = Image.open(gbg).convert("RGB").resize((1920, 1080), Image.LANCZOS)
+        fr = Image.open(os.path.join(ROOT, "assets", "Images", "cap_shop_front.png")).convert("RGBA")
+        bg.paste(fr, (0, 0), fr)
+        bg.save(os.path.join(ROOT, "assets", "Images", "cap_shop_order.jpg"), quality=85, optimize=True)
 
     # ---- CAP_SHOP_ART (art units = Figma px, shifted so each piece starts at 0,0) ----
     ents = []

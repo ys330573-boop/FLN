@@ -5140,6 +5140,11 @@ const CAP_SHOP_FIG = {"chars": {"man": [683, 266, 339, 765], "woman": [1155, 298
    down to a ROUNDED bottom (the generated polygon had corners), is shaded like a liquid (cream edges, bright
    middle, a little shadow at the bottom) and the glass's own walls + shine are laid over it at low opacity,
    so the milk reads as INSIDE the glass. Kept outside the generated block so build_shop.py --patch keeps it. */
+/* [page 11] a FULL shop bottle is filled up to the bottom of its neck (was: only to the shoulder) — just a
+   small empty space is left near the neck */
+["shopb4", "shopb3", "shopb2"].forEach(k => { if(CAP_SHOP_ART[k]) CAP_SHOP_ART[k].yFill = 604; });
+/* the man stood a little high (his bubble touched the title banner) — he stands 42px lower */
+if(CAP_SHOP_FIG.chars.man) CAP_SHOP_FIG.chars.man[1] += 42;
 (function(){
   const G = CAP_SHOP_ART.shopglass; if(!G) return;
   const T = 668, B = 856, L0 = 742.5, R0 = 891, L1 = 767, R1 = 867, BOT = 869.5, FILL = 684;
@@ -5305,6 +5310,8 @@ function capArtVessel(kind, o){
     return out.length > 2 ? area(out) : 0; };
   const rot = (th) => { const c = Math.cos(th), sn = Math.sin(th);
     return quad.map(p => [(p[0] - O[0]) * c - (p[1] - O[1]) * sn, (p[0] - O[0]) * sn + (p[1] - O[1]) * c]); };
+  // the mouth = the outline's top edge; a tipped vessel can never hold liquid above its lowest mouth point
+  const MOUTH = quad.map((p, i) => p[1] <= A.yTop + 0.5 ? i : -1).filter(i => i >= 0);
   const TOT = area(quad), FULL = below(rot(0), (A.yFill != null ? A.yFill : A.yTop) - O[1]) / TOT;   // "full" = the art's fill line
   const loc = p => [(p[0] + sx), (p[1] + sy)];   // art units → viewBox units
   const v = { el, kind, w, h, s, x: 0, y: 0, level: o.level || 0, angle: 0, wob: 0, liquid: o.liquid || "milk",
@@ -5317,7 +5324,10 @@ function capArtVessel(kind, o){
         milk.setAttribute("transform", `translate(${m.cx} ${m.cy + (1 - L) * m.ry * 0.7}) scale(${k.toFixed(4)} ${(k * sw).toFixed(4)}) translate(${-m.cx} ${-m.cy})`);
         milk.style.opacity = Math.max(0, Math.min(1, 1 - (Math.abs(this.angle) - 55) / 30)).toFixed(3);   // tipped past sideways: the opening turns away
         surf.style.opacity = "0"; return this; }
-      const L = Math.max(0, Math.min(1, this.level)), pts = rot(this.angle * Math.PI / 180), want = L * FULL * TOT;
+      const L = Math.max(0, Math.min(1, this.level)), pts = rot(this.angle * Math.PI / 180);
+      let want = L * FULL * TOT;
+      // tipped: the surface stops at the lip (the rest has already run out) — never a slab cut off by the mouth
+      if(this.angle && MOUTH.length){ const mY = Math.max(...MOUTH.map(i => pts[i][1])); want = Math.min(want, below(pts, mY)); }
       const ys = pts.map(p => p[1]); let lo = Math.min(...ys), hi = Math.max(...ys);
       for(let i = 0; i < 22; i++){ const mid = (lo + hi) / 2; if(below(pts, mid) > want) lo = mid; else hi = mid; }
       const plane = (lo + hi) / 2;
@@ -5512,6 +5522,12 @@ function capRealPour(ctx, src, dst, o){
   const PH = [ ["move", 760], ["tip", 380], ["pour", POUR], ["stop", o.stay ? 560 : 360] ].concat(o.stay ? [] : [["home", 720]]);
   const total = PH.reduce((a, p) => a + p[1], 0);
   const d0 = o.dstFrom != null ? o.dstFrom : dst.level, d1 = o.dstTo, s0 = src.level, s1 = o.srcTo != null ? o.srcTo : 0;
+  // the destination fills from the moment the stream LANDS until the tail has fallen in — never before the
+  // milk has reached it (a tall bottle took ~0.5 s of fall that used to show as the level rising first)
+  let landT = null;
+  const fillK = (now)=>{ if(landT == null || t0 == null) return 0;
+    const end = t0 + PH.slice(0, 4).reduce((a, q) => a + q[1], 0) * 1 - PH[3][1] * 0.2;   // ~ end of the "stop" phase
+    return Math.max(0, Math.min(1, (now - landT) / Math.max(1, end - landT))); };
   let t0 = null, soundOn = false, lastDrop = 0, lastRip = 0, lastFoam = 0, fallT0 = null, tailDrops = false, clinked = false, chimed = false, tail = 0;
   // chained pours rest nearly upright and lifted CLEAR of the glass just filled (never standing in it)
   const STAY = o.high ? (a => ({ a, l: Math.max(0, Py1 + lowAt(a) - dst.y + 10) }))(A3 - dir * 25)
@@ -5534,9 +5550,9 @@ function capRealPour(ctx, src, dst, o){
       pose([lerp(F.x, tx, k), lerp(F.y, tyAt(Py0), k)], lerp(F.a, A1, k), lerp(F.l, lift, Math.min(1, k * 1.6)) + arc * Math.sin(Math.PI * k)); }
     else if(ph === "tip"){ const k = ease(p); py = Py0; pose([tx, tyAt(Py0)], lerp(A1, A2, k), lift * (1 - k)); flow = k > 0.7 ? (k - 0.7) / 0.3 : 0; }
     else if(ph === "pour"){ const k = p; py = lerp(Py0, Py1, ease(k)); pose([tx, tyAt(py)], lerp(A2, A3, ease(k)), 0); flow = 1;
-      src.level = lerp(s0, s1, k); dst.level = lerp(d0, d1, k);
+      src.level = lerp(s0, s1, k); dst.level = lerp(d0, d1, fillK(now));   // it only rises once the stream lands
       if(!soundOn){ soundOn = true; capSfxPour(POUR, d0, d1, src.liquid); } }
-    else if(ph === "stop"){ const k = ease(p); py = Py1; pose([tx, tyAt(Py1)], lerp(A3, STAY.a, k), STAY.l * k); src.level = s1; dst.level = d1; tail = k;
+    else if(ph === "stop"){ const k = ease(p); py = Py1; pose([tx, tyAt(Py1)], lerp(A3, STAY.a, k), STAY.l * k); src.level = s1; dst.level = lerp(d0, d1, fillK(now)); tail = k;
       if(!chimed && o.chime && k > 0.4){ chimed = true; capSfxFull(); } }
     else if(ph === "home"){ const k = ease(Math.min(1, p));
       // with an arc: travel back HIGH, and only drop once over its own spot (never down onto a neighbour)
@@ -5566,6 +5582,7 @@ function capRealPour(ctx, src, dst, o){
     const fell = fallT0 == null ? 0 : (now - fallT0) / 1000;
     const vis = ph === "stop" ? totalLen : Math.min(totalLen, 140 * fell + 0.5 * 2200 * fell * fell);   // gravity
     const landed = vis >= totalLen - 0.5;
+    if(landed && landT == null && width > 0.3) landT = now;
     if(width > 0.3 && totalLen > 2 && vis > 1){
       const L2 = [], R2 = [], spine = [];
       for(let k = 0; k < pts.length; k++){
@@ -5978,8 +5995,11 @@ Object.assign(SlideModules, {
         man:   { skin: "#FEA864", lip: "#FC8A4B", eyes: [[165, 110, 24, 26], [222, 113, 22, 25]], mouth: [174, 159, 56, 26], line: "#5A2A12" },
         woman: { skin: "#FE9E64", lip: "#FA8B53", eyes: [[92, 118, 30, 30], [154, 124, 24, 26]], mouth: [114, 159, 45, 28], line: "#6A2A1A" },
         boy:   { skin: "#FEA065", lip: "#F98A4D", eyes: [[115, 115, 27, 31], [173, 118, 22, 25]], mouth: [137, 153, 43, 28], line: "#5A2A12" } };
+      // after the hand-over each customer switches to the "holding the bottle" art (ASSETE MAP), placed on the same
+      // canvas so the head does not move (_tools/build_hold.py); its own face boxes keep blink + lip sync working
+      const FACE_HOLD = {"man":{"skin":"#FEAC65","lip":"#FC8A4B","eyes":[[163.9,110.0,26.1,27.6],[221.6,111.6,22.9,26.1]],"mouth":[179.7,162.1,41.1,22.9],"bottle":[163.2,239.5,70.3,180.8],"line":"#5A2A12"},"woman":{"skin":"#FDB774","lip":"#FA8B53","eyes":[[92.8,118.6,28.3,29.1],[151.9,122.7,28.3,28.3]],"mouth":[111.4,161.5,45.3,25.1],"bottle":[93.6,239.1,68.7,181.1],"line":"#6A2A1A"},"boy":{"skin":"#FEB470","lip":"#F98A4D","eyes":[[115.5,116.0,26.0,29.5],[171.0,116.0,26.0,28.6]],"mouth":[133.7,158.5,45.1,21.7],"bottle":[125.9,267.7,69.4,179.5],"line":"#5A2A12"}};
       const faceTimers = [];
-      ["man", "woman", "boy"].forEach((name, i)=>{ const F = FACE[name], [ , , w, h] = CAP_SHOP_FIG.chars[name];
+      const makeFace = (F, i, w, h)=>{
         const lid = ([x, y, ew, eh])=> `<g class="cap-lid"><ellipse cx="${x + ew / 2}" cy="${y + eh / 2 + 1}" rx="${ew / 2 + 4}" ry="${eh / 2 + 5}" fill="${F.skin}"/>` +
           `<path d="M${x - 2},${y + eh * 0.62} Q${x + ew / 2},${y + eh * 0.62 + 6} ${x + ew + 2},${y + eh * 0.62}" stroke="#2A160C" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>`;
         const [mx, my, mw, mh] = F.mouth;
@@ -5990,12 +6010,21 @@ Object.assign(SlideModules, {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("class", "cap-face"); svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
         svg.innerHTML = `<defs><filter id="cf${i}" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter></defs>` +
-          F.eyes.map(lid).join("") + shut; CUST[i].querySelector(".cap-body").appendChild(svg); CUST[i].face = svg;
-        // blink every 2.5–5.5 s, each customer on their own rhythm (sometimes a double blink)
-        const blink = ()=>{ if(!ctx.alive()) return; svg.classList.remove("blink"); void svg.getBoundingClientRect(); svg.classList.add("blink");
-          if(Math.random() < 0.18) setTimeout(()=>{ if(ctx.alive()){ svg.classList.remove("blink"); void svg.getBoundingClientRect(); svg.classList.add("blink"); } }, 260);
+          F.eyes.map(lid).join("") + shut;
+        return svg; };
+      ["man", "woman", "boy"].forEach((name, i)=>{ const F = FACE[name], [ , , w, h] = CAP_SHOP_FIG.chars[name];
+        const svg = makeFace(F, i, w, h); CUST[i].querySelector(".cap-body").appendChild(svg); CUST[i].face = svg;
+        // blink every 2.5–5.5 s, each customer on their own rhythm (sometimes a double blink) — whichever face they wear now
+        const blink = ()=>{ if(!ctx.alive()) return; const f = CUST[i].face; f.classList.remove("blink"); void f.getBoundingClientRect(); f.classList.add("blink");
+          if(Math.random() < 0.18) setTimeout(()=>{ if(ctx.alive()){ const g = CUST[i].face; g.classList.remove("blink"); void g.getBoundingClientRect(); g.classList.add("blink"); } }, 260);
           faceTimers.push(setTimeout(blink, 2500 + Math.random() * 3000)); };
         faceTimers.push(setTimeout(blink, 900 + i * 1100 + Math.random() * 800)); });
+      // preload the holding-the-bottle art so the swap is instant
+      ["man", "woman", "boy"].forEach(n => { const im = new Image(); im.src = IMG["cap_shop_" + n + "_hold"] || ("assets/Images/cap_shop_" + n + "_hold.png"); });
+      // swap customer i to the holding-the-bottle art + its face
+      const wearHold = (i)=>{ const name = ["man", "woman", "boy"][i], [ , , w, h] = CAP_SHOP_FIG.chars[name], body = CUST[i].querySelector(".cap-body");
+        body.querySelector("img").src = IMG["cap_shop_" + name + "_hold"] || ("assets/Images/cap_shop_" + name + "_hold.png");
+        const nf = makeFace(FACE_HOLD[name], i + 3, w, h); CUST[i].face.replaceWith(nf); CUST[i].face = nf; };
       // lips: while a customer speaks, flap between the painted open smile and the closed overlay (speech rhythm)
       let lipTimer = null;
       const talk = (c, on)=>{ clearTimeout(lipTimer); const f = c.face; if(!f) return;
@@ -6063,7 +6092,9 @@ Object.assign(SlideModules, {
           m.breathe += ((m.mode === "walk" || m.mode === "leave" ? 0 : 1) - m.breathe) * Math.min(1, dt * 2.5);
           const br = Math.sin(2 * Math.PI * (T + i * 0.9) / 3.4);             // slow breathing
           const tk = Math.sin(2 * Math.PI * T * 1.7);
-          const y = bob - m.breathe * 1.6 * (br + 1) / 2 - m.talk * 2.6 * (1 - Math.cos(2 * Math.PI * T * 1.7)) / 2;
+          const ct = m.catchAt ? performance.now() / 1000 - m.catchAt : 9;      // catch: a quick dip as the bottle lands
+          const dip = ct < 0.55 ? 14 * Math.sin(Math.PI * ct / 0.55) * (1 - ct / 0.55) : 0;
+          const y = bob + dip - m.breathe * 1.6 * (br + 1) / 2 - m.talk * 2.6 * (1 - Math.cos(2 * Math.PI * T * 1.7)) / 2;
           const r = m.rot - m.talk * 0.5 * tk;
           const sy = 1 + m.breathe * 0.006 * (br + 1) / 2;
           m.c.style.transform = `translate3d(${m.x.toFixed(2)}px,0,0)`;
@@ -6089,7 +6120,7 @@ Object.assign(SlideModules, {
         V[spec.key] = v; });
       const TV = d.vessels.map(s => V[s.key]).find(v => v.spec.glasses === d.target);   // the right answer
       // speech bubbles above the three customers (Figma: man in turban / woman / boy)
-      const bubbles = [{ x: 820, y: 188 }, { x: 1228, y: 236 }, { x: 1548, y: 232 }].map((p, i)=>{
+      const bubbles = [{ x: 820, y: 230 }, { x: 1228, y: 236 }, { x: 1548, y: 232 }].map((p, i)=>{
         const b = document.createElement("div"); b.className = "cap-bubble"; b.style.left = p.x + "px"; b.style.top = p.y + "px";
         b.innerHTML = `<span class="n">${d.wants[i]}</span> गिलास`; return b; });
       let phase = "intro", attempts = 0, onlyRight = false, busy = false;
@@ -6132,7 +6163,7 @@ Object.assign(SlideModules, {
             pouring = true; g.used = true; poured++; g.el.classList.remove("tappable");
             SwiftPAL.emit("count_tap", { slide_id: slide.id, phase: slide.phase, vessel: v.spec.key, n: poured });
             const last = poured >= n;
-            capRealPour(ctx, g, bv, { dir: -1, high: true, ceil: 200, chime: last, srcTo: 0, dstFrom: (poured - 1) / n, dstTo: poured / n, ms: 1400, tilt: [66, 100], dx: 36,   /* less tip, lip a little right of the mouth centre: the glass fits between the title and the bottle (no overlap) */
+            capRealPour(ctx, g, bv, { dir: -1, high: true, ceil: 200, chime: last, srcTo: 0, dstFrom: (poured - 1) / n, dstTo: poured / n, ms: 1400, tilt: [50, 100], dx: 36,   /* less tip, lip a little right of the mouth centre: the glass fits between the title and the bottle (no overlap) */
               onDone: ()=>{ pouring = false; capBadge(g, poured); capFlash(g.el, "cap-hl", 700);
                 if(last) finish(); else { const nx = nextGlass(); if(nx) capPoint(nx.el); gIdle.arm(); } } }); }; });
         ctx.say(measured.size === 0 ? A.tap_vessel : null, null, ()=>{ if(!poured && !done){ capPoint(gl[0].el); gIdle.arm(); } });
@@ -6159,24 +6190,39 @@ Object.assign(SlideModules, {
         state.masteryAttempts++; if(wrongTotal === 0) state.masteryHits++;
         const okId = wrongTotal === 0 ? A.ok : A.ok + "2";   // "शाबाश!" only when every bottle went right first time
         ctx.replayFn = ()=> ctx.say(okId);
-        ctx.say(okId, null, ()=>{ setSwMood("point"); capNavOn(); }); };
-      const deliver = (v, ci)=>{ delivered.add(v.spec.key); v.el.classList.remove("draggable", "cap-hl-loop"); custGlow(ci, false);
+        // no Next button here: once the praise has played AND every customer has walked out of the frame,
+        // the game moves on to the next screen by itself
+        ctx.say(okId, null, ()=>{ setSwMood("point");
+          const next = ()=>{ if(M.some(m => m.mode !== "gone")){ ctx.after(250, next); return; }
+            ctx.after(700, ()=> completeSlide(true)); };
+          next(); }); };
+      /* correct drop: the customer CATCHES the bottle — it flies in a short arc from where it was dropped into
+         their hands (chest height, in front of the body), they give a little catch-dip, say thanks, and walk out
+         of the frame still holding it (the bottle becomes part of the customer's body, so it moves with them). */
+      const deliver = (v, ci, dx, dy)=>{ delivered.add(v.spec.key); v.el.classList.remove("draggable", "cap-hl-loop", "dragging"); custGlow(ci, false);
         const r = custRect(ci), chip = scene.querySelector(".cap-chip." + v.spec.key); if(chip) chip.style.opacity = "0";
-        // the bottle goes onto the counter in front of that customer
-        const home = [v.x, v.y], tx = r.x + r.w / 2 - v.w / 2, ty = v.y;
-        v.el.style.transition = "transform .55s cubic-bezier(.3,1.3,.5,1)"; v.el.style.transform = `translate(${tx - home[0]}px,${ty - home[1]}px)`;
-        capFlash(v.el, "cap-ok", 1600); sfxTap(); capSfxClink();
         const bub = scene.querySelectorAll(".cap-bubble")[ci]; if(bub) bub.classList.add("done");
         SwiftPAL.emit("shop_deliver", { slide_id: slide.id, vessel: v.spec.key, customer: NAMES[ci] });
-        busy = true; CUST[ci].classList.add("talking"); talk(CUST[ci], true);
-        // the customer takes the bottle: it lifts toward them and disappears
-        ctx.after(750, ()=>{ v.el.style.transition = "transform .45s ease-in, opacity .45s ease-in";
-          v.el.style.transform = `translate(${tx - home[0]}px,${ty - home[1] - 60}px) scale(.8)`; v.el.style.opacity = "0";
-          ctx.after(480, ()=>{ v.el.style.display = "none"; }); });
-        ctx.say(A.thanks[ci], null, ()=>{ CUST[ci].classList.remove("talking"); talk(CUST[ci], false);
-          gone.add(ci); if(bub){ bub.style.transition = "opacity .35s"; bub.style.opacity = "0"; }
-          walkOut(ci);                                                         // ...and walks out of the frame
-          ctx.after(900, ()=>{ busy = false; if(delivered.size === d.vessels.length) allDone(); else pIdle.arm(); }); }); };
+        busy = true; sfxTap();
+        const BX = FACE_HOLD[NAMES[ci]].bottle, HOLD = BX[3] / v.h;          // lands exactly on the bottle painted in their hands
+        const x0 = v.x + (dx || 0), y0 = v.y + (dy || 0);                   // where it was dropped (scene px)
+        const hx = r.x + BX[0] + BX[2] / 2 - v.w * HOLD / 2, hy = r.y + BX[1];
+        v.el.style.transition = "none"; v.el.style.transformOrigin = "0 0"; v.el.style.zIndex = "9";
+        const D = 560, peak = 120; let t0 = null;
+        const fly = (now)=>{ if(!ctx.alive()) return; if(t0 == null) t0 = now;
+          const p = Math.min(1, (now - t0) / D), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+          const x = x0 + (hx - x0) * e, y = y0 + (hy - y0) * e - peak * Math.sin(Math.PI * p), sc = 1 + (HOLD - 1) * e, rot = 10 * Math.sin(Math.PI * p);
+          v.el.style.transform = `translate(${(x - v.x).toFixed(1)}px,${(y - v.y).toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+          if(p < 1){ requestAnimationFrame(fly); return; }
+          // caught: the customer changes to the "holding the bottle" art (the flying bottle becomes the painted one)
+          v.el.style.display = "none"; wearHold(ci);
+          M[ci].catchAt = performance.now() / 1000; capSfxClink();
+          CUST[ci].classList.add("talking"); talk(CUST[ci], true);
+          ctx.say(A.thanks[ci], null, ()=>{ CUST[ci].classList.remove("talking"); talk(CUST[ci], false);
+            gone.add(ci); if(bub){ bub.style.transition = "opacity .35s"; bub.style.opacity = "0"; }
+            walkOut(ci);                                                       // ...and walks out of the frame with it
+            ctx.after(900, ()=>{ busy = false; if(delivered.size === d.vessels.length) allDone(); else pIdle.arm(); }); }); };
+        requestAnimationFrame(fly); };
       const wrongDrop = (v, springBack)=>{ v.wrong = (v.wrong || 0) + 1; wrongTotal++; state.attempts = wrongTotal;
         springBack(); sfxWrongSoft(); setSwMood("tryagain"); capFlash(v.el, "cap-pulse", 1400);
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: v.wrong, vessel: v.spec.key });
@@ -6205,7 +6251,7 @@ Object.assign(SlideModules, {
             const ci = over();
             const springBack = ()=>{ v.el.style.transition = "transform .45s cubic-bezier(.3,1.4,.5,1)"; v.el.style.transform = ""; };
             if(ci === -1){ springBack(); pIdle.arm(); return; }              // dropped on nothing: just goes back
-            if(ci === wantOf(v)) deliver(v, ci); else wrongDrop(v, springBack); };
+            if(ci === wantOf(v)) deliver(v, ci, dx, dy); else wrongDrop(v, springBack); };
           v.el.addEventListener("pointermove", mv); v.el.addEventListener("pointerup", up); v.el.addEventListener("pointercancel", up);
         }); };
       const startPick = ()=>{ phase = "pick"; $("promptText").textContent = slide.ask_prompt_hi || slide.prompt_hi;
