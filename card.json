@@ -9,7 +9,7 @@
   "theme": "toybox",
   "landing_hero": {
     "kind": "image",
-    "src": "assets/Images/cap_landing_strip.png"
+    "src": "assets/Images/cap_landing_pour.jpg"
   },
   "title": {
     "hi": "कितना पानी है?",
@@ -389,7 +389,11 @@
       "vo_pt_guided": "assets/Audio/cap_pt_guided.mp3",
       "vo_pt_practice": "assets/Audio/cap_pt_practice.mp3",
       "sfx_celebrate": "assets/Audio/sfx_celebrate.mp3",
-      "sfx_pour": "assets/Audio/sfx_pour.mp3"
+      "sfx_pour": "assets/Audio/sfx_pour.mp3",
+      "sfx_play_button": "assets/Audio/sfx_play_button.mp3",
+      "sfx_next_button": "assets/Audio/sfx_next_button.mp3",
+      "sfx_fb_correct": "assets/Audio/sfx_fb_correct.mp3",
+      "sfx_fb_incorrect": "assets/Audio/sfx_fb_incorrect.mp3"
     },
     "audio_text": {
       "cap_landing": "नमस्ते दोस्त! मैं हूँ स्विफ्टी। आइए, देखते और सीखते हैं कि कौन-से बर्तन में कितना पानी है।",
@@ -711,7 +715,120 @@
       "cap_landing_strip": "assets/Images/cap_landing_strip.png",
       "cap_glass": "assets/Images/cap_glass.png",
       "cap_mug": "assets/Images/cap_mug.png",
-      "cap_cup": "assets/Images/cap_cup.png"
+      "cap_cup": "assets/Images/cap_cup.png",
+      "cap_landing_pour": "assets/Images/cap_landing_pour.jpg"
+    }
+  },
+  "gate": {
+    "img": "assets/UI/gate_peek.webp",
+    "peek": "assets/UI/gate_peek.webp",
+    "talk": "assets/UI/gate_talk.webp",
+    "rest": "assets/UI/gate_rest.webp",
+    "peek_ms": 1520,
+    "hold_ms": 450
+  },
+  "end_anim": {
+    "cols": 6,
+    "fw": 329,
+    "fh": 440,
+    "step_ms": 25,
+    "bits": "00000000000000000011110000111100000011000000000000000000000000000000000000000000000000001110000000011111000000011110000000000011111000011110000000001110000111100000110000000011000001111100000011100000011000011111111100111000000000000000000000000000000000000000000",
+    "vo": "cap_well_done",
+    "shabaash": {
+      "src": "assets/UI/cel_shabaash.webp",
+      "pre": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "word": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "post": [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    },
+    "talk": {
+      "src": "assets/UI/cel_talk.webp",
+      "open": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        15,
+        16,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    "idle": {
+      "src": "assets/UI/cel_idle.webp",
+      "loop": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
     }
   }
 }

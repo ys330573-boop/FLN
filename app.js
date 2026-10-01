@@ -1,7 +1,7 @@
 const CARD = JSON.parse(document.getElementById('cardData').textContent);
-  const AUDIO_EXT = (CARD.assets && CARD.assets.audio_ext) || "mp3";  // .mp3 (maths) / .ogg (Hindi FLN)
+  const AUDIO_EXT = (CARD.assets && CARD.assets.audio_ext) || "mp3";  // 32c-b: THE RUNG-2 HINT WAS BEING KILLED BY ITS OWN REVEAL, 1ms IN. revealOne() opened with play(audioFor(slide,'reveal')) while dragWrong(slide) had started hint2 in the SAME event, and play() begins with stopAudio() -- so the longest, most informative clip in the lesson (the one that NAMES the order) was cut at ~1ms of 5931-8651ms, measured on all four parts of HIKGH04_L01_S02. A child who got it wrong twice heard nothing of the help authored for exactly that moment. It also spoke 'यह सही क्रम है।' before anything was placed -- the same premature-reveal defect 25d removed from MATCH_DRAG_N. Now guarded: `if(!isPlaying) play(reveal)`, so a revealOne() reached in silence still speaks it, and the reveal line is not lost either way -- celebrateThenAdvance(slide, revealed=true) speaks it when the child then places the tile. Applied to BOTH copies (SEQUENCE_DRAG + MATCH_GENDER_PAIRS hold byte-identical revealOne()s; leaving one copy of a copy-pasted bug is how 31o's missing clearHold survived in these same two mechanics). SCOPE MEASURED before landing, not claimed: _tools/prove_scope.py --type SEQUENCE_DRAG MATCH_GENDER_PAIRS -> 6 of 33 bundles can reach it, 27 provably cannot. Patch C of vo_no_cut_standard.py was NOT applied: 32b nocut had already unified the reveal path into one celebrateThenAdvance(slide, revealed) behind a single word-wait, which is C's intent in a better shape -- the script now recognises that instead of refusing the whole run and blocking this BLOCKING patch behind it. · 32d: max_attempts fallback ||3 -> ||2 in 10 sites. The engine's own default contradicted the house value and would have silently handed a 3rd attempt with an empty third rung to any new game that omitted the field -- the defect closed fleet-wide on 08-03. Inert today (all 33 cards set it explicitly); this closes the door, it does not change a shipping game. · .mp3 (maths) / .ogg (Hindi FLN)
   const IMG_EXT   = (CARD.assets && CARD.assets.img_ext)   || "png";  // .png (working) / .webp (delivered/FLN) — twin of AUDIO_EXT (fixes A3)
-  const ENGINE_VERSION = "2026.07.28t-r4-unified";  // 28t: A TAP DURING FEEDBACK AUDIO COUNTS INSTEAD OF VANISHING. The tap gate ignored a tap while ANY VO sounded — correct for the PROMPT (24a added it to stop spam-tapping), wrong for the hint clip that plays right after a wrong answer: a child who tapped again while hint1 was still speaking had that attempt SILENTLY DISCARDED. They tapped twice, the engine counted once, terminal help never came — the 2-attempt ladder defeated through a side door, on every tap mechanic in the fleet. `_fb` now marks feedback audio specifically: during it a tap is accepted and interrupts the clip (stopAudio first, so never two voices); during the prompt, taps are still ignored. Cleared on every ladder exit so it cannot leak into later prompt audio. Verified: attempts go 1 -> 2 on the second tap and terminal help fires. I could NOT reproduce the exact audio-mid-flight instant headless (clips end in <60ms there), so that specific moment rests on the 3-line gate being reviewable rather than on a measurement — stated plainly rather than claimed. PROCESS NOTE, because Yasir called out the churn and he was right: 28p-28s were four bumps in an hour and TWO of them existed only to fix regressions from the previous one (SORT_SHAPE misplacement, the stranded red state). The cost was never batching, it was shipping before verifying. This bump was made with the engine edited, the monolith regenerated and the game rebuilt at the OLD stamp, behaviour checked, and the version moved only once at the end — which is how the next ones should go.  28s: THE RED NEVER SETTLED TO GREY — my own 28r bug, caught by behavioural verification 20 minutes after writing it. The 700ms flash->lock timer opened with `if(state.helpShown) return;`, inherited from the code it replaced. But at the 2nd wrong, terminal help fires in the SAME beat, so helpShown was already true and the swap was skipped: measured on HI01H01_L02_S05 G1, the card sat RED and untappable at +1.7s and would have stayed that way. That is precisely the stuck-red-ring bug I fixed in 28d and have now reintroduced in a new form. The guard was correct for the OLD behaviour (do not UNBLOCK a card once terminal help owns the board) and wrong for the new one (swap the flash for the lock), and I copied it without re-deriving whether it still applied. Removed from all three paths; only the 'this cell turned out to be the answer' check remains. THE LESSON, written down for the third time: a guard inherited from replaced code must be re-justified against the new behaviour, not carried over.  28r: BOTH WRONG ATTEMPTS FLASH RED FIRST; ONLY THE SECOND ALSO DISABLES. Yasir 2026-07-28: "on second wrong attempt as well we are supposed to give the red glow first and then disable." He is right and 28p was half a fix: it restored red on the 1st wrong but sent the 2nd straight to the grey lock, so the child lost the 'that is not it' signal at the exact moment they most needed it. The red IS the feedback; the grey lock is an EXTRA consequence the 2nd attempt earns. Sequence now, every wrong tap: red buzz for 700ms -> then (2nd only) settle to grey and untappable. SAME FIX IN TWO MORE MECHANICS, where it turned out to be worse: SENTENCE_FIND and TAP_ALL_WITH_SOUND locked their chip PERMANENTLY ON THE FIRST WRONG TAP (.crossed / .nope, both pointer-events:none), so 27a's ruling 'a wrong card must NOT lock on the first miss' had never reached them at all — a child lost a chip for one miss on those slides while every other mechanic gave them a retry. All three paths now share the same flash-then-lock shape. Checked the whole class rather than only the site Yasir named: those were the only three places a wrong tap adds a lock class.  28q: FIXES MY OWN 28p BUG BEFORE IT SHIPPED. The SORT_GENDER terminal rung landed in SORT_SHAPE — I applied it with a first-occurrence string replace, and the `dragWrong(slide); // buzz + Swiftie...` + answer_wrong pair it keyed on is IDENTICAL in both modules, so it went to the wrong one. SORT_SHAPE then referenced `_sgWrong`, which does not exist in its scope: a ReferenceError on any wrong drop, on MTKGA03_L01_S01 P1/P2. Caught by BEHAVIOURAL verification (three real wrong drops on a SORT_GENDER slide showed attempts climbing 1-2-3 with no glow, no dim, no hand) — a syntax check and a rebuild both passed it, and static checks always would have. Nothing shipped: the dists and zips were still on 28o. Moved to SORT_GENDER and addressed via the module BLOCK rather than a global first-match, so the same class of mistake cannot repeat. LESSON, again: when two modules share boilerplate, never target it with an unanchored replace — extract the module's own text first, as the MEET_LETTER edit in 28p did.  28p (batch, 8 items, closes 8 requests): (1) THE HINT BULB IS REMOVED ENTIRELY — Yasir 2026-07-28 "we do not need that idea glow button at all". It appeared WITH A GLOW on the FIRST wrong (the add was above the ladder branch, not inside it) and was never phase-gated — 10 of 10 show-sites ungated — so it also offered help in round 3; on several mechanics TAPPING it flashed the answer ghost, i.e. reveal-on-demand with zero attempts. Hidden via CSS rather than deleting the node, because $("hintBtn") is dereferenced unguarded at all 10 sites and removing it would throw on the first wrong answer in every mechanic. (2) 1st WRONG IS RED AGAIN, ON A LIVE CARD — his ruling, and my own 28e over-correction: 28e said a DISABLED option is never red but implemented it on `.crossed`, the class used for BOTH the momentary buzz and the permanent lock, so it bleached the first-wrong flash too and left a grey disable with no red anywhere. Split into `.wrong-flash` (red, glowing, STILL TAPPABLE, removed after 700ms) and `.crossed` (28e's grey lock, from attempt 2). (3) LANDING HERO CAN GROW — raised THREE times (Yasir + the SME on both games) and also mine: 28i's max-height:180px cap was measured to be exactly the overflow boundary, because .sg-content.has-hero's 206px bottom margin shifted the block up so growth ate the title's headroom instead of the dead space below. Margin 206->120 and cap 180->250. MEASURED at Yasir's own 1919x977: title 7.7px -> 18px below the card edge, hero 166 -> 230px tall, dead space hero->button 92 -> 16px. (4) SORT_GENDER FINALLY HAS A TERMINAL RUNG — it was the sixth terminal-help path with NONE: buzz + try_again forever, no ceiling, no glow, no dim, no hand, so a child could be wrong indefinitely and a guided sort could never earn the hand. Counted PER TILE (a slide-wide streak resets on any correct drop) and routed through the shared terminalHold/travelNudge contract. (5) STORY_SCENE fits OUTSIDE the tutorial too — 27h was scoped to .stage.tut, so on test phases the caption sat behind the आगे pill (measured: 19px under a 136px-wide button on 5 slides of HIKGH07_L01_S02). (6) the tut teach picture may use the room it has (261px of art in a 581px card with 607px of width unused) without reintroducing 27h's overflow. (7) MEET_LETTER: the hardcoded '→' is gone (markup, so no card could remove it) and the auto demo no longer plants a hand on a single-letter slide — "points at the obvious and adds nothing". MEET_SHAPE/NUMBER/GENDER keep their arrows; he named MEET_LETTER. (8) bare .intro-letter glyph tiles are box-free like the pictures beside them.  STILL OPEN, deliberately not rushed into this bump: the other TWO MEET_LETTER asks — a word taught for both sounds (जल = ज + ल) must DISPLAY both letters, and the hand must sync to the glyph being spoken. The existing data.pair mode is not a substitute (it renders 1536px inside 1329px), so it needs real layout work and measurement; item (7) deliberately left no guessed 'is this two-letter' condition behind. Also still open: DEMO_COUNT before->after (a new capability), HIKGH07's baked-in scene backgrounds (art regen), Pehli's 11 dead .webp paths (card fix).  28o: TWO DRAG RULINGS FROM YASIR (2026-07-28). (1) THE HAND SHOWS THE MOVE. "on drag, the hand nudge guides the student precisely... move the hand nudge from the question card to the answer card." A static hand on the tile says 'this one' but never says WHERE it goes — which on a matching slide is the actual thing the child must work out. travelNudge() now slides the hand from the tile to its correct zone on a loop; terminalHold() takes an optional destination, so all three drag modules (MATCH_DRAG_N, MATCH_GENDER_PAIRS, SEQUENCE_DRAG) demonstrate the gesture while every TAP mechanic passes no destination and keeps the static point. Same phase rule as handOnAnswer (tutorial/guided only, never round 3), and the animation is stored on state so stopNudge cancels it — an infinite animation left running would follow the child into the next slide. Falls back to a static point without .animate(). (2) EVERY CARD THE SAME SIZE. "all the cards, both question and answer cards are to be of the same size in matching/dragging." They were three sizes: .dd-zone 150, .dd-tile 104, .dd-tile.pic-tile 134 — the thing you drag was smaller than the thing you drop onto. Unified on 150 (the largest, so nothing shrinks and the drag target gets easier). Deliberately excluded: .dd-tile.snapped (the 62px badge parked inside a filled zone — not a card) and .dd-stage.seq-words (word tiles size to their text; equal squares would clip long words, and sentence-building is not the matching mechanic).  28n: A NO-STIMULUS QUESTION RECLAIMS THE EMPTY SPACE (CSS only). After 28m stripped the 🔊 chip from the four audio-only stimuli, those slides looked half-empty and I flagged it to Yasir as a centring problem; he asked for a centring pass. I MEASURED FIRST and my flag was WRONG — the cells were already centred exactly (142px above, 142px below a 210px row in a 494px grid; .opt-grid already carries align-items:center + align-content:center), so a centring change would have done nothing. The real problem was that the tiles kept their with-a-stimulus size while the stimulus slot stood empty, so the space read as a void. The tiles now grow into it (min-height 210->300, glyph 96->112, pic 134->158), which also gives a KG thumb a bigger target. Scoped with :has() to rows WITHOUT a .stimulus-pic and excluding .stage.tut, so every slide that has a stimulus — and all the 27h tutorial-fit work — is untouched. Also RULED this round: the Swiftie header volume chip is template furniture and STAYS (Yasir 2026-07-28), which closes the flag 28m left open; 'no vol button' means the stimulus chips, not the shell's replay control.  28m: NO VOLUME BUTTON ANYWHERE. Yasir 2026-07-28: "we use vol button nowhere. if nothing then we keep question only." This closes the flag 28c deliberately left open: four stimuli have NO image (TAP_SHAPE_BY_NAME, TAP_LETTER_BY_SOUND, MASTERY_SILENT_PICK sound_to_letter + name_to_shape), so stripping their 🔊 + 'नाम सुनो'/'ध्वनि सुनो' chip looked like it would leave a blank card and I asked rather than guessed. The ruling is that a slide with nothing to show shows the QUESTION only — stimulus is now null on all four. The chip was ALSO the only way to re-hear the sound, so the FUNCTION moved to the header replay (state.replayAudio, set AFTER mount so mountTapOptions cannot overwrite it) rather than being deleted along with the affordance — a KG child must be able to hear the sound again. The 🔊 glyph also came off the three read-aloud BUTTONS (SENTENCE_READ 'पूरा पढ़ो', SENTENCE_SOUND and SENTENCE_PICK_PIC 'फिर सुनो'); those keep the button and their Hindi text, so nothing loses function there either. Touches 4 games: HI01H04_L02_S02 (8 slides), HI01H06_L01_S01 (7), HIKGH02_L01_S03_P2 (8), MTKGA03_L01_S01 (2). NOT TOUCHED, flagged for a ruling: the HEADER replay chip and the LANDING .sg-vo chip are still speaker icons. I left them because they are the only remaining way to re-hear a prompt, and because Yasir and the SME both reviewed screenshots showing the header chip today without flagging it — but if "nowhere" includes those, they need a text affordance first, not deletion.  28l: HARD RULE — NO QUESTION IS EVER SOLVED AUTOMATICALLY IN A TEST PHASE. Yasir 2026-07-28: "regardless of what interaction, as long as we in guided or practice, no question will be solved automatically." Only a tutorial slide may finish a question itself (there it is a demonstration). Two mechanics were still answering FOR the child on the last wrong attempt: PATTERN_BUILD and SEQUENCE_COMPLETE both ran `setTimeout(placeCorrect, 1000)`, so the engine filled the blank in and moved on — the child never answered. Yasir caught SEQUENCE_COMPLETE live on HIKGH04_L02_S02's build slides. Both now glow the correct tray tile, disable the rest, show the hand (phase-gated, so round 3 still gets none) and WAIT. MATCH_GENDER_PAIRS and SEQUENCE_DRAG already held the glow (25d) but never dimmed the distractors or pointed, so they route through the same helper now. The point of this bump is that the rule lives in ONE place — maySolveFor()/terminalHold()/clearHold() — because it has now drifted three times: 25d fixed two mechanics and left two auto-solving and two half-done, and each was re-reported separately (SORT_GENDER 06:32, SEQUENCE_COMPLETE 13:32) after I had already called the class closed. A new mechanic inherits the contract instead of re-deciding it. clearHold() releases the tray when the child does place it, or the disabled tiles would stay dead for the remaining blanks. STILL OPEN and deliberately not in this bump: SORT_GENDER has no terminal rung at all (a 6th path, different structure — bins not tiles); it does not auto-solve, it just gives audio only, so it is queued rather than rushed into this one.  28k: OPTIONAL MIDDLE HINT RUNG (`hint2`). The SME on Pehli Dhwani specified a THREE-rung ladder — rung 1 'फिर से कोशिश कीजिए।', rung 2 'शब्द को बोलकर देखिए, और पहली ध्वनि चुनिए।' (a strategy, NOT the answer), rung 3 the answer. Our ladder had two rungs, so rung 2 spoke `hint`, the level that names the answer; there was nowhere to put a strategy line. Six rung-2 sites (mountTapOptions, dragWrong, wrongClip, SORT, SENTENCE_FIND, TAP_ALL_WITH_SOUND) now call midHint(), which prefers `hint2` and falls back to `hint` — so a card that authors no hint2 behaves EXACTLY as before and the rest of the fleet keeps two rungs. CONFLICT, RAISED AND RULED: a third rung means the answer arrives on the 3rd wrong, so that deck's max_attempts goes to 3 and the card blocks after the 3rd attempt — which contradicts Yasir's standing 'blocks only after the 2nd wrong attempt'. I flagged it; he ruled 2026-07-28 'implement as per written by the SME'. It is therefore DECK-SCOPED to HIKGH02_L02_S01 only. Do not raise max_attempts or author hint2 on another game without the same explicit ask on that game's deck.  28j: THE GUIDING HAND, FIXED AT THE CHOKE POINT INSTEAD OF PER MECHANIC. Yasir found a hand in round 3 again (MTKGA01_L04_S01 P5, a COUNT_TAP practice slide) after I had gated handOnAnswer in 28f and startNudge in 28i. Cause: ~25 sites call pointNudgeAt DIRECTLY and bypassed both gates. Gating call sites one at a time is what produced three rounds of 'fixed'; the rule now lives in pointNudgeAt itself, default TUTORIAL ONLY, so every existing raw site becomes correct by construction and any future mechanic inherits it. handOnAnswer passes earned=true for terminal help, the one case Yasir allows in guided because two failed attempts paid for it. Round 3 gets no hand by ANY route. ALSO FIXED, both regressions from my own 28h placement change: (a) EMPTY SKY — the 'flip above if it would run off the stage' clamp put the hand 100-395px above a tall TAP_IN_SCENE hotspot, pointing at open air on 4 of 6 guided slides of HI01H07_L01_S02. Flipping is simply wrong for a hand that points UP; it now clamps INSIDE the stage instead, worst case overlapping the target's lower edge as it always used to. (b) A LABEL BELOW THE ANCHOR — anchoring to the passed element's bottom only helps if that element contains the text, and GENDER_INTRO passes the cat IMAGE while .cat-word sits below it, so 'below the image' landed on the word (56% covered on T3; 100% before 28h). Rather than teach each mechanic a smarter anchor, placement now MEASURES real text rects in the tile and drops below the lowest one that shares the column. Also: check_system's 'hand on answer, all phases' marker was a FALSE GREEN asserting the opposite of the live rule — renamed and re-keyed to the 28j choke point.  28i: WHY THE ROUND-3 HAND KEPT COMING BACK, plus four fleet-wide gaps. (1) THE ROUND-3 HAND BAN IS NOW ENGINE-ENFORCED. I reported this fixed three times and Yasir kept seeing it, because 28f only closed the answer/tap paths (handOnAnswer + HAND_PHASES) while the drag/count PROGRESS cue reaches the hand through startNudge, whose only round-3 guard was the CARD's scaffold_rules.nudge_timeout_ms — and 22 of 27 cards set `independent: 8000` (two also set practice). So on any drag or count slide in round 3, eight seconds of hesitation still produced a hand, in nearly every game in the fleet. Card data cannot be the guard for a hard rule: startNudge now refuses outside TUTORIAL and ignores a card that arms round 3. Tutorial-only, not {tutorial,guided}: the idle hand is UN-EARNED (a mount timer), and Yasir's rule is that any visual hint waits for 2 failed attempts — guided still gets its hand, but only through handOnAnswer at terminal help, which is where it is earned. Verified with a real 10.6s untouched wait on round-3 drag slides (P1/P3 SORT_GENDER, card arming practice+independent at 8000): no hand. (2) THE SAME FIX, ONE COPY OF IT — startNudge carried its own duplicate of the old positioning formula, so 28h's 'hand sits below the tile, never on its word' never reached a single progress cue; it delegates to pointNudgeAt now, so placement cannot drift between the two paths again. (3) SENTENCE_FIND SPEAKS THE TARGET WORD, NOT ALL FOUR (Yasir): the slide says 'जो शब्द सुनो, उस पर टैप करो।' and the engine read every option aloud, so nothing identified the word to tap — the task was unanswerable by design. Target-only is the default; the word-by-word read is opt-in via data.read_along:true. This REVERSES an SME ask from that same deck (21c flag #5) — flagged for Yasir, not silently dropped. Its trailing startNudge(slide,_tgt) — a pre-attempt hand on the answer, the third form 28f missed — is gone. (4) THE TWO-HINT LADDER REACHES THE PRODUCE MECHANICS. Yasir's 2026-07-25 'two hints everywhere, every game, every interaction type' landed for taps (24a) and drags (25a), but MAKE_SET / MAKE_EQUAL / BUILD_TO_NUMBER / TAP_ALL_WITH_SOUND grade their own wrong answers and inherited neither — and BUILD_TO_NUMBER passed `null`, i.e. its wrong-answer feedback was SILENT, text-only, to a child who cannot read. All four now call wrongClip(), one grader in one place; with no hint1/hint authored it returns the same try_again as before, so no card regresses. MAKE_NUMBER and COMBINE_COUNT reach completeSlide(true) only — no wrong path exists, so demanding a ladder was a checker false positive and they are excluded by name. (5) LANDING IMAGE HERO IS SIZED AT ALL — `.sg-hero img{height:118px}` has never matched anything (the element is .sg-art), so an image hero rendered at natural size: 1244x695 in a 1069x438 card, shoving the landing title to top:-106px, off screen. Same selector mismatch 16e fixed for count hands and left for images. (6) WIDTH-FIT MEASURES INK, NOT ADVANCE — the SME's original 'make the words fit inside the box', still unfixed. Devanagari paints wider than it advances, and the real bug was the BRANCH: a word whose advance fit never entered the shrink path, so its ink overflow was never considered (यह 66 ink vs 59 box, बकरी 138/132, एक 91/85, कहाँ 184/180 — all four had fitting advances). Fits whichever actually paints wider, so Latin/numerals are untouched. Also: engine_guard now WARNS (never blocks) when another session holds the engine lock — the stale-local-copy trap that produced a request against already-fixed 28g code.  28h: TWO FIXES Yasir named directly. (1) THE HAND NO LONGER COVERS THE WORD — pointNudgeAt planted the fingertip 56 design-px INSIDE the tile's bottom edge, which is fine on a bare picture tile (its only caller for years) and fatal the moment 28f started pointing it at an .opt-cell, whose bottom strip IS the label: measured 92x27px of the answer's word hidden under the hand, i.e. we glowed the answer and then covered it. The hand now starts just past the tile's bottom edge, clamped to flip ABOVE the tile if that would run off the stage foot rather than being silently clipped. Verified by measurement AND by looking: G1 hand t646 vs tile b641, label b627, vertical overlap 0, still centred, still tappable. (2) ONE GATE PER ROUND, NOT PER PHASE NAME — 28a made `independent` an alias of practice to fix a MISSING round-3 gate, and thereby created a DUPLICATE one: a card using both names crossed two 'different phases' and showed the identical 'अब आपकी बारी!' gate twice, back to back. 7 of 27 cards use both. Gates now dedupe on a ROUND id (PHASE_ROUND), so that pair collapses to one and any unmapped phase (mastery, or a future name) fails safe to NO gate — which is the ruling: three rounds, no round 4. Also closed as NOT-A-DEFECT: a report that the round-3 hand ban was still broken. Measured on P1 at 28h — terminal help fires, answer glows, stays tappable, handShown FALSE. 28f had already fixed it; the report read a stale source. The raw pointNudgeAt calls left in MEET_ORDER/COMPARE_TWO/the demo step chain are auto-DEMO teaching animations, not hints, and stay.  28g: 'going back from last screen gets swiftie stuck' — clearHost() dropped body.is-end but never removed .show from #endScreen, so the celebration layer (cheering Swiftie + 'बहुत बढ़िया!') stayed overlaid on the slide you navigated back to, covering the middle option. I had hit this myself and mis-triaged it as low severity ('a child cannot go back from celebration') — but REVIEW uses the dev nav, so it hit every review pass, and it also caused 60 phantom overlap findings in my audit sweep. Deliberately scoped to the end screen only: also clearing stage.blurred/gating here would un-blur the gray phase gate mid-flight, since mountSlide runs inside the gate's callback.  28f: ONE RULE FOR THE GUIDING HAND, in one place (handOnAnswer()) — Yasir 2026-07-28, two rulings merged: tutorial may show the hand (teaching); guided ONLY after 2 failed attempts; round 3 (practice / independent / mastery) NEVER, 'regardless of whatever name we save it by'. Also DELETED the idle/mount hand on answerable slides: startNudge fired at nudge_timeout_ms (guided 5000ms) — right after the prompt VO — pointing at the stimulus before the child had tried anything. A visual hint is now earned only by 2 failed attempts. All 5 terminal-help paths route through handOnAnswer, so the phase rule cannot drift per-mechanic again (27d put the hand in 1 of 5 and I reported it as 'every phase'). Demo/progress nudges inside the count and drag mechanics are untouched — teaching animations, not hints.  28e: (1) A DISABLED OPTION IS NEVER RED — .crossed / .sentence-word.crossed / .tap-all-item.nope now match the plain grey .faded lock. Two looks for one meaning was the complaint; this supersedes the red ring 27a introduced. 1st-wrong buzz/shake unaffected (28d unblocks that card after 700ms so it never rests as disabled). (2) TAP_IN_SCENE no longer PULSES the correct hotspot 6s after mount — that handed the answer over before the child tried (measured: identical at t=1s, only .correct-hot pulsing at t=7s). The glow now comes only from terminal help, where distractors also fade. (3) FIXED MY OWN 28a REGRESSION: the new SEQUENCE_COMPLETE picture stimulus pushed .seq-tray under the आगे pill (bottom ~30% of two tiles a dead zone on all 4 build slides). .seq-stage now top-anchors, tightens its gap and reserves the pill's lane.  NOT DONE, needs care: the fleet-default 'remove handnudge on idle' ruling — startNudge is also used by drag/count mechanics for PROGRESS cues, so disarming it globally would remove useful guidance, not just idle hints. Filed.  28d (three REGRESSIONS of my own, re-reported by Yasir): (1) the stuck RED RING — the 700ms unblock was guarded by `if(!state.locked)`, but state.locked is also set TRANSIENTLY while reveal_seq narrates, so a 700ms landing in that window skipped the removal and .crossed stayed FOREVER (permanent red ring, permanently dead card). Now keyed off this cell only (.correct / state.helpShown). I had found that same state.locked trap while fixing the idle-VO ticker, documented it there, and failed to propagate it back. (2) HAND NUDGE only existed on ONE of FIVE terminal-help paths — 27d added it to mountTapOptions.revealAnswer and I reported it as 'every phase', but practice/independent rounds are drags / sentence-finds / scene-taps. Added to MATCH_DRAG_N.terminalHelp, SENTENCE_FIND and TAP_IN_SCENE, each with stopNudge() first so the flow nudge cannot drag the hand off the answer. (3) STORY_SCENE picture drifted via `storyKenBurns` — killed engine-wide; a teaching picture must not move under a KG child. Root cause common to (1) and (2): verified narrowly, reported broadly.  28c: STORY_QUESTION stimulus is the IMAGE ONLY — the 🔊 glyph and the 'प्रश्न सुनो' label were hardcoded in the module (d.stim_hi only reworded the label), so no card could remove them. Tapping the picture still replays the question and the header chip still works: the affordance is gone, not the function. No thumb (mastery / hide_recall) now passes a null stimulus instead of rendering an empty card. The four AUDIO-ONLY chips (TAP_SHAPE_BY_NAME, TAP_LETTER_BY_SOUND, MASTERY_SILENT_PICK x2) are untouched — they have no image, so stripping them leaves a blank card; flagged for a ruling.  28b: PHASE GATE BACKGROUND GOES GRAY (Yasir + Figma ref). Scrim 35% -> rgba(64,64,70,.58) and backdrop-filter gains grayscale(.9) brightness(.92), so a colourful KG scene actually DESATURATES instead of merely dimming; grayscale rides the BACKDROP so the peeking Swiftie and the headline keep full colour. Also kills `body.is-start .phase-gate{background: transparent !important}` — the FIRST gate (landing->tutorial) had NO scrim at all, open as flag S2-a; this closes it. Verified by SCREENSHOTTING the gate (capture_pages cannot — it is a ~2s transient) on both the mid-lesson and is-start paths.  28a [code tags read `[27j]` — written before midnight, engine_bump rolled the date; grep [27j] for these six changes] (batched wave fixes, 6 module changes, all ADDITIVE — a card that does not opt in behaves exactly as before): SEQUENCE_COMPLETE takes an opt-in picture stimulus (d.img/picture/emoji) so build-the-word slides can show the thing being spelled; TAP_IN_SCENE gains the two-rung hint ladder + terminal help that GLOWS the target instead of solving it, and .tis-hot is now VISIBLE on every candidate (it was border:none/transparent, so a child had nothing to aim at); mountTapOptions finally speaks audio.correct after the tapped word (12 STORY_QUESTION slides were silent); MATCH_DRAG_N drop-zones speak on tap, reusing pair.match_audio; SENTENCE_FIND: rung 1 now plays hint1 (it played try_again), `hint` is spoken as the terminal line, and terminal help NO LONGER locks+completes the slide — RULE-9 breach, it was solving the answer for the child; PHASE_GATE_TITLE/VO gain `independent` as an ALIAS of practice — three rounds, not four: round 3 is named practice OR independent and a card using the latter got no round-3 gate. `mastery` is deliberately NOT gated (no round 4), so vo_pt_mastery stays unplayed and that verify_bundle warn is a checker artifact. Also: _tools/check_system.py now verifies the ENGINE READS hint1/hint per mechanic, closing a false green where authored hints could never play.  27h: F1 tutorial-frame fit — tall teach modules (STORY_SCENE .story-frame 900x432, GENDER_INTRO .gender-cat 430px) overflowed the 318px .tut-content and, because it is justify-content:center, split the overflow BOTH ways: heading 78-100% covered above, caption/word-chip behind the आगे pill below. Regression from the 25e/27c change that shortened every tut-card 87px. Now the picture SHRINKS (what the SME asked) instead of pushing the layout apart; scoped to .stage.tut so guided/practice are untouched. Cleared 6 requests across 4 games. · F2 shared baseline — centerInkGlyph ink-centred EACH glyph, so a word with an above-line matra sat up to 23px lower than a plain word inside one row (the SME's 'text alignment is not right', 7 of 17 pages). A row with >1 .ink-glyph now uses constant FONT metrics; a lone showcase glyph keeps ink-centring. Both verified by LOOKING at headless captures, not only by measuring.  ENGINE STAMP — the receipt (verify_bundle.py) asserts a built game carries THIS exact string; a stale/divergent engine → hard FAIL, so the wrong engine can never silently ship. BUMP IN LOCKSTEP with engine_guard.py + swiftpal_build.py + unified_build.py + verify_bundle.py on EVERY engine change (r2: drag/pattern feedback standard + PHASE_TRANSITION; r3c: off-white toybox bg, dual-coded counting options numeral+hand, full-body landing mascot, true-corner square/rect; r3d: Swiftie mouth-stops-when-silent (still frame), Arabic display numerals 1/2/3, landing shows full 1..n hand row, volume-chip aligned in header pill); r4: additive number-sequence path modules MEET_SEQUENCE + SEQUENCE_COMPLETE + SEQUENCE_NEXT (MTKGA01_L02_S04 "completes a number sequence within 20") — purely additive, existing lessons untouched. r4-landing (16c): landing recomposed to match reference — small corner mascot (230px, was 300), content re-centered (dropped padding-left:300 right-shift hack), VO chip moved from top-right to the mascot's shoulder (left:150/bottom:34, 58px). CSS-only; supersedes the 16b right-shift overlap fix.; 16d: TRUNK MERGE — unified the two diverged engine lines at base 12d: the 15e mechanics trunk (CONSERVE_COUNT + COUNT_ACTION + COUNT_DRAG_MATCH + ORDER_BY_WEIGHT + PICK_SET_BY_NUMBER, per_row/dense count-set grouping, bigNumCell numeral-only test options, title_first landing order) + the 16c r4 design trunk (boot loader, peek phase-transition, concept-strip landing, DS header, flat CTAs, sunburst/star-burst celebration, recomposed corner-mascot landing). Nothing dropped from either line. 16e: landing count-hero hand sizing FIXED — the .sg-hero sizing selectors never matched (template uses .sg-art); hands rendered natural-size, overflowing the card (title pushed outside the box, numeral-1 hidden behind the mascot — user-visible on MTKGA01_L02_S01). Retargeted to .sg-art .sg-hand/.sg-hand-cell/.sg-hand-num (112px; image-hero landings untouched). CSS-only. 16f: INTRO strip fit-or-wrap — old sizing assumed 1220px + a -100px breakout and punched wide strips (10 numerals, 7+ letters) through the tut-frame borders; now sized to the frame (960) and wrapping into two balanced rows below the 110px touch floor. Fixes MTKGA01_L02_S01 s00 (user-caught live) AND the HIKGH04_P2 letter-row daylight item. 21a (20a Figma-polish port): production expression heads (setSwMood sw_head_<expr>[_anim].webp + mascot.webp fallback), body-level start/end edge-layers + full-viewport dark blur phase-gate, inline SVG audio/hint/sg-vo chips, nudge_hand_new/nudge_tap_v2, SORT-01 opt-in one-by-one tray reveal + speak-on-match, INTRO picture mode (data.pics) + auto-INTRO instruction VO, transition-audio AUDIO_EXT fix, landing shape-tiles, self-disabling browser-TTS fallback for missing clips (ruled SHIP), F2F7FA ground + red/green-reserved sweep; merged WITH the live in-word-matra colouring + reveal_seq _sayThen strict-VO + MATCH_DRAG_N md-word WIP (nothing reverted). 21c (consolidated wave bump): +COMBINE_COUNT (Put-Together: drag group B onto A, merge to one row, tap-count total ≤10) and +TRACE_SHAPE (finger-trace the outline — a PRODUCE gesture; forgiving corridor, ~80% coverage → success, idle demo, upright/sharp/fixed-colour, no score/timer); MATCH_DRAG_N tap→LETTER (tap_audio) / correct-drop→WORD (match_audio) split (gated+fallback, siblings untouched); SEQUENCE_DRAG word-mode tap-a-tile→speak-word + glow-order + whole-sentence-read-at-end, SENTENCE_READ/SENTENCE_FIND word-by-word read-along hand-nudge (word-mode gated; letter-sequence untouched); landing gate cursor:default (hand-pointer on buttons only). All additive. 24a (HI01H08-fork port + N7-N10 audit bump): AUDIO GEN-TOKEN (_audioGen) — stopAudio/play supersede pattern kills echo/double-voice, orphaned clips, stale fallback-timer resume + cancelled-TTS resume (N7a); replay chips get navUnlock + guards (isPlaying / revealing / demoRunning / ownsAudio-without-replay) so फिर-सुनो mid-VO can no longer brick gated teach slides or gen-kill self-driving demo chains (N7b/N8); state.revealing gates drag + replay during reveal_seq/sortSeqReveal (N8 drag path); capture-phase DRAG VO-GATE on draggable tiles (isPlaying + 4s _voStart cap — speak-on-press tiles NOT over-blocked) (A1); mountTapOptions tap gate: one-tap-at-a-time _busy + 4s _vb + no taps during ANY VO + additive hint1 first-wrong clip (A2); auto walk-through INTRO/GENDER_INTRO ignore card taps until taught, then tap=replay (A3); playbackRate pinned 1.0 (A4); SORT tray ghost-slot .sort-ghost on placement (A5); MATCH_DRAG_N final-drop word no longer truncated by the celebrate VO (C); viewport pinch-zoom lock (N9); star-burst spark fill-mode both (N10). N11 (asset preload) deferred. 25a (drag hint ladder): dragWrong() now grades its spoken feedback like the tap path — 1st wrong plays the slide's hint1, 2nd+ plays hint (the level that GIVES the answer); all 12 drag wrong-drop sites inherit it with no call-site change, and cards without hint1/hint authored still play try_again unchanged (additive, zero sibling regression). Yasir ruling 2026-07-25: two hints everywhere, every game, every interaction type. 27c (autonomous teaching + tutorial fit): mountTapOptions honours slide.data.auto — a TEACHING slide now runs the whole beat itself (prompt on the picture -> teaching line on the right choice -> that choice goes green+pulses, wrong ones fade, its letter sounds -> आगे unlocks), taps dead throughout, no confetti/sfx; opt-in, and SENTENCE_SOUND/INTRO/GENDER_INTRO/MEET_* keep their own pre-existing auto paths (they return before mountTapOptions). CSS: .stage.tut q-rows that carry a picture stimulus lay it BESIDE the options — the 25e card leaves 273 design px and stimulus+gap+opt-cell need 434, so the grid track squashed to 43px and the cells spilled onto the picture (Yasir 2026-07-27, Antim T2/T3). 27g-fix (relabelled — 27d was taken by the terminal-help hand): the auto chain no longer points the hand at the picture stimulus — pointNudgeAt plants the fingertip 56px above an element bottom, i.e. straight over a .stimulus-pic .lbl, so the hand hid the very word being taught for the whole prompt beat.
+  const ENGINE_VERSION = "2026.08.04b-r4-unified";  // 31o: TERMINAL HELP LEFT THE TRAY PERMANENTLY DEAD IN TWO MECHANICS. revealOne() -> terminalHold() disables every OTHER tile with inline pointer-events:none !important and opacity:.4 so the child can only act on the revealed one. clearHold() has existed to release that since [28l] and PATTERN_BUILD, SEQUENCE_COMPLETE and SORT_GENDER all call it — but SEQUENCE_DRAG and MATCH_GENDER_PAIRS never did. So after two wrong tries, placing the revealed tile CORRECTLY left every remaining tile dead and faded for the rest of the slide: the game simply stopped accepting input, with the tray visibly greyed. Yasir hit it twice on HIKGH04_L01_S02 P3's SEQUENCE_DRAG and named the precondition exactly — "even after placing the correct after two wrong attempts, the cards remain blocked". MATCH_DRAG_N was never affected because it has its own local clearHelp() on the correct path. Both now call clearHold(tileRow) before settle(). NOTE for future engine work: terminalHold and clearHold must be added in the SAME edit — a mechanic that dims without releasing looks fine in every static check and only fails after a specific 3-step sequence (wrong, wrong, right), which no existing harness walked. · 31n: REVERTS 31m's 20s DRAG-GATE WINDOW (my regression, Yasir caught it in minutes) AND STOPS A FILLED SEQUENCE_DRAG SLOT SHRINKING. (a) 31m widened installDragVoGate's window from 4000ms to 20000ms reasoning that real clips outlast 4s. True, but it misread the window's PURPOSE: blocking during a live clip is the CSS lock's job (body.vo-lock is exact — on for precisely as long as isPlaying); this window is the ESCAPE HATCH. Widening it turned a stalled or slow-to-end clip into a twenty-second dead screen — place one letter correctly, then every remaining tile refuses to move. Back to 4000ms. The gap 31m was really chasing (.cdm-objtile/.cdm-card/.combine-drag having no CSS entry, so relying on this gate alone) stays closed in the CSS rule, which is where it belonged. LESSON: widening a safety valve is not the same as tightening a gate. (b) .seq-slot 104px -> 150px. SEQUENCE_DRAG's settle() does zone.classList.remove('dd-zone') so a filled slot stops accepting drops, and .dd-zone was the ONLY rule sizing it at 150 — so a correctly placed letter's box instantly shrank to 104 beside its 150px empty neighbours (measured 79 vs 114 on screen at the 0.757 fit-scale). Sizing now lives on .seq-slot itself and no longer depends on a class the mechanic deliberately removes. · 31m: THE DRAG VO-GATE'S SAFETY WINDOW WAS SHORTER THAN THE CLIPS IT GUARDED. installDragVoGate decided `isPlaying && now-_voStart < 4000`, so it stopped blocking FOUR SECONDS into every line while the child was still being spoken to — and real VO is routinely longer (this game's own placeholder clip is 4.41s). It never surfaced on .dd-tile or .sort-item because the CSS lock covers those and CSS has no escape hatch; but .cdm-objtile, .cdm-card and .combine-drag appear in the gate's SEL list with NO CSS entry, so they were live on the JS gate alone and grabbable mid-sentence. Both halves fixed: those three classes join the body.vo-lock rule (CSS is now the primary gate for every draggable the gate names), and the JS window becomes 20s — purely a stall backstop so a clip that never ends cannot freeze the tiles forever, not a mid-clip escape. play()'s existing 800ms/1200ms fallbacks already handle missing and undecodable clips. Measured with a stubbed 6s Audio (headless here cannot decode, which is why a real-clip window never appeared in earlier tests): tile stays pointer-events:none for the full clip and the drag is refused at t=4.5s, freeing only when the clip ends. · 31l: two more mechanics onto the vo-lock list — COMBINE_COUNT (.combine-grp, cursor:grab) and ORDER_BY_ATTR (.ord-item, five slides across guided AND practice on MTKGA02_L02_S02). Both were found by RE-RUNNING _tools/vo_lock_audit.py after 31k, which is the point: the lock is a denylist and a denylist cannot tell you what it is missing — only walking every slide with the lock forced on can. Run that audit whenever a mechanic is added. Children need no entry (.ord-obj-img is inside .ord-item; pointer-events:none blocks descendants). · 31k: THE VO LOCK WAS SHORT BY NINE MECHANICS (style.css). Yasir 2026-08-02: "even when the VO is being played the student can drag/tap the card." body.vo-lock is a DENYLIST of interactive classes, so any mechanic not named in it stayed fully live while a clip spoke — and adding a mechanic never failed loudly. Audited every slide of HIKGH04_L01_S02 P1-P4 and the 6 maths games with the lock forced on (_tools/vo_lock_audit.py): drag/drop and tap-option slides WERE locked correctly, but INTRO (.intro-letter), MEET_LETTER (.meet-letter-box), SHAPE_INTRO (.intro-shape), TRACE_SEQUENCE (.tseq-box), TRACE_SHAPE (.trace-box), ROTATE_SHAPES (.rot-tile), COUNT_TAP (.count-item) and MAKE_EQUAL (.cobj/.balance-add) were not. TRACE_SHAPE runs in guided AND independent, COUNT_TAP in practice: a stray tap there spends one of the child's two attempts while the instruction is still being read to them. Parents only — pointer-events:none blocks descendants, so .cobj-img/.count-badge/.rot-art/.rot-name need no entry. .tut-audio stays reachable on purpose (it is the replay control) and already refuses mid-VO in JS. STILL POINTER-EVENTS ONLY: no opacity, no filter, no pale board — the screen must look identical, the cards simply do not respond. · 31j: THE CAPTION CHIP IS FOR TILES THAT CANNOT FIT THE BADGE, nothing else — supersedes 31h, 31i and two private fixes. The constraint is TWO-SIDED: never bury the zone's word, never smother the picture. 31h keyed on the .zone-lbl ELEMENT (always emitted, empty when unlabelled -> 15 word tiles would have been clipped into a 62px badge). 31i keyed on label TEXT (lifted from HI01H02_L01_S01's private fix) but protects only the label, so on HIKGH02_L02_S01 — zones with no label — single letters got the caption chip, which that game's own engine_local had MEASURED at 47.1% of the tile over the art vs 9.4% for the corner badge. HIKGH02_L02_S01/S02's private [...text].length>1 counts CODE POINTS, so अं and अः (HIKGH04_L01_S01 P2, labelled zones) read as words and would caption straight onto the label. Now: a single BASE character always fits the badge and always gets it; only a genuine multi-character word takes the caption, and only where no label would be buried. Base characters means stripping the Devanagari combining block (matras/anusvara/visarga/virama/nukta) before counting. Fleet census of all 90 MATCH_DRAG_N tiles: 68 letters on labelled zones, 7 letters on unlabelled zones, 15 words on unlabelled zones, ZERO words on a labelled zone — the two clauses never fight; the label clause is a guard for a future card. · 31i: 31h's LABEL TEST WAS WRONG FOR WORD TILES. The zone builder always emits `<span class="zone-lbl">${p.picture||""}</span>`, so an UNLABELLED zone still carries the span, empty — and `!zone.querySelector('.zone-lbl')` read it as LABELLED and gave it the 62px corner badge. Measured 15 word tiles that would have been clipped: HIKGH04_L02_S02 (घर नल कप बस जग) and HI01H04_L03_S01 (घास माला दादा पापा नाक कान). Now tests the label's TEXT. Found by reading HI01H02_L01_S01's engine_local before sweeping it: that game had diagnosed and fixed this exact bug on 2026-07-28 ("after getting the letter placed on the correct answer card it overlaps the images") with the correct textContent check, and HIKGH02_L02_S01/S02 had a weaker grapheme-count variant from 2026-07-29 — three private fixes for one engine bug, none upstreamed, which is the isolation tax in one line. The canonical fix now supersedes all three. · 31h: TWO MATCH_DRAG_N DEFECTS YASIR CAUGHT ON HIKGH04_L01_S02 P1 G4, 2026-08-02. (a) THE GUIDE HAND OUTLIVED THE TASK. travelNudge loops iterations:Infinity from coordinates captured ONCE, and only stopNudge() cancels it. The correct-drop path ran leaveTrayGhost -> clearHelp -> settle and none of them called it; clearHelp only strips CSS classes. So once terminal help had fired, the child placing that very tile correctly left the hand looping over the ghost slot the tile came from — pointing at an empty box, and still pointing at a FINISHED pair while they worked the remaining ones. stopNudge() now runs in settle(), the single correct-placement path (drop AND reveal). (b) THE PLACED LETTER COVERED THE PICTURE'S WORD. settle() added `md-word` unconditionally while its own comment called it the caption look "for WORD tiles (not the letter badge)" — there is no word/letter branch here, every tile comes from p.letter. md-word is bottom:6px/left:50%, exactly where .zone-lbl sits: measured a 40x21px chip over a 40x21px label, 100% occlusion, so matching घ to the house DELETED the word घर — the reinforcement the exercise exists for. .dd-tile.snapped's top-right corner badge had consequently never shipped. The new test is NOT letter-vs-word (Devanagari makes length useless: अं is one letter in two code points) but "is there a label to cover" — checked per zone at settle time. Every word-tile card in the fleet (HI01H04_L03_S01, HIKGH04_L02_S02) renders no .zone-lbl and keeps the caption chip unchanged; labelled cards get the corner badge. · 31g: TWO AUTONOMY RULINGS FROM YASIR, 2026-08-02. (a) SHAPE_INTRO GETS AN AUTONOMOUS PATH. It was the last teaching mechanic with none at all — it unlocked आगे only at tapped.size >= shapes.length, so the child was held hostage by the lesson that is supposed to teach them. This is INTRO's [16h] chain shape-for-letter: each tile highlights and speaks itself, the instruction VO plays, _autoDone flips, आगे unlocks, and taps THEN become per-shape replays (taps are ignored before that so the lesson cannot be cut off). Gated on data.auto, so no card changes behaviour until it opts in. A missing clip is a silent beat that still advances — play() fires its callback on both the no-src and the error path — so an un-recorded build teaches itself rather than stalling on a dead screen. (b) NO आगे ON SELF-ADVANCING SLIDES: "we dont need the buttons in guided and independent". Every tap mechanic already hid the button; MATCH_DRAG_N and SEQUENCE_DRAG were the only non-tutorial slides still showing one, so a run read as button-free and then sprouted a button on the drag pages. It was never a completion signal there — filling the last zone / placing the last tile calls celebrateThenAdvance -> completeSlide unaided, so the button could only skip the child PAST their own finished work. Verified before removing: nothing is stranded, which is the same contract the tap slides have had all along. · 31f: INTRO TILE SIZER NOW CLAMPS BY HEIGHT — the tutorial heading was sitting BEHIND the letters. Yasir 2026-08-01 on HIKGH04_L01_S02 P1. The sizer only ever considered WIDTH: when n letters could not fit one row at the 110px touch floor it wrapped to two rows and then RE-EXPANDED each tile back toward the 184px cap, because 4 of 8 do fit a 960px row. Result: a 392px grid inside the 318px .tut-content box. That box centres its overflow, so half the excess (37px layout / 28px on screen at the 0.757 fit-scale) rode UP into .tut-prompt. Measured, not guessed: P1 (8 letters) and P2 (9) overlap by 28px and 22px; P3 (5) and P4 (6) stay on one row and are clean — which is exactly why it looked intermittent. FIX: row COUNT still comes from width alone (behaviour unchanged for every already-correct slide); only the tile SIZE is now additionally clamped to the real available height, host.clientHeight, falling back to 318 when a phase-gate blur has the card hidden and clientHeight reads 0. TOUCH=110 stays a hard floor: a viewport too short for that overflows rather than shrink a KG tile below a reliable target. Two-row grids now compute (availH-GAP)/2 = 149px instead of 184px. · 30o: THE TTS FALLBACK IS REMOVED ENGINE-WIDE. Yasir 2026-07-31, urgent, after hearing a robot voice on a game whose VO is 100% human: "there should be no way to fall back on tts, it is fine if we dont have audio, we will know if an audio is missing but having tts is worse." _ttsSay was added at 20a as a REVIEW PLACEHOLDER so an un-recorded build was never silent. That reasoning was backwards and this ruling corrects it: a synthetic voice MASKS a missing clip. It made a broken build sound finished, so nobody could hear the gap the placeholder existed to cover — and worse, it spoke over 60-of-60 HUMAN VO whenever autoplay was refused (see 30n). Silence is diagnostic; a missing clip must read as missing. WHAT CHANGED: both call sites now go straight to the silent beat they already had as their alternative (onFail -> setTimeout(fire,1200); no-src -> setTimeout(fire,800)), and _ttsSay's body is replaced by `return false`. The browser speech API is unreachable from engine code: zero SpeechSynthesisUtterance constructions, zero speechSynthesis.speak, zero live call sites, all measured on comment-stripped code. WHY A STUB AND NOT A DELETION: any call site this sweep did not find — a per-game engine_local, an older isolated copy, a build script — would throw ReferenceError on a deleted function and take the entire slide chain down with it, turning a wrong-voice bug into a dead game. Returning false routes every caller into the silent path that already exists. Same trade as the unused @keyframes kept at 30j/30l: the stub is the safe half. stopAudio()'s speechSynthesis.cancel() is deliberately KEPT — nothing should be speaking now, but a browser still holding an utterance from a CACHED older build gets silenced by it, and cancelling is not speaking. NOTE ON SCOPE, because a parallel session reported this as a two-game fix: 30n already removed the autoplay trigger on all 28 games, and this removes the fallback itself on all 28 — neither was ever per-game, and a per-game edit to engine_local would have left 26 games speaking. Swept by _tools/no_tts_standard.py. Consequence to accept knowingly: on the ~26 games whose clips are still Gemini TTS FILES (measured 2 of 28 fully human, _tools/vo_provenance.py), those files still play — this ruling removes the browser-voice FALLBACK, not TTS content. Un-recorded lines that had no file at all are now silent, which is exactly what he asked for.  30n: THE LANDING SPOKE IN THE OS VOICE BEFORE THE HUMAN CLIP. Yasir 2026-07-31, on multiple games: "the first time audio being played on the landing screen is the tts audio, and when i click the volume button again on the landing page then the human recorded audio is played." Confirmed HI01H07_L01_S02 and HI01H01_L02_S05. CAUSE: a.play() rejects for TWO different reasons and onFail treated them alike. A missing or undecodable file SHOULD fall through to _ttsSay — that is the deliberate review placeholder for un-recorded lines. But the browser ALSO rejects with NotAllowedError under its autoplay policy, and that fires on every single load before the child's first gesture. So on a game whose VO is 60/60 human, the landing spoke browser speech-synthesis, and the gesture that finally let the real file play was his tap on the volume button. Now NotAllowedError/AbortError are told apart from a real failure and stay SILENT; onerror and every other rejection still route to onFail, so the placeholder keeps working where it is wanted. fire() is still called on the silent path and is NOT optional: play() has already run setPlaying(true), so returning without it would leave body.vo-lock on and the entire screen untappable — a soft-lock traded for a wrong voice. WHAT THIS COST, WRITTEN DOWN: _ttsSay's own header asserted it was "SELF-DISABLING - fires only when the MP3 is missing; once real clips ship, play() succeeds and this never runs". That is true only AFTER a user gesture, which a landing screen by definition does not have. I READ THAT COMMENT EARLIER THE SAME NIGHT while answering his TTS question, repeated its claim back to him as an aside — "no TTS file ships, but a clip that fails to load will be spoken by the OS voice" — and never tested the autoplay path, so he found it by pressing play. A comment asserting a safety property is not the property; when a docstring claims something is self-disabling, that is the line to go and prove. Related and still true: 30m guarded the pointerdown fallback so the greeting no longer RESTARTS on the first tap; these are two different landing-audio bugs and both sweeps live in _tools/landing_vo_standard.py.  30m: TWO LANDING FIXES — MY 30l REGRESSION, AND THE GREETING RESTARTING. Yasir 2026-07-30: "shuru karein is not perfectly in the button. also the landing VO does not seem fine." (1) TEXT OFF-CENTRE IN THE START BUTTON — MINE, from 30l. I set height:64px with padding:12px 36px on a 4.54px border, which leaves 64-24-9.08 = 30.9px of content box for a 32px font: the line box does not fit, so the text is pushed off-centre. Before 30l the pill had NO fixed height and grew to its text, so padding-centring happened to work; copying his approved build's HEIGHT without copying centring with it is what broke it. Now box-sizing:border-box + inline-flex + align-items:center + line-height:1 + padding 0 36px — the line box is centred rather than balanced by padding. Devanagari is why padding-centring can never be trusted here: matras rise above the em box and conjuncts drop below it, so one padding value reads differently per string. (2) THE LANDING GREETING RESTARTED ON THE FIRST TAP. `window.addEventListener("pointerdown", ... playLanding())` is an autoplay-POLICY fallback: if the browser refused the greeting on load, the first gesture is our chance to start it. It fired UNCONDITIONALLY, so whenever autoplay HAD worked the child's first tap anywhere restarted the 9.04s greeting from the top, and on a tap that happened to be शुरू करें it bled into the tutorial. Now guarded on whether sound is genuinely moving (currentAudio && !paused && !ended && currentTime>0) rather than on "did we call play()" — on a BLOCKED autoplay we did call play(), so a call-flag would have killed the very fallback the line exists for. The सुनो chip's own playLanding() is deliberately untouched: an explicit replay must always replay. MEASURED while diagnosing, and worth recording because it answers a standing question: HI01H07_L01_S02 ships ZERO TTS. All 60 wired clips match Downloads\HI01H07_L01_S02_VO_FINAL.zip on duration to within 0.15s, vo_landing is 9.04s identical across human WAV -> factory ogg -> dist ogg, and the only non-VO asset is sfx_celebrate. Its CHANGES.md note about 34 Kore TTS placeholders is SUPERSEDED — a later session wired the FINAL human drop on 07-29. Note the drop names files `<id>.ogg.wav` (double extension); stripping one extension makes every id mismatch and reports 0 overlap, which cost me one false alarm. Engine caveat: play()'s onFail still routes to _ttsSay(), a BROWSER speech-synthesis fallback — no TTS file ships, but a clip that fails to load will be spoken by the OS voice. Isolated copies swept by _tools/start_btn_standard.py (1) and _tools/landing_vo_standard.py (2).  30l: THE START BUTTON (शुरू करें) STANDS STILL, AND IS NOT FAT. Yasir 2026-07-30, and this was his THIRD ask. The first two times I read "the volume button hovers ... make it a little slim" plus a landing screenshot and fixed `.audio-chip`/`.tut-audio` (30j), reporting 28/28 twice. He finally spelled it out: "i am not talking about the audio button — i am talking about the start button". THREE round buttons live on that one screen — .sg-btn (the शुरू करें pill), .sg-vo (the small blue listen chip at Swiftie's hip, hardcoded 58px, does NOT read --chip-size), and .audio-chip (question slides, --chip-size) — and I matched the wrong one twice. THE LESSON IS NOT "ask more", IT IS THAT MY AUDIT CONFIRMED MY OWN EDIT: both green receipts measured the element I had just changed, never the element in his screenshot. A sweep proves a value was written; it says nothing about whether it was the right value to write. When a ruling comes with a screenshot, identify the ELEMENT from the screenshot before choosing the selector. (1) NOT HOVERING: `animation:sgBtnPulse 1.4s ease-in-out infinite` sits on the BASE .sg-btn rule, so the pill breathes continuously from the moment the landing paints — it is not VO-linked at all, which is why chasing VO state found nothing. Killed engine-wide; @keyframes sgBtnPulse stays DEFINED but unused, since a dangling `animation:` naming a deleted keyframe fails silently. His own approved Strilling/Pulling build ALSO runs sgBtnPulse — when his words and his older approved build disagree, the words are the newer ruling and win. (2) NOT FAT: ours shipped `padding:14px 54px` with NO height, so the pill grew to its text at ~76px tall against the 64px his approved build ships — 19% taller, which is what "fatty" meant. Now padding 12px 36px + height 64px + min-width 186px + bottom 34->40px, every number measured off Downloads\HI01H08_L01_S02_Pulling_Streeling_Pehchano.zip. Width is deliberately NOT pinned to his width:250px: that belongs to the IMAGE variant (.sg-btn img, display:none on the text variant) and forcing it would make the pill WIDER than the one he called fat. Content width lands ~202px — slimmer than his reference on both axes. Isolated copies swept by _tools/start_btn_standard.py.  30k: THE FIGMA GREY ON THE TRANSITION SCREEN, THE UNFRAMED STIMULUS, THE SMALLER ANSWER CARD. Three Yasir rulings 2026-07-30, all engine-wide. (1) GATE SCRIM = rgba(57,55,55,.6) — #393737 at 60%, which he read off the ORIGINAL FIGMA transition frame with an eyedropper and sent as a screenshot. It replaces rgba(64,64,70,.58), which was MY approximation of the meeting's "dark 60% blur". This does NOT reopen 30b: he removed the grayscale FILTER, which desaturates the whole scene behind the gate, and kept the grey SCRIM, which only darkens it — the two read identically in prose and completely differently on screen, which is exactly why 28b/30b flip-flopped. All SIX real .phase-gate blocks were normalised to the one value (base rule, the is-start override that used to be `transparent`, and the late overrides), because the LAST declaration wins and a stale override left behind is invisible until someone screenshots it. (2) THE STIMULUS PICTURE IS NEVER FRAMED — "remove the container surrounding the cat image ... apply this for other pages with same mechanic". It was already unframed in TUTORIAL only; the 27c note says so in writing ("the same stimulus stays framed in guided/independent/mastery"). That scoping is now dropped: it is the same teaching art in every phase. Chrome only, sizing untouched, so nothing reflows. (3) ANSWER CARDS ~12% SMALLER — "make the answer card a little bit smaller": .opt-cell min-height 210->184, column caps 300/260/230->264/229/202, option picture 134->118, and the no-stimulus override 300->264 so it keeps its ratio to the base card. .big-glyph STAYS at 96px — on a letter/numeral card the glyph is the thing being learned, 96+22px of label still fits inside 184px, and nobody asked for a legibility cut; the option PICTURE shrinks because a photo is a referent, not a taught letterform. Also only helps the 27h tutorial-fit work, which fights overflow. Isolated copies swept by _tools/gate_standard.py (1) and _tools/card_standard.py (2,3); both audit the LAST EFFECTIVE declaration on comment-stripped CSS, never a marker string — and both now mask comments in BOTH directions, because this file's changelogs QUOTE the rules they supersede, so a raw-text sweep would have silently rewritten the project's own record of the 28b ruling. Measured: 1 of 7 .phase-gate blocks existed only inside a comment. NOTE FOR THE NEXT SESSION: the deny-ACE guard is on app.js ONLY — style.css took all three of these edits with no unguard step at all. Half a guard.  30j: THE AUDIO CHIP STOPS MOVING, AND GETS SLIMMER. Yasir 2026-07-30: "the volume button hovers when VO is being played, it should be just at one place and not hovering not moving" + "the volume button is to be a little slim". (1) Removed `animation:audioPulse 1s ease-in-out infinite` from BOTH .audio-chip.playing and .tut-audio.playing — a 12% scale throb that ran for the whole duration of every clip, which on the landing is most of the screen time. The @keyframes block is deliberately KEPT though now unused: a dangling `animation:` naming a deleted keyframe fails SILENTLY, so leaving the definition is the safe side of that trade. The .playing class is still toggled by setPlaying and still drives the wave arcs (.wv1/.wv2) inside the icon — those signal playback WITHOUT moving the button, which is the distinction he drew; if he wants them still too it is one more rule. (2) --chip-size 70px -> 66px. NOT my guess: 66px is what BOTH of his reference builds ship (HI01H08_L01_S02 Strilling/Pulling and HI01H08_L01_S01 Ekvachan). Ekvachan also already had NO .audio-chip.playing rule at all, i.e. the design had already dropped the throb and our engine was the straggler — fourth time now that reading his approved build gave the exact value where guessing would have cost a round trip (bird height, VO lock shape, mascot ring, this). ASK FOR THE BUILD THAT LOOKS RIGHT. Isolated copies swept by _tools/audio_chip_standard.py.  30i: THE CELEBRATION PAGE — BUTTON IMMEDIATE, NO TEXT. Two Yasir rulings 2026-07-30. (1) "the button appears after the VO is completed. the button should be there as we get on that screen." CELEBRATION.mount used to hide #endBtn and set state.endBtnPending, which autoPlayChain's onDone released — so on a long celebration clip, or a missing one that fell through to the TTS placeholder, the child sat on a dead end screen with nothing to press. Same silent-non-response family as the VO tap gate. Now shown at mount with hint-glow, endBtnPending left false. The onDone branch is deliberately NOT deleted: it is the flag's only consumer, so anything that still sets it keeps working instead of silently never showing a button. (2) "there should be no sentence on the last page, no praising nothing. the only writings allowed on that page is inside the button." #endTitle (was slide.prompt_hi at 44px) and #endSubtitle (was data.end_subtitle) are now set to "" rather than removed — `.end-title:empty` / `.end-subtitle:empty` are already display:none, so they collapse WITH their margins, and a card still carrying end_subtitle just stops rendering it instead of needing 28 cards edited. The celebration VO is untouched: he banned writing, not the spoken praise, and verify_bundle's "every slide SPEAKS its prompt (incl. celebration)" gate reads the card's audio map, not the DOM. Isolated copies swept by _tools/celebration_standard.py — a shared bump reaches none of the 19.  30h: WHITE RING AROUND THE HEADER SWIFTIE. Yasir 2026-07-30: "see the round white ring around swiftie? none of our games have that. it is necessary." Verified he was right: shared .mascot-circle was border-radius:50% + overflow:hidden with no ring, and the avatar art itself is a plain light-blue disc (rendered sw_anim_rest / sw_head_talking / mascot / sw_head_neutral onto the page bg to confirm no ring is baked in, and the art is byte-identical across all 28 games), so NO game could have shown one. Added background:#9DDBF5 + border:4px solid #FFFFFF + box-shadow:0 6px 14px rgba(0,47,118,.20) — values taken from THREE of his own reference builds that agree exactly (HI01H08_L01_S02 Strilling/Pulling, HI01H08_L01_S01 Ekvachan, Final_Deployed_Sorting_Objects_Skill_2/r4_reference); a fourth (MTKGA02_L01_S01_Final) draws the same ring via box-shadow:0 0 0 4px instead. box-sizing:border-box is global so the 4px sits INSIDE the 132px wrap — the disc shrinks 8px, the avatar does not grow, which is the reference look. METHOD NOTE: this is the third look-ruling in a row where reading his own approved build gave the exact value and guessing would have cost a round trip (bird height 172->clamp, VO lock pointer-events-only, now the ring). ASK FOR THE BUILD THAT LOOKS RIGHT. Isolated copies swept by _tools/mascot_ring.py; a shared bump reaches none of the 19.  30g: THE VO LOCK IS BACK, THE PALE BOARD IS NOT. Yasir 2026-07-30, twice, the second time bluntly: "just red glow on card on wrong tap and cards untappable when VO being played, you dont need to show any affect for untappable, just make it untappable." 28u had bundled TWO things under body.vo-lock — `pointer-events:none` (the LOCK, which he wants) and `opacity:.55` on 27 selectors (the PALE BOARD, which he does not). My 30f removed BOTH, so for one bump nothing was untappable while a clip spoke. 30g restores the class with pointer-events ONLY. RULE GOING FORWARD: never put opacity/filter/grayscale under body.vo-lock; if a "wait" cue is ever wanted it goes on the ONE card the child touched, never on the board. HIKGH07_L01_S02's session had independently reached exactly this shape (pointer-events + cursor, no opacity) before I did — I had stripped its JS toggle in 30f, leaving its correct CSS inert, which is why that game looked unfixed. On 28t: with the lock live a feedback-audio tap is not registered, but it is also not CONSUMED — 28t's real bug was the attempt vanishing, and the child can simply tap again when the hint ends. AND THE REASON HE SAW IT "STILL" BROKEN AFTER 30f: the pale effect survives in 16 stale dists and 16 delivered zips cut before 30f. A fleet CSS fix is not visible until the artifacts are re-cut — _tools/recut_all.py.  30f: THE PAGE-WIDE VO DIM IS REMOVED, AND IT WAS MASKING A REGRESSION I CAUSED. Yasir 2026-07-30: "when VO are being said, the whole game goes like blocked mode. it shouldnt be that way, only the red glow should be on the tapped card, if the answer is wrong. dont block the entire screen fam." This reverses 28u's visible half of CIL-2107 / RULING_no_tapping_during_VO: body.vo-lock dimmed 27 selectors to opacity .55 with pointer-events:none for the duration of ANY clip, so one wrong tap greyed the whole board while the hint spoke. THE SERIOUS PART: that pointer-events:none meant a tap during FEEDBACK audio never reached the tap gate — and the gate is `(isPlaying && !_fb)`, i.e. 28t had deliberately made feedback-audio taps COUNT because it found retries being silently discarded and the 2-attempt ladder defeated through that side door. So my CSS from 28u silently killed a JS fix from 28t, one bump earlier, with every check green. Third time a guard inherited from replaced code has caused this class of bug (28r's helpShown early-return, 28e's .crossed bleaching the flash, now this) — and the first time it was CSS undoing JS, which no test we own would have caught. WHAT REMAINS OPEN: the JS half still refuses taps during the PROMPT clip (24a anti-spam), so a prompt tap is still silently refused, which is literally CIL-2107's original complaint. NOT decided here: making prompt taps land would reverse 24a, which is Yasir's call. Isolated copies are swept by _tools/vo_dim_remove.py — a shared bump reaches none of the 19.  30d: GATE BIRD HEIGHT IS NOW YASIR'S OWN MEASURED VALUE, not my guess. `.phase-gate #phaseGateImg` height 215px -> clamp(120px,26vh,250px). He named the build where the peek "was first seen and it was working just right" — Strilling/Pulling — and that build (Downloads\HI01H08_L01_S02_Pulling_Streeling_Pehchano.zip, index.html) renders the gate at clamp(120px,26vh,250px) and references ONLY assets/UI/peeking_pal.gif, which is byte-identical to the pal_2 gif he sent (500x500, 73 frames, final opaque area 96401, 1286 KB). So the art was never at fault: our gate rendered it at 172px, ~31% under its approved size, crushing the flank feather tufts to 1px rows that read as scratch marks. THREE THINGS I GOT WRONG FIRST, so nobody repeats them: (a) I pre-scaled the asset to force an exact 0.5 render scale — moved banding 2% and made the worst row WORSE; (b) 30c's 215px was my own halfway guess; (c) I read a 66.9% mid-animation area collapse in a session-supplied encode as a peek-a-boo animation in the art, when the SOURCE gif measures 0.0% — it was a genuinely broken encode. The clamp being responsive also fixes the small-window check that a fixed 250px would have failed on a 400px stage. The GIF is deliberately not adopted: 1286 KB vs our 676 KB WebP, the 10 MB decimal cap is a hard gate, and the WebP measures faithful to source (worst frame-to-frame opaque-area drop 0.1%). IF THE BIRD LOOKS WRONG AGAIN, CHECK THE HEIGHT BEFORE THE ENCODE. Standardising this across the 19 isolated copies is what _tools/gate_standard.py exists for.  30c: GATE BIRD RENDERS AT 215px, was 172px. Yasir: "the gif is just leaving such marks badly". Chased this to ground and the marks are NOT ours: both WebP encodes measure byte-faithful to his source GIF (0 ghost px and 0 hole px across all 73 frames, diffed against a cumulative composite of the GIF itself). The marks are the SPIKY FEATHER TUFTS down both flanks of the new yellow-jacket art - at 172px the bird is only 146px wide, each spike lands on about one pixel, and the row reads as scratches. Rendering taller fixes it without touching the art: measured side by side, 215px makes the tufts legible and 260px makes them fully clean; 215 chosen because 260 is a 51% increase on a mascot the design lead already approved. WHAT DID NOT WORK, recorded so nobody repeats it: pre-scaling the asset from 330x389 to 292x344 to hit an exact 0.5 render scale changed row-to-row banding by 2% (12.30 -> 12.01) and made the worst row WORSE (41.9 -> 55.7). The constraint is tuft geometry vs render height, not the encode. Also do NOT flatten the animation to fix it - a session did exactly that during this bump, wrote a 1-frame 68 KB peeking.webp over the MASTER chrome_assets, and every future build would have shipped a static bird; chrome_assets now carries a write-deny ACE on all 24 files because isolation covers engine CODE only and never covered the shared art kit.  30b: TWO LOOK FIXES ON THE TRANSITION GATE, both from Yasir seeing 30a live. (1) GRAYSCALE REMOVED from the phase-gate backdrop - "the bg needs just to be blurred, no need of this gray filter". This reverses point 3 of the 2026-07-28 desaturation note: blur plus the dark scrim carry the gate on their own, and grayscale(.9) drained the colour out of the whole scene behind it so it read as broken rather than as depth. brightness(.92) went with it - it existed only to compensate for the grayscale. The rgba(64,64,70,.58) scrim STAYS: that is the "dark 60% blur" meeting ruling and it is what closes flag S2-a. (2) THE GATE BIRD ASSET was re-encoded, not a code change - logged here only so the pairing is traceable. Yasir: "the gif is just leaving such marks badly". The marks were NOT in the file: all four candidate encodes decode clean via ImageDecoder (348 opaque rows on the centre column, 0 hole rows), so the artefact came from the browser downscaling 330px-wide art with dense feather strokes into the gate's 146px box, per animation frame, inside a backdrop-filter compositing layer. Fixed at the source: assets/UI/peeking.webp is now pre-scaled to 292x344 (2x the height:172px render) with LANCZOS at encode time, so the browser only does a DPR scale. Also dropped minimize_size, which enables WebP frame-diffing and is a real alpha-edge hazard even though it was not the cause here. 676 KB, still under the old 824 KB asset. NOTE for anyone re-encoding this: PIL gives GIF frames as PARTIAL TILES with disposal=None, so they must be composited CUMULATIVELY or you extract feet-only frames; and canvas drawImage() on an animated WebP always draws FRAME 1 (nearly empty here), which makes a naive pixel test report every candidate identical - use ImageDecoder with an explicit frameIndex.  28u: FOUR FLEET FIXES IN ONE BUMP, batched deliberately after 28p-28s showed what per-change bumping costs. (1) THE RED WRONG-ANSWER FLASH WAS INVISIBLE ON 23 OF 27 GAMES. `.stage.thm-toybox .opt-cell` is specificity (0,3,0) and sets background + border-color; `.opt-cell.wrong-flash` is (0,2,0). The theme rule therefore won REGARDLESS of source order and painted cream over the red, so 28p's ruling - the thing Yasir explicitly asked for - rendered on almost nothing for a week while every static check passed and check_system stayed happy. Four sessions found it independently on 2026-07-29; 18 had already patched their own engine_local with !important, which is why those copies carry it and why several handoffs say "the !important is NOT laziness". Fixed here by SPECIFICITY - a theme-scoped (0,4,0) twin selector - not by spreading !important. Any future `.stage.thm-x .opt-cell` needs the same twin: that is the real lesson, and it is the second time this exact cascade trap has cost a week. Same bump also gives `.sentence-word.wrong-flash`/`.tap-all-item.wrong-flash` the `transition:none` their .opt-cell twin has had since 28p - without it the chips EASED into red instead of snapping, and the class is removed after 700ms so the ease ate most of its own lifetime. (2) CONFETTI NOW FALLS FROM THE TOP OF THE PAGE (Yasir 2026-07-29, stated final: "confetti is supposed to come from top of the screen and not from the sides", then "it should drop from the top of the entire page"). Replaces the two bottom-corner cannons that shipped r4 through 28t. Parented to <body> in VIEWPORT coords with position:fixed - NOT to .slide-stage, which is inset, so spawning at the stage top edge visibly began part-way down - and z-indexed above the end-screen overlay. Element and --tx/--ty contract unchanged, so the existing .conf-shot keyframes still drive it. Lifted from HI01H01_L02_S04/S05 where it was built and verified first. `.confetti i{top:-24px;animation:confettiFall}` is still DEAD CSS from the pre-r4 implementation - nothing creates those <i> elements - and is left alone deliberately rather than deleted in the same bump. (3) SORT_GENDER SOFT-LOCK: slides were UNWINNABLE. 28p armed the terminal rung here but the correct-drop branch cleared none of it - .reveal-hold on the tile, .tile-disabled plus INLINE pointer-events:none/opacity:.4 on every other tile, the bins marked, and travelNudge's hand still looping - so `placed === need` could never be reached. Found and reproduced with real pointer drags on G3 and G6 by HI01H05_L01_S01, which asked for it to be fixed first; an unwinnable slide is a straight QA fail, not a cosmetic bug. clearHold() already existed for exactly this and also removes the INLINE styles, which a class-only cleanup would leave behind (looking correct while the tiles stay dead). Guarded on state.helpShown - a guard on CLEANUP, not the early-RETURN that stranded a card red in 28r. SORT_SHAPE checked: it never arms terminalHold, so it was never affected. Deliberately did NOT lift the `speak_on_drop` gate from the same local diff: that was a per-game ruling, and defaulting speak-on-match off fleet-wide would silently mute games that rely on it. (4) THE VO LOCK NOW HAS ITS VISIBLE HALF (CIL-2107 / RULING_no_tapping_during_VO). Taps were already refused while a clip played, but nothing on screen changed, so a child tapped an alive-looking card and got silence - and the ruling is explicit that the silent non-response IS the defect. body.vo-lock is toggled from setPlaying(), the one function every playback exit passes through (stopAudio, and fire() for natural end / supersede / cancelled TTS / missing-file fallback), NOT from a timer, so the lock cannot outlive the audio and strand a slide. Grey never red; replay chips stay live; opacity .55 reads as "wait" not "dead". Lifted verbatim from HIKGH04_L02_S02 (also shipped in HIKGH07_L01_S02). PROCESS: only 8 games build from shared now, so this bump rebuilds 8, not 27 - that is the whole point of isolation. The 19 isolated games do NOT receive any of this automatically and must be told.  28t: A TAP DURING FEEDBACK AUDIO COUNTS INSTEAD OF VANISHING. The tap gate ignored a tap while ANY VO sounded — correct for the PROMPT (24a added it to stop spam-tapping), wrong for the hint clip that plays right after a wrong answer: a child who tapped again while hint1 was still speaking had that attempt SILENTLY DISCARDED. They tapped twice, the engine counted once, terminal help never came — the 2-attempt ladder defeated through a side door, on every tap mechanic in the fleet. `_fb` now marks feedback audio specifically: during it a tap is accepted and interrupts the clip (stopAudio first, so never two voices); during the prompt, taps are still ignored. Cleared on every ladder exit so it cannot leak into later prompt audio. Verified: attempts go 1 -> 2 on the second tap and terminal help fires. I could NOT reproduce the exact audio-mid-flight instant headless (clips end in <60ms there), so that specific moment rests on the 3-line gate being reviewable rather than on a measurement — stated plainly rather than claimed. PROCESS NOTE, because Yasir called out the churn and he was right: 28p-28s were four bumps in an hour and TWO of them existed only to fix regressions from the previous one (SORT_SHAPE misplacement, the stranded red state). The cost was never batching, it was shipping before verifying. This bump was made with the engine edited, the monolith regenerated and the game rebuilt at the OLD stamp, behaviour checked, and the version moved only once at the end — which is how the next ones should go.  28s: THE RED NEVER SETTLED TO GREY — my own 28r bug, caught by behavioural verification 20 minutes after writing it. The 700ms flash->lock timer opened with `if(state.helpShown) return;`, inherited from the code it replaced. But at the 2nd wrong, terminal help fires in the SAME beat, so helpShown was already true and the swap was skipped: measured on HI01H01_L02_S05 G1, the card sat RED and untappable at +1.7s and would have stayed that way. That is precisely the stuck-red-ring bug I fixed in 28d and have now reintroduced in a new form. The guard was correct for the OLD behaviour (do not UNBLOCK a card once terminal help owns the board) and wrong for the new one (swap the flash for the lock), and I copied it without re-deriving whether it still applied. Removed from all three paths; only the 'this cell turned out to be the answer' check remains. THE LESSON, written down for the third time: a guard inherited from replaced code must be re-justified against the new behaviour, not carried over.  28r: BOTH WRONG ATTEMPTS FLASH RED FIRST; ONLY THE SECOND ALSO DISABLES. Yasir 2026-07-28: "on second wrong attempt as well we are supposed to give the red glow first and then disable." He is right and 28p was half a fix: it restored red on the 1st wrong but sent the 2nd straight to the grey lock, so the child lost the 'that is not it' signal at the exact moment they most needed it. The red IS the feedback; the grey lock is an EXTRA consequence the 2nd attempt earns. Sequence now, every wrong tap: red buzz for 700ms -> then (2nd only) settle to grey and untappable. SAME FIX IN TWO MORE MECHANICS, where it turned out to be worse: SENTENCE_FIND and TAP_ALL_WITH_SOUND locked their chip PERMANENTLY ON THE FIRST WRONG TAP (.crossed / .nope, both pointer-events:none), so 27a's ruling 'a wrong card must NOT lock on the first miss' had never reached them at all — a child lost a chip for one miss on those slides while every other mechanic gave them a retry. All three paths now share the same flash-then-lock shape. Checked the whole class rather than only the site Yasir named: those were the only three places a wrong tap adds a lock class.  28q: FIXES MY OWN 28p BUG BEFORE IT SHIPPED. The SORT_GENDER terminal rung landed in SORT_SHAPE — I applied it with a first-occurrence string replace, and the `dragWrong(slide); // buzz + Swiftie...` + answer_wrong pair it keyed on is IDENTICAL in both modules, so it went to the wrong one. SORT_SHAPE then referenced `_sgWrong`, which does not exist in its scope: a ReferenceError on any wrong drop, on MTKGA03_L01_S01 P1/P2. Caught by BEHAVIOURAL verification (three real wrong drops on a SORT_GENDER slide showed attempts climbing 1-2-3 with no glow, no dim, no hand) — a syntax check and a rebuild both passed it, and static checks always would have. Nothing shipped: the dists and zips were still on 28o. Moved to SORT_GENDER and addressed via the module BLOCK rather than a global first-match, so the same class of mistake cannot repeat. LESSON, again: when two modules share boilerplate, never target it with an unanchored replace — extract the module's own text first, as the MEET_LETTER edit in 28p did.  28p (batch, 8 items, closes 8 requests): (1) THE HINT BULB IS REMOVED ENTIRELY — Yasir 2026-07-28 "we do not need that idea glow button at all". It appeared WITH A GLOW on the FIRST wrong (the add was above the ladder branch, not inside it) and was never phase-gated — 10 of 10 show-sites ungated — so it also offered help in round 3; on several mechanics TAPPING it flashed the answer ghost, i.e. reveal-on-demand with zero attempts. Hidden via CSS rather than deleting the node, because $("hintBtn") is dereferenced unguarded at all 10 sites and removing it would throw on the first wrong answer in every mechanic. (2) 1st WRONG IS RED AGAIN, ON A LIVE CARD — his ruling, and my own 28e over-correction: 28e said a DISABLED option is never red but implemented it on `.crossed`, the class used for BOTH the momentary buzz and the permanent lock, so it bleached the first-wrong flash too and left a grey disable with no red anywhere. Split into `.wrong-flash` (red, glowing, STILL TAPPABLE, removed after 700ms) and `.crossed` (28e's grey lock, from attempt 2). (3) LANDING HERO CAN GROW — raised THREE times (Yasir + the SME on both games) and also mine: 28i's max-height:180px cap was measured to be exactly the overflow boundary, because .sg-content.has-hero's 206px bottom margin shifted the block up so growth ate the title's headroom instead of the dead space below. Margin 206->120 and cap 180->250. MEASURED at Yasir's own 1919x977: title 7.7px -> 18px below the card edge, hero 166 -> 230px tall, dead space hero->button 92 -> 16px. (4) SORT_GENDER FINALLY HAS A TERMINAL RUNG — it was the sixth terminal-help path with NONE: buzz + try_again forever, no ceiling, no glow, no dim, no hand, so a child could be wrong indefinitely and a guided sort could never earn the hand. Counted PER TILE (a slide-wide streak resets on any correct drop) and routed through the shared terminalHold/travelNudge contract. (5) STORY_SCENE fits OUTSIDE the tutorial too — 27h was scoped to .stage.tut, so on test phases the caption sat behind the आगे pill (measured: 19px under a 136px-wide button on 5 slides of HIKGH07_L01_S02). (6) the tut teach picture may use the room it has (261px of art in a 581px card with 607px of width unused) without reintroducing 27h's overflow. (7) MEET_LETTER: the hardcoded '→' is gone (markup, so no card could remove it) and the auto demo no longer plants a hand on a single-letter slide — "points at the obvious and adds nothing". MEET_SHAPE/NUMBER/GENDER keep their arrows; he named MEET_LETTER. (8) bare .intro-letter glyph tiles are box-free like the pictures beside them.  STILL OPEN, deliberately not rushed into this bump: the other TWO MEET_LETTER asks — a word taught for both sounds (जल = ज + ल) must DISPLAY both letters, and the hand must sync to the glyph being spoken. The existing data.pair mode is not a substitute (it renders 1536px inside 1329px), so it needs real layout work and measurement; item (7) deliberately left no guessed 'is this two-letter' condition behind. Also still open: DEMO_COUNT before->after (a new capability), HIKGH07's baked-in scene backgrounds (art regen), Pehli's 11 dead .webp paths (card fix).  28o: TWO DRAG RULINGS FROM YASIR (2026-07-28). (1) THE HAND SHOWS THE MOVE. "on drag, the hand nudge guides the student precisely... move the hand nudge from the question card to the answer card." A static hand on the tile says 'this one' but never says WHERE it goes — which on a matching slide is the actual thing the child must work out. travelNudge() now slides the hand from the tile to its correct zone on a loop; terminalHold() takes an optional destination, so all three drag modules (MATCH_DRAG_N, MATCH_GENDER_PAIRS, SEQUENCE_DRAG) demonstrate the gesture while every TAP mechanic passes no destination and keeps the static point. Same phase rule as handOnAnswer (tutorial/guided only, never round 3), and the animation is stored on state so stopNudge cancels it — an infinite animation left running would follow the child into the next slide. Falls back to a static point without .animate(). (2) EVERY CARD THE SAME SIZE. "all the cards, both question and answer cards are to be of the same size in matching/dragging." They were three sizes: .dd-zone 150, .dd-tile 104, .dd-tile.pic-tile 134 — the thing you drag was smaller than the thing you drop onto. Unified on 150 (the largest, so nothing shrinks and the drag target gets easier). Deliberately excluded: .dd-tile.snapped (the 62px badge parked inside a filled zone — not a card) and .dd-stage.seq-words (word tiles size to their text; equal squares would clip long words, and sentence-building is not the matching mechanic).  28n: A NO-STIMULUS QUESTION RECLAIMS THE EMPTY SPACE (CSS only). After 28m stripped the 🔊 chip from the four audio-only stimuli, those slides looked half-empty and I flagged it to Yasir as a centring problem; he asked for a centring pass. I MEASURED FIRST and my flag was WRONG — the cells were already centred exactly (142px above, 142px below a 210px row in a 494px grid; .opt-grid already carries align-items:center + align-content:center), so a centring change would have done nothing. The real problem was that the tiles kept their with-a-stimulus size while the stimulus slot stood empty, so the space read as a void. The tiles now grow into it (min-height 210->300, glyph 96->112, pic 134->158), which also gives a KG thumb a bigger target. Scoped with :has() to rows WITHOUT a .stimulus-pic and excluding .stage.tut, so every slide that has a stimulus — and all the 27h tutorial-fit work — is untouched. Also RULED this round: the Swiftie header volume chip is template furniture and STAYS (Yasir 2026-07-28), which closes the flag 28m left open; 'no vol button' means the stimulus chips, not the shell's replay control.  28m: NO VOLUME BUTTON ANYWHERE. Yasir 2026-07-28: "we use vol button nowhere. if nothing then we keep question only." This closes the flag 28c deliberately left open: four stimuli have NO image (TAP_SHAPE_BY_NAME, TAP_LETTER_BY_SOUND, MASTERY_SILENT_PICK sound_to_letter + name_to_shape), so stripping their 🔊 + 'नाम सुनो'/'ध्वनि सुनो' chip looked like it would leave a blank card and I asked rather than guessed. The ruling is that a slide with nothing to show shows the QUESTION only — stimulus is now null on all four. The chip was ALSO the only way to re-hear the sound, so the FUNCTION moved to the header replay (state.replayAudio, set AFTER mount so mountTapOptions cannot overwrite it) rather than being deleted along with the affordance — a KG child must be able to hear the sound again. The 🔊 glyph also came off the three read-aloud BUTTONS (SENTENCE_READ 'पूरा पढ़ो', SENTENCE_SOUND and SENTENCE_PICK_PIC 'फिर सुनो'); those keep the button and their Hindi text, so nothing loses function there either. Touches 4 games: HI01H04_L02_S02 (8 slides), HI01H06_L01_S01 (7), HIKGH02_L01_S03_P2 (8), MTKGA03_L01_S01 (2). NOT TOUCHED, flagged for a ruling: the HEADER replay chip and the LANDING .sg-vo chip are still speaker icons. I left them because they are the only remaining way to re-hear a prompt, and because Yasir and the SME both reviewed screenshots showing the header chip today without flagging it — but if "nowhere" includes those, they need a text affordance first, not deletion.  28l: HARD RULE — NO QUESTION IS EVER SOLVED AUTOMATICALLY IN A TEST PHASE. Yasir 2026-07-28: "regardless of what interaction, as long as we in guided or practice, no question will be solved automatically." Only a tutorial slide may finish a question itself (there it is a demonstration). Two mechanics were still answering FOR the child on the last wrong attempt: PATTERN_BUILD and SEQUENCE_COMPLETE both ran `setTimeout(placeCorrect, 1000)`, so the engine filled the blank in and moved on — the child never answered. Yasir caught SEQUENCE_COMPLETE live on HIKGH04_L02_S02's build slides. Both now glow the correct tray tile, disable the rest, show the hand (phase-gated, so round 3 still gets none) and WAIT. MATCH_GENDER_PAIRS and SEQUENCE_DRAG already held the glow (25d) but never dimmed the distractors or pointed, so they route through the same helper now. The point of this bump is that the rule lives in ONE place — maySolveFor()/terminalHold()/clearHold() — because it has now drifted three times: 25d fixed two mechanics and left two auto-solving and two half-done, and each was re-reported separately (SORT_GENDER 06:32, SEQUENCE_COMPLETE 13:32) after I had already called the class closed. A new mechanic inherits the contract instead of re-deciding it. clearHold() releases the tray when the child does place it, or the disabled tiles would stay dead for the remaining blanks. STILL OPEN and deliberately not in this bump: SORT_GENDER has no terminal rung at all (a 6th path, different structure — bins not tiles); it does not auto-solve, it just gives audio only, so it is queued rather than rushed into this one.  28k: OPTIONAL MIDDLE HINT RUNG (`hint2`). The SME on Pehli Dhwani specified a THREE-rung ladder — rung 1 'फिर से कोशिश कीजिए।', rung 2 'शब्द को बोलकर देखिए, और पहली ध्वनि चुनिए।' (a strategy, NOT the answer), rung 3 the answer. Our ladder had two rungs, so rung 2 spoke `hint`, the level that names the answer; there was nowhere to put a strategy line. Six rung-2 sites (mountTapOptions, dragWrong, wrongClip, SORT, SENTENCE_FIND, TAP_ALL_WITH_SOUND) now call midHint(), which prefers `hint2` and falls back to `hint` — so a card that authors no hint2 behaves EXACTLY as before and the rest of the fleet keeps two rungs. CONFLICT, RAISED AND RULED: a third rung means the answer arrives on the 3rd wrong, so that deck's max_attempts goes to 3 and the card blocks after the 3rd attempt — which contradicts Yasir's standing 'blocks only after the 2nd wrong attempt'. I flagged it; he ruled 2026-07-28 'implement as per written by the SME'. It is therefore DECK-SCOPED to HIKGH02_L02_S01 only. Do not raise max_attempts or author hint2 on another game without the same explicit ask on that game's deck.  28j: THE GUIDING HAND, FIXED AT THE CHOKE POINT INSTEAD OF PER MECHANIC. Yasir found a hand in round 3 again (MTKGA01_L04_S01 P5, a COUNT_TAP practice slide) after I had gated handOnAnswer in 28f and startNudge in 28i. Cause: ~25 sites call pointNudgeAt DIRECTLY and bypassed both gates. Gating call sites one at a time is what produced three rounds of 'fixed'; the rule now lives in pointNudgeAt itself, default TUTORIAL ONLY, so every existing raw site becomes correct by construction and any future mechanic inherits it. handOnAnswer passes earned=true for terminal help, the one case Yasir allows in guided because two failed attempts paid for it. Round 3 gets no hand by ANY route. ALSO FIXED, both regressions from my own 28h placement change: (a) EMPTY SKY — the 'flip above if it would run off the stage' clamp put the hand 100-395px above a tall TAP_IN_SCENE hotspot, pointing at open air on 4 of 6 guided slides of HI01H07_L01_S02. Flipping is simply wrong for a hand that points UP; it now clamps INSIDE the stage instead, worst case overlapping the target's lower edge as it always used to. (b) A LABEL BELOW THE ANCHOR — anchoring to the passed element's bottom only helps if that element contains the text, and GENDER_INTRO passes the cat IMAGE while .cat-word sits below it, so 'below the image' landed on the word (56% covered on T3; 100% before 28h). Rather than teach each mechanic a smarter anchor, placement now MEASURES real text rects in the tile and drops below the lowest one that shares the column. Also: check_system's 'hand on answer, all phases' marker was a FALSE GREEN asserting the opposite of the live rule — renamed and re-keyed to the 28j choke point.  28i: WHY THE ROUND-3 HAND KEPT COMING BACK, plus four fleet-wide gaps. (1) THE ROUND-3 HAND BAN IS NOW ENGINE-ENFORCED. I reported this fixed three times and Yasir kept seeing it, because 28f only closed the answer/tap paths (handOnAnswer + HAND_PHASES) while the drag/count PROGRESS cue reaches the hand through startNudge, whose only round-3 guard was the CARD's scaffold_rules.nudge_timeout_ms — and 22 of 27 cards set `independent: 8000` (two also set practice). So on any drag or count slide in round 3, eight seconds of hesitation still produced a hand, in nearly every game in the fleet. Card data cannot be the guard for a hard rule: startNudge now refuses outside TUTORIAL and ignores a card that arms round 3. Tutorial-only, not {tutorial,guided}: the idle hand is UN-EARNED (a mount timer), and Yasir's rule is that any visual hint waits for 2 failed attempts — guided still gets its hand, but only through handOnAnswer at terminal help, which is where it is earned. Verified with a real 10.6s untouched wait on round-3 drag slides (P1/P3 SORT_GENDER, card arming practice+independent at 8000): no hand. (2) THE SAME FIX, ONE COPY OF IT — startNudge carried its own duplicate of the old positioning formula, so 28h's 'hand sits below the tile, never on its word' never reached a single progress cue; it delegates to pointNudgeAt now, so placement cannot drift between the two paths again. (3) SENTENCE_FIND SPEAKS THE TARGET WORD, NOT ALL FOUR (Yasir): the slide says 'जो शब्द सुनो, उस पर टैप करो।' and the engine read every option aloud, so nothing identified the word to tap — the task was unanswerable by design. Target-only is the default; the word-by-word read is opt-in via data.read_along:true. This REVERSES an SME ask from that same deck (21c flag #5) — flagged for Yasir, not silently dropped. Its trailing startNudge(slide,_tgt) — a pre-attempt hand on the answer, the third form 28f missed — is gone. (4) THE TWO-HINT LADDER REACHES THE PRODUCE MECHANICS. Yasir's 2026-07-25 'two hints everywhere, every game, every interaction type' landed for taps (24a) and drags (25a), but MAKE_SET / MAKE_EQUAL / BUILD_TO_NUMBER / TAP_ALL_WITH_SOUND grade their own wrong answers and inherited neither — and BUILD_TO_NUMBER passed `null`, i.e. its wrong-answer feedback was SILENT, text-only, to a child who cannot read. All four now call wrongClip(), one grader in one place; with no hint1/hint authored it returns the same try_again as before, so no card regresses. MAKE_NUMBER and COMBINE_COUNT reach completeSlide(true) only — no wrong path exists, so demanding a ladder was a checker false positive and they are excluded by name. (5) LANDING IMAGE HERO IS SIZED AT ALL — `.sg-hero img{height:118px}` has never matched anything (the element is .sg-art), so an image hero rendered at natural size: 1244x695 in a 1069x438 card, shoving the landing title to top:-106px, off screen. Same selector mismatch 16e fixed for count hands and left for images. (6) WIDTH-FIT MEASURES INK, NOT ADVANCE — the SME's original 'make the words fit inside the box', still unfixed. Devanagari paints wider than it advances, and the real bug was the BRANCH: a word whose advance fit never entered the shrink path, so its ink overflow was never considered (यह 66 ink vs 59 box, बकरी 138/132, एक 91/85, कहाँ 184/180 — all four had fitting advances). Fits whichever actually paints wider, so Latin/numerals are untouched. Also: engine_guard now WARNS (never blocks) when another session holds the engine lock — the stale-local-copy trap that produced a request against already-fixed 28g code.  28h: TWO FIXES Yasir named directly. (1) THE HAND NO LONGER COVERS THE WORD — pointNudgeAt planted the fingertip 56 design-px INSIDE the tile's bottom edge, which is fine on a bare picture tile (its only caller for years) and fatal the moment 28f started pointing it at an .opt-cell, whose bottom strip IS the label: measured 92x27px of the answer's word hidden under the hand, i.e. we glowed the answer and then covered it. The hand now starts just past the tile's bottom edge, clamped to flip ABOVE the tile if that would run off the stage foot rather than being silently clipped. Verified by measurement AND by looking: G1 hand t646 vs tile b641, label b627, vertical overlap 0, still centred, still tappable. (2) ONE GATE PER ROUND, NOT PER PHASE NAME — 28a made `independent` an alias of practice to fix a MISSING round-3 gate, and thereby created a DUPLICATE one: a card using both names crossed two 'different phases' and showed the identical 'अब आपकी बारी!' gate twice, back to back. 7 of 27 cards use both. Gates now dedupe on a ROUND id (PHASE_ROUND), so that pair collapses to one and any unmapped phase (mastery, or a future name) fails safe to NO gate — which is the ruling: three rounds, no round 4. Also closed as NOT-A-DEFECT: a report that the round-3 hand ban was still broken. Measured on P1 at 28h — terminal help fires, answer glows, stays tappable, handShown FALSE. 28f had already fixed it; the report read a stale source. The raw pointNudgeAt calls left in MEET_ORDER/COMPARE_TWO/the demo step chain are auto-DEMO teaching animations, not hints, and stay.  28g: 'going back from last screen gets swiftie stuck' — clearHost() dropped body.is-end but never removed .show from #endScreen, so the celebration layer (cheering Swiftie + 'बहुत बढ़िया!') stayed overlaid on the slide you navigated back to, covering the middle option. I had hit this myself and mis-triaged it as low severity ('a child cannot go back from celebration') — but REVIEW uses the dev nav, so it hit every review pass, and it also caused 60 phantom overlap findings in my audit sweep. Deliberately scoped to the end screen only: also clearing stage.blurred/gating here would un-blur the gray phase gate mid-flight, since mountSlide runs inside the gate's callback.  28f: ONE RULE FOR THE GUIDING HAND, in one place (handOnAnswer()) — Yasir 2026-07-28, two rulings merged: tutorial may show the hand (teaching); guided ONLY after 2 failed attempts; round 3 (practice / independent / mastery) NEVER, 'regardless of whatever name we save it by'. Also DELETED the idle/mount hand on answerable slides: startNudge fired at nudge_timeout_ms (guided 5000ms) — right after the prompt VO — pointing at the stimulus before the child had tried anything. A visual hint is now earned only by 2 failed attempts. All 5 terminal-help paths route through handOnAnswer, so the phase rule cannot drift per-mechanic again (27d put the hand in 1 of 5 and I reported it as 'every phase'). Demo/progress nudges inside the count and drag mechanics are untouched — teaching animations, not hints.  28e: (1) A DISABLED OPTION IS NEVER RED — .crossed / .sentence-word.crossed / .tap-all-item.nope now match the plain grey .faded lock. Two looks for one meaning was the complaint; this supersedes the red ring 27a introduced. 1st-wrong buzz/shake unaffected (28d unblocks that card after 700ms so it never rests as disabled). (2) TAP_IN_SCENE no longer PULSES the correct hotspot 6s after mount — that handed the answer over before the child tried (measured: identical at t=1s, only .correct-hot pulsing at t=7s). The glow now comes only from terminal help, where distractors also fade. (3) FIXED MY OWN 28a REGRESSION: the new SEQUENCE_COMPLETE picture stimulus pushed .seq-tray under the आगे pill (bottom ~30% of two tiles a dead zone on all 4 build slides). .seq-stage now top-anchors, tightens its gap and reserves the pill's lane.  NOT DONE, needs care: the fleet-default 'remove handnudge on idle' ruling — startNudge is also used by drag/count mechanics for PROGRESS cues, so disarming it globally would remove useful guidance, not just idle hints. Filed.  28d (three REGRESSIONS of my own, re-reported by Yasir): (1) the stuck RED RING — the 700ms unblock was guarded by `if(!state.locked)`, but state.locked is also set TRANSIENTLY while reveal_seq narrates, so a 700ms landing in that window skipped the removal and .crossed stayed FOREVER (permanent red ring, permanently dead card). Now keyed off this cell only (.correct / state.helpShown). I had found that same state.locked trap while fixing the idle-VO ticker, documented it there, and failed to propagate it back. (2) HAND NUDGE only existed on ONE of FIVE terminal-help paths — 27d added it to mountTapOptions.revealAnswer and I reported it as 'every phase', but practice/independent rounds are drags / sentence-finds / scene-taps. Added to MATCH_DRAG_N.terminalHelp, SENTENCE_FIND and TAP_IN_SCENE, each with stopNudge() first so the flow nudge cannot drag the hand off the answer. (3) STORY_SCENE picture drifted via `storyKenBurns` — killed engine-wide; a teaching picture must not move under a KG child. Root cause common to (1) and (2): verified narrowly, reported broadly.  28c: STORY_QUESTION stimulus is the IMAGE ONLY — the 🔊 glyph and the 'प्रश्न सुनो' label were hardcoded in the module (d.stim_hi only reworded the label), so no card could remove them. Tapping the picture still replays the question and the header chip still works: the affordance is gone, not the function. No thumb (mastery / hide_recall) now passes a null stimulus instead of rendering an empty card. The four AUDIO-ONLY chips (TAP_SHAPE_BY_NAME, TAP_LETTER_BY_SOUND, MASTERY_SILENT_PICK x2) are untouched — they have no image, so stripping them leaves a blank card; flagged for a ruling.  28b: PHASE GATE BACKGROUND GOES GRAY (Yasir + Figma ref). Scrim 35% -> rgba(64,64,70,.58) and backdrop-filter gains grayscale(.9) brightness(.92), so a colourful KG scene actually DESATURATES instead of merely dimming; grayscale rides the BACKDROP so the peeking Swiftie and the headline keep full colour. Also kills `body.is-start .phase-gate{background: transparent !important}` — the FIRST gate (landing->tutorial) had NO scrim at all, open as flag S2-a; this closes it. Verified by SCREENSHOTTING the gate (capture_pages cannot — it is a ~2s transient) on both the mid-lesson and is-start paths.  28a [code tags read `[27j]` — written before midnight, engine_bump rolled the date; grep [27j] for these six changes] (batched wave fixes, 6 module changes, all ADDITIVE — a card that does not opt in behaves exactly as before): SEQUENCE_COMPLETE takes an opt-in picture stimulus (d.img/picture/emoji) so build-the-word slides can show the thing being spelled; TAP_IN_SCENE gains the two-rung hint ladder + terminal help that GLOWS the target instead of solving it, and .tis-hot is now VISIBLE on every candidate (it was border:none/transparent, so a child had nothing to aim at); mountTapOptions finally speaks audio.correct after the tapped word (12 STORY_QUESTION slides were silent); MATCH_DRAG_N drop-zones speak on tap, reusing pair.match_audio; SENTENCE_FIND: rung 1 now plays hint1 (it played try_again), `hint` is spoken as the terminal line, and terminal help NO LONGER locks+completes the slide — RULE-9 breach, it was solving the answer for the child; PHASE_GATE_TITLE/VO gain `independent` as an ALIAS of practice — three rounds, not four: round 3 is named practice OR independent and a card using the latter got no round-3 gate. `mastery` is deliberately NOT gated (no round 4), so vo_pt_mastery stays unplayed and that verify_bundle warn is a checker artifact. Also: _tools/check_system.py now verifies the ENGINE READS hint1/hint per mechanic, closing a false green where authored hints could never play.  27h: F1 tutorial-frame fit — tall teach modules (STORY_SCENE .story-frame 900x432, GENDER_INTRO .gender-cat 430px) overflowed the 318px .tut-content and, because it is justify-content:center, split the overflow BOTH ways: heading 78-100% covered above, caption/word-chip behind the आगे pill below. Regression from the 25e/27c change that shortened every tut-card 87px. Now the picture SHRINKS (what the SME asked) instead of pushing the layout apart; scoped to .stage.tut so guided/practice are untouched. Cleared 6 requests across 4 games. · F2 shared baseline — centerInkGlyph ink-centred EACH glyph, so a word with an above-line matra sat up to 23px lower than a plain word inside one row (the SME's 'text alignment is not right', 7 of 17 pages). A row with >1 .ink-glyph now uses constant FONT metrics; a lone showcase glyph keeps ink-centring. Both verified by LOOKING at headless captures, not only by measuring.  ENGINE STAMP — the receipt (verify_bundle.py) asserts a built game carries THIS exact string; a stale/divergent engine → hard FAIL, so the wrong engine can never silently ship. BUMP IN LOCKSTEP with engine_guard.py + swiftpal_build.py + unified_build.py + verify_bundle.py on EVERY engine change (r2: drag/pattern feedback standard + PHASE_TRANSITION; r3c: off-white toybox bg, dual-coded counting options numeral+hand, full-body landing mascot, true-corner square/rect; r3d: Swiftie mouth-stops-when-silent (still frame), Arabic display numerals 1/2/3, landing shows full 1..n hand row, volume-chip aligned in header pill); r4: additive number-sequence path modules MEET_SEQUENCE + SEQUENCE_COMPLETE + SEQUENCE_NEXT (MTKGA01_L02_S04 "completes a number sequence within 20") — purely additive, existing lessons untouched. r4-landing (16c): landing recomposed to match reference — small corner mascot (230px, was 300), content re-centered (dropped padding-left:300 right-shift hack), VO chip moved from top-right to the mascot's shoulder (left:150/bottom:34, 58px). CSS-only; supersedes the 16b right-shift overlap fix.; 16d: TRUNK MERGE — unified the two diverged engine lines at base 12d: the 15e mechanics trunk (CONSERVE_COUNT + COUNT_ACTION + COUNT_DRAG_MATCH + ORDER_BY_WEIGHT + PICK_SET_BY_NUMBER, per_row/dense count-set grouping, bigNumCell numeral-only test options, title_first landing order) + the 16c r4 design trunk (boot loader, peek phase-transition, concept-strip landing, DS header, flat CTAs, sunburst/star-burst celebration, recomposed corner-mascot landing). Nothing dropped from either line. 16e: landing count-hero hand sizing FIXED — the .sg-hero sizing selectors never matched (template uses .sg-art); hands rendered natural-size, overflowing the card (title pushed outside the box, numeral-1 hidden behind the mascot — user-visible on MTKGA01_L02_S01). Retargeted to .sg-art .sg-hand/.sg-hand-cell/.sg-hand-num (112px; image-hero landings untouched). CSS-only. 16f: INTRO strip fit-or-wrap — old sizing assumed 1220px + a -100px breakout and punched wide strips (10 numerals, 7+ letters) through the tut-frame borders; now sized to the frame (960) and wrapping into two balanced rows below the 110px touch floor. Fixes MTKGA01_L02_S01 s00 (user-caught live) AND the HIKGH04_P2 letter-row daylight item. 21a (20a Figma-polish port): production expression heads (setSwMood sw_head_<expr>[_anim].webp + mascot.webp fallback), body-level start/end edge-layers + full-viewport dark blur phase-gate, inline SVG audio/hint/sg-vo chips, nudge_hand_new/nudge_tap_v2, SORT-01 opt-in one-by-one tray reveal + speak-on-match, INTRO picture mode (data.pics) + auto-INTRO instruction VO, transition-audio AUDIO_EXT fix, landing shape-tiles, self-disabling browser-TTS fallback for missing clips (ruled SHIP), F2F7FA ground + red/green-reserved sweep; merged WITH the live in-word-matra colouring + reveal_seq _sayThen strict-VO + MATCH_DRAG_N md-word WIP (nothing reverted). 21c (consolidated wave bump): +COMBINE_COUNT (Put-Together: drag group B onto A, merge to one row, tap-count total ≤10) and +TRACE_SHAPE (finger-trace the outline — a PRODUCE gesture; forgiving corridor, ~80% coverage → success, idle demo, upright/sharp/fixed-colour, no score/timer); MATCH_DRAG_N tap→LETTER (tap_audio) / correct-drop→WORD (match_audio) split (gated+fallback, siblings untouched); SEQUENCE_DRAG word-mode tap-a-tile→speak-word + glow-order + whole-sentence-read-at-end, SENTENCE_READ/SENTENCE_FIND word-by-word read-along hand-nudge (word-mode gated; letter-sequence untouched); landing gate cursor:default (hand-pointer on buttons only). All additive. 24a (HI01H08-fork port + N7-N10 audit bump): AUDIO GEN-TOKEN (_audioGen) — stopAudio/play supersede pattern kills echo/double-voice, orphaned clips, stale fallback-timer resume + cancelled-TTS resume (N7a); replay chips get navUnlock + guards (isPlaying / revealing / demoRunning / ownsAudio-without-replay) so फिर-सुनो mid-VO can no longer brick gated teach slides or gen-kill self-driving demo chains (N7b/N8); state.revealing gates drag + replay during reveal_seq/sortSeqReveal (N8 drag path); capture-phase DRAG VO-GATE on draggable tiles (isPlaying + 4s _voStart cap — speak-on-press tiles NOT over-blocked) (A1); mountTapOptions tap gate: one-tap-at-a-time _busy + 4s _vb + no taps during ANY VO + additive hint1 first-wrong clip (A2); auto walk-through INTRO/GENDER_INTRO ignore card taps until taught, then tap=replay (A3); playbackRate pinned 1.0 (A4); SORT tray ghost-slot .sort-ghost on placement (A5); MATCH_DRAG_N final-drop word no longer truncated by the celebrate VO (C); viewport pinch-zoom lock (N9); star-burst spark fill-mode both (N10). N11 (asset preload) deferred. 25a (drag hint ladder): dragWrong() now grades its spoken feedback like the tap path — 1st wrong plays the slide's hint1, 2nd+ plays hint (the level that GIVES the answer); all 12 drag wrong-drop sites inherit it with no call-site change, and cards without hint1/hint authored still play try_again unchanged (additive, zero sibling regression). Yasir ruling 2026-07-25: two hints everywhere, every game, every interaction type. 27c (autonomous teaching + tutorial fit): mountTapOptions honours slide.data.auto — a TEACHING slide now runs the whole beat itself (prompt on the picture -> teaching line on the right choice -> that choice goes green+pulses, wrong ones fade, its letter sounds -> आगे unlocks), taps dead throughout, no confetti/sfx; opt-in, and SENTENCE_SOUND/INTRO/GENDER_INTRO/MEET_* keep their own pre-existing auto paths (they return before mountTapOptions). CSS: .stage.tut q-rows that carry a picture stimulus lay it BESIDE the options — the 25e card leaves 273 design px and stimulus+gap+opt-cell need 434, so the grid track squashed to 43px and the cells spilled onto the picture (Yasir 2026-07-27, Antim T2/T3). 27g-fix (relabelled — 27d was taken by the terminal-help hand): the auto chain no longer points the hand at the picture stimulus — pointNudgeAt plants the fingertip 56px above an element bottom, i.e. straight over a .stimulus-pic .lbl, so the hand hid the very word being taught for the whole prompt beat.
   try { window.SWIFTPAL_ENGINE = ENGINE_VERSION; } catch(e){}
 const $ = id => document.getElementById(id);
 
@@ -13,6 +13,35 @@ function fit(){
   // viewport is covered edge-to-edge. Any leftover bars on non-16:9 are blue, not white.
   const s = Math.min(vw/1333, vh/750);
   document.documentElement.style.setProperty("--scale", s);
+  _fitSkyHole();
+}
+/* [r28] THE HOLE IN THE SKY HAS TO SIT ON THE CARD, NOT IN THE MIDDLE OF THE WINDOW.
+   Yasir: "the stars and bubble animation should not overlap on the main rectangular box of cover
+   page."
+   The kit already punches a hole so drifting stars do not cross the translucent card - but it is
+   a FIXED 1074x416 centred on the VIEWPORT, while the card is centred inside the scaled stage and
+   is 1111x455. Two mismatches: the hole is 40px smaller than the card in each axis, and it is
+   only in the right place when the stage happens to be centred in the window. Measured on the
+   cover as shipped: 10 of the 87 drifting pieces were over the card, several of them deep inside
+   it rather than in the edge band.
+   Measuring the card and driving the mask from its real rect fixes both at once, and keeps
+   working at any window size - which a hand-tuned constant cannot. 12px of bleed either side so
+   nothing peeks out along the rounded corners. */
+function _fitSkyHole(){
+  const card = document.querySelector(".sg-card");
+  const sky  = document.querySelector(".sg-sky");
+  if(!card || !sky) return;
+  const r = card.getBoundingClientRect();
+  if(!r.width || !r.height) return;          // gate hidden: leave the last good values in place
+  const bleed = 12;
+  sky.style.setProperty("--sg-hole-w", (r.width  + bleed * 2) + "px");
+  sky.style.setProperty("--sg-hole-h", (r.height + bleed * 2) + "px");
+  /* TOP-LEFT, NOT CENTRE. mask-position takes lengths the way background-position does: the
+     value places the image's top-left corner, so feeding it the card's centre put the hole half
+     its own size down and to the right of the card - which is why stars were still crossing the
+     box after the size was already correct. */
+  sky.style.setProperty("--sg-hole-x", (r.left - bleed) + "px");
+  sky.style.setProperty("--sg-hole-y", (r.top  - bleed) + "px");
 }
 window.addEventListener("resize", fit);
 window.addEventListener("load", fit);
@@ -252,7 +281,51 @@ const SwiftPAL = window.SwiftPAL = {
 };
 
 /* ---------- 3. AUDIO ---------- */
-let isPlaying=false, currentAudio=null, _audioGen=0, _voStart=0;
+let isPlaying=false, currentAudio=null, currentVoiceSource=null, _audioGen=0, _voStart=0;
+/* [31x] ANDROID LOW-LATENCY VO — decode every short clip ONCE and replay it from memory.
+   The tab plays over Wi-Fi from a LAN server; a per-play() fetch costs 200-500ms AT THE MOMENT the clip is
+   needed, which lands as silence between words and reads as "the VO is slower on the tab". Buffers remove
+   the network from the playback path completely. Device-passed on HI01H06_L01_S01, 2026-08-07. */
+let _voiceAC=null;
+/* [31z] play() PUBLISHES the length of what it is currently speaking, in ms. Any per-clip net
+   must be able to ask "how long is this clip?" — and on the buffer path there is NO Audio
+   element to interrogate, so a net reading currentAudio.duration silently falls back to its
+   flat default and cuts the clip it exists to protect. Null whenever nothing is speaking. */
+let _curVoMs=null;
+const _voiceBuffers=new Map(), _voiceLoads=new Map();
+let _audioWarmPromise=Promise.resolve(), _initialAudioWarmPromise=Promise.resolve();
+function _voiceContext(){
+  if(!_voiceAC){
+    try{ _voiceAC=new (window.AudioContext||window.webkitAudioContext)({latencyHint:"interactive"}); }
+    catch(e){ _voiceAC=null; }
+  }
+  return _voiceAC;
+}
+/* ALWAYS go through this, never _voiceContext(), on any path that is about to make sound: an interrupted
+   Android context is `suspended`, and a suspended context accepts start() and plays NOTHING — no onended,
+   so vo-lock never lifts. */
+function _resumeVoiceAudio(){
+  const c=_voiceContext();
+  if(c && c.state==="suspended") try{ const p=c.resume(); if(p&&p.catch)p.catch(()=>{}); }catch(e){}
+  return c;
+}
+function _loadVoiceBuffer(src){
+  if(!src) return Promise.reject(new Error("missing audio source"));
+  if(location.protocol === "file:") return Promise.reject(new Error("file:// - element playback"));   // local file: no fetch (CORS), the element path plays it
+  if(_voiceBuffers.has(src)) return Promise.resolve(_voiceBuffers.get(src));
+  if(_voiceLoads.has(src)) return _voiceLoads.get(src);
+  const p=(async()=>{
+    const c=_voiceContext();
+    if(!c||!window.fetch) throw new Error("Web Audio unavailable");
+    const r=await fetch(src,{cache:"force-cache"});
+    if(!r.ok) throw new Error("audio fetch failed: "+r.status);
+    const b=await c.decodeAudioData(await r.arrayBuffer());
+    _voiceBuffers.set(src,b); return b;
+  })();
+  _voiceLoads.set(src,p);
+  p.catch(()=>{}).finally(()=>_voiceLoads.delete(src));
+  return p;
+}
 let isMuted = false;
 function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAudio();
   document.querySelectorAll(".audio-chip").forEach(c => c.classList.toggle("muted", m)); }
@@ -261,23 +334,20 @@ function setPlaying(on){
   // .playing toggle across the header chip AND the tut-card replay chip (the header is hidden in the
   // tut frame, so the in-card .tut-audio is the only visible affordance and must react to VO too).
   isPlaying=on;
-  /* [30g] VO LOCK — untappable, zero visual. See style.css. Driven off setPlaying (never a timer) so
-     the lock cannot outlive the audio; toggled on `on` alone so it tracks the tap gate under mute. */
-  document.body.classList.toggle("vo-lock", !!on);
   if(on) _voStart = Date.now();   // drag VO-gate 4s safety: stamp when a VO began so a stalled clip can't soft-lock the tiles
   document.querySelectorAll(".audio-chip, .tut-audio, .sg-vo").forEach(c => c.classList.toggle("playing", on && !isMuted));
-  /* [LOCAL 2026-07-29 — RULING_no_tapping_during_VO] The tap gate already refused taps while a clip
-     played (isPlaying), but NOTHING on screen changed, so a child tapped a live-looking card and got
-     silence. That silent non-response was the reported defect, not the blocking. This body class is
-     the VISIBLE half; the CSS dims + un-points every interactive element.
-     Driven off setPlaying — NOT a timer — deliberately: this is the one function every exit passes
-     through (stopAudio, and fire() for natural end / supersede / cancelled TTS / missing-file
-     fallback), so the lock can never outlive the audio and strand the slide.
-     Toggled on `on` alone, NOT `on && !isMuted`: the tap gate keys off isPlaying whatever the mute
-     state is, so gating on mute here would recreate the exact invisible-block bug while muted. */
-  /* [30f] the page-wide VO dim was REMOVED here — Yasir: "dont block the entire screen fam".
-   It also set pointer-events:none, which stopped a tap during FEEDBACK audio from reaching the tap
-   gate and so silently undid 28t (feedback taps must count). See the shared engine's note. */
+  /* [30g] VO LOCK — UNTAPPABLE, ZERO VISUAL. Yasir 2026-07-30: "cards untappable when VO being
+     played, you dont need to show any affect for untappable, just make it untappable."
+     28u bundled a lock (pointer-events:none) with a pale board (opacity:.55). 30f removed BOTH, which
+     went too far — nothing was untappable any more. The class is back; its CSS now carries only
+     pointer-events. Never re-add opacity/filter under it: a "wait" cue, if ever wanted, belongs on the
+     single card the child touched.
+     Driven off setPlaying and NOT a timer, deliberately: this is the one function every playback exit
+     passes through (stopAudio, and fire() for natural end / supersede / cancelled TTS / missing-file
+     fallback), so the lock can never outlive the audio and leave a slide permanently dead.
+     Toggled on `on` alone, NOT `on && !isMuted` like the chips above: the tap gate keys off isPlaying
+     regardless of mute, so gating this on mute would let taps land while muted and diverge from it. */
+  document.body.classList.toggle("vo-lock", !!on);
 }
 /* stopAudio(): hard-stop the current clip AND bump the playback generation so any in-flight
    callback (a chain's onended, a fallback timer, a cancelled TTS onend) becomes a no-op. This is
@@ -285,6 +355,10 @@ function setPlaying(on){
    NEW clip on top of the current one, or resume onto the next screen. */
 function stopAudio(){
   _audioGen++;
+  if(currentVoiceSource){
+    try{ currentVoiceSource.onended=null; currentVoiceSource.stop(); currentVoiceSource.disconnect(); }catch(e){}
+    currentVoiceSource=null;
+  }
   if(currentAudio){ try{ currentAudio.onended=null; currentAudio.onerror=null; currentAudio.pause(); }catch(e){} currentAudio=null; }
   try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}   // [20a] also stop the TTS placeholder
   setPlaying(false);
@@ -294,11 +368,17 @@ function stopAudio(){
    only when the MP3 is missing; once real clips ship, play() succeeds and this never runs. Returns true if
    it took over (so play() doesn't ALSO schedule a silent beat). */
 function _ttsSay(src, onDone){
-  /* [30o] THE TTS FALLBACK IS GONE (Yasir 2026-07-31): "there should be no way to fall back on tts,
-     it is fine if we dont have audio, we will know if an audio is missing but having tts is worse."
-     A synthetic voice MASKS a missing clip — it made a broken build sound finished. Silence is
-     diagnostic. Kept as a stub, not deleted: an unfound call site would ReferenceError and take the
-     slide chain down, whereas false routes it into the silent-beat path that already exists. */
+  /* [30o] THE TTS FALLBACK IS GONE. Yasir 2026-07-31, after hearing a robot voice on a game whose VO
+     is 100% human: "there should be no way to fall back on tts, it is fine if we dont have audio, we
+     will know if an audio is missing but having tts is worse."
+     That is a product ruling, and it is the right one: a synthetic voice MASKS a missing clip. It made
+     a broken build sound finished, so nobody could hear the gap the placeholder was invented to cover.
+     Silence is diagnostic. A missing clip now reads as missing.
+     KEPT AS A STUB rather than deleted on purpose. Any call site I have not found — a per-game
+     engine_local, an older isolated copy, something in a build script — would throw ReferenceError on
+     a deleted function and take the whole slide chain down with it. Returning false routes every caller
+     into the silent-beat path it already handles. Same trade as the unused @keyframes: the stub is the
+     safe half. The browser speech API is never touched from here again. */
   return false;
 }
 
@@ -307,31 +387,80 @@ function _ttsSay(src, onDone){
    play()/stopAudio() has since run, this call's fire/onFail/fallback-beat bail — a superseded chain
    can never start a clip over the current one, orphan the new clip (stale onFail nulling currentAudio),
    or resume onto the next slide (fallback timers + cancelled-TTS onend die with the token too). */
+/* [31y] REAL DURATIONS FROM THE DECODED BUFFERS — see _tools/failsafe_standard.py.
+   [31x] warms every card clip into _voiceBuffers during the landing, so a clip's true length is known
+   synchronously, by src, before any chain starts. Deadlines are therefore COMPUTED, never guessed.
+   Unknown/un-warmed clip -> a generous absolute backstop, never a tight race: a net that is too long
+   only delays a recovery that rarely fires, while a net that is too short cuts a child's teaching clip. */
+function _clipMs(src){
+  const b = (src && typeof _voiceBuffers !== "undefined") ? _voiceBuffers.get(src) : null;
+  return b ? b.duration * 1000 : 8000;
+}
+function _chainMs(srcs, gapMs){
+  let total = 0;
+  (srcs || []).forEach(s => {
+    const b = (s && typeof _voiceBuffers !== "undefined") ? _voiceBuffers.get(s) : null;
+    total += (b ? b.duration * 1000 : 4000) + (gapMs || 450);
+  });
+  return total;
+}
+/* [r17] CACHE-BUST EVERY AUDIO URL. A re-recorded clip keeps its filename, so the browser has
+   no reason to fetch it again and the reviewer keeps hearing the previous take. __AUDIO_V is
+   stamped by the builder from the CONTENT of the audio folder, so it changes exactly when a clip
+   changes and not otherwise - a fresh URL on every build would defeat caching for no reason. */
+var __AUDIO_V = "872b0aa95f";
+function _av(src){
+  if(typeof src !== "string" || src.indexOf("assets/Audio/") < 0) return src;
+  return src.indexOf("?") >= 0 ? src : src + "?v=" + __AUDIO_V;
+}
 function play(src, onEnd){
+  src = _av(src);
   stopAudio(); setPlaying(true);
   const myGen=_audioGen;
-  let done=false; const fire=()=>{ if(done || myGen!==_audioGen)return; done=true; setPlaying(false); if(onEnd) onEnd(); };
+  let done=false; const fire=()=>{ if(done || myGen!==_audioGen)return; done=true; currentVoiceSource=null; currentAudio=null; _curVoMs=null; setPlaying(false); if(onEnd) onEnd(); };
   if(src){
-    const a=new Audio(src); currentAudio=a;
-    a.playbackRate = 1.0;   // natural recorded pace — any pep-up factor makes HUMAN VO too fast (Yasir 2026-07-24)
-    let handled=false;
-    const onFail=()=>{ if(handled || myGen!==_audioGen)return; handled=true; currentAudio=null; setTimeout(fire, 1200); }; /* [30o] silent beat — never a synthetic voice (Yasir); [30p] brace restored outside the comment */
-    a.onended=fire;
-    a.onerror=onFail;
-    /* [30n] AN AUTOPLAY REFUSAL IS NOT A MISSING FILE. a.play() rejects both for a broken file — where
-       _ttsSay is the intended review placeholder — and with NotAllowedError under the browser's autoplay
-       policy, which fires on every load before the first gesture. Treating them alike made a game with
-       complete human VO speak the OS voice on its landing, with the volume button as the gesture that
-       finally let the real clip through. fire() here is NOT optional: setPlaying(true) already ran, so
-       bailing without it leaves body.vo-lock on and the whole screen untappable. */
-    a.play().catch((err)=>{
-      const nm = err && err.name;
-      if(nm === "NotAllowedError" || nm === "AbortError"){
-        if(handled || myGen!==_audioGen) return;
-        handled=true; currentAudio=null; fire(); return;   // silent; the first gesture starts the real clip
+    /* [31u] trim window if this game has a VO_TRIM map; games without one play the clip whole. */
+    const _tw = (typeof _trimFor === "function") ? _trimFor(src) : null;
+    /* The pre-[31x] element path, kept verbatim as the fallback for EVERY failure: no Web Audio, fetch or
+       decode error, start() throw. Failure mode = today's behaviour, never worse, and never TTS. */
+    const htmlFallback=()=>{
+      if(myGen!==_audioGen)return;
+      const a=new Audio(src); currentAudio=a; a.preload="auto";
+      a.playbackRate = 1.0;   // natural recorded pace — any pep-up factor makes HUMAN VO too fast (Yasir 2026-07-24)
+      if(_tw){
+        a.addEventListener("loadedmetadata",()=>{ try{ if(isFinite(a.duration)&&_tw[0]<a.duration)a.currentTime=_tw[0]; }catch(e){} });
+        a.addEventListener("timeupdate",()=>{ if(a.currentTime>=_tw[1]){ try{a.pause();}catch(e){} fire(); } });
       }
-      onFail();
-    });
+      let handled=false;
+      const onFail=()=>{ if(handled||myGen!==_audioGen)return; handled=true; currentAudio=null; setTimeout(fire,1200); }; /* [30o] silent beat — never a synthetic voice (Yasir) */
+      a.onended=fire; a.onerror=onFail;
+      /* [30n] AN AUTOPLAY REFUSAL IS NOT A MISSING FILE. NotAllowedError/AbortError fire on every load
+         before the child's first gesture; treating them as a load failure is what made a game with perfect
+         human VO speak the OS voice on the landing. fire() here is NOT optional — play() already ran
+         setPlaying(true), so returning without it strands body.vo-lock and the screen goes untappable. */
+      a.play().catch(err=>{
+        const nm=err&&err.name;
+        if(nm==="NotAllowedError"||nm==="AbortError"){
+          if(handled||myGen!==_audioGen)return; handled=true; currentAudio=null; fire(); return;
+        }
+        onFail();
+      });
+    };
+    _loadVoiceBuffer(src).then(buffer=>{
+      if(myGen!==_audioGen)return;                 // superseded while decoding
+      const c=_resumeVoiceAudio(); if(!c){htmlFallback();return;}  /* resume, NOT _voiceContext(): a suspended
+         context queues the clip SILENTLY with vo-lock held — no sound, no onended, screen soft-locked. */
+      const source=c.createBufferSource(); source.buffer=buffer; source.connect(c.destination);
+      source.onended=fire; currentVoiceSource=source;
+      _curVoMs = (_tw ? Math.max(0, Math.min(_tw[1],buffer.duration) - Math.max(0,Math.min(_tw[0],buffer.duration))) : buffer.duration) * 1000;
+      try{
+        if(_tw){
+          const start=Math.max(0,Math.min(_tw[0],buffer.duration));
+          const dur=Math.max(0.01,Math.min(_tw[1],buffer.duration)-start);
+          source.start(0,start,dur);
+        }else source.start(0);
+      }catch(e){ try{source.disconnect();}catch(_){} currentVoiceSource=null; htmlFallback(); }
+    }).catch(htmlFallback);
   } else { setTimeout(fire, 800); }   // [30o] no src: silent beat, never TTS
 }
 /* playSfx(id): fire-and-forget sound effect on its OWN Audio element so it can
@@ -339,17 +468,17 @@ function play(src, onEnd){
    Silently no-ops if the file is missing or playback is blocked. */
 function playSfx(id){
   if(!id) return;
-  try{
-    const a = new Audio("assets/Audio/" + id + "." + AUDIO_EXT);
-    a.volume = 0.7;
-    a.play().catch(()=>{});
-  }catch(e){}
+  const src="assets/Audio/"+id+"."+AUDIO_EXT;
+  _loadVoiceBuffer(src).then(buffer=>{
+    const c=_resumeVoiceAudio(); if(!c)throw new Error("Web Audio unavailable");
+    const source=c.createBufferSource(),gain=c.createGain();
+    source.buffer=buffer; gain.gain.value=0.7; source.connect(gain).connect(c.destination); source.start(0);
+  }).catch(()=>{ try{const a=new Audio(src);a.volume=0.7;a.play().catch(()=>{});}catch(e){} });
 }
 /* ---------- game-feel: procedural SFX (no audio files) + success particle burst ----------
    WebAudio resumes on the first user tap (autoplay policy), so taps/answers always sound. */
 let _juiceAC = null;
-function _ac(){ if(!_juiceAC){ try{ _juiceAC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
-  if(_juiceAC && _juiceAC.state === "suspended"){ try{ _juiceAC.resume(); }catch(e){} } return _juiceAC; }
+function _ac(){ _juiceAC=_resumeVoiceAudio(); return _juiceAC; }   // [31x] one context for VO + procedural SFX
 function _tone(freqs, type, dur, vol){ const c = _ac(); if(!c) return; const t0 = c.currentTime;
   freqs.forEach((f, i)=>{ const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
     const t = t0 + i*(dur/freqs.length); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+0.02);
@@ -385,15 +514,30 @@ function setSwMood(m){ swMood = m;
   const expr = SW_POSE[m] || "talking";
   const animated = expr !== "talking" && !SW_STILL;   // resting face is the static talking head
   img.onerror = () => { img.onerror = null; img.src = "assets/UI/mascot.webp"; };   // [mascot-10]
-  const bust = (animated && expr === "celebrate") ? ("?r=" + (state.slideStart || 1)) : "";  // [mascot-08] replay play-once
-  img.src = "assets/UI/sw_head_" + expr + (animated ? "_anim" : "") + ".webp" + bust;
+  /* [mascot-08 rev2] the celebrate head is a play-once animation that must REPLAY on each new slide's
+     celebration. The old cache-buster (?r=slideStart) forced that by minting a NEW URL — which
+     re-DOWNLOADED the 382KB file every slide (measured 2026-08-08: 2 celebrations = 2 fetches = 763KB).
+     Clearing src and forcing a reflow restarts the animation from the CACHED copy instead: same replay,
+     zero re-download. Only needed when re-setting the SAME url — a pose change restarts naturally. */
+  const _swUrl = "assets/UI/sw_head_" + expr + (animated ? "_anim" : "") + ".webp";
+  if(animated && img.getAttribute("src") === _swUrl){ img.removeAttribute("src"); void img.offsetWidth; }
+  img.src = _swUrl;
   if(w) w.dataset.expr = expr; }
+/* [28u] CONFETTI FALLS FROM THE TOP OF THE PAGE — the correct-answer celebration (replaces the popup).
+   Yasir 2026-07-29, stated final: "confetti is supposed to come from top of the screen and not from the
+   sides", then the follow-up "it should drop from the top of the entire page". This REPLACES the two
+   bottom-corner cannons that shipped from r4 through 28t.
+   Two details that are load-bearing, both learned the hard way on HI01H01_L02_S04/S05 where this was
+   first built and verified before being lifted here:
+     - parent to <body> in VIEWPORT coords with position:fixed, NOT to .slide-stage. The stage is inset
+       inside the viewport, so spawning at the stage's top edge visibly began part-way down the page.
+     - z-index above the end-screen overlay, or the celebration that matters most is the one you cannot
+       see.
+   The element and the --tx/--ty custom-property contract are unchanged, so the existing .conf-shot
+   keyframes still drive it — only the origin and the vectors moved. Note `.confetti i{top:-24px;
+   animation:confettiFall}` in style.css remains DEAD CSS from the pre-r4 implementation: nothing
+   creates those <i> elements. Left alone deliberately rather than deleted in the same bump. */
 function confettiCannon(){
-  /* [30j] CONFETTI FALLS FROM THE TOP OF THE ENTIRE PAGE (Yasir, stated twice and final).
-     Parented to <body> in VIEWPORT coords with position:fixed — NOT to .slide-stage, which is inset in
-     the viewport, so spawning at the stage's top edge visibly begins part-way down the page. z-index
-     sits above the end-screen overlay, or the celebration that matters most is the one you cannot see.
-     Same .conf-shot element and --tx/--ty contract, so the existing CSS keyframes still drive it. */
   const VW = window.innerWidth || 1200, VH = window.innerHeight || 800;
   const host = document.body;
   const cols = ["#F9695E","#FDC23C","#4EBE6A","#4EA3F0","#9B7BE8","#FF8FB1"];
@@ -401,13 +545,54 @@ function confettiCannon(){
     c.style.background = cols[i % cols.length];
     c.style.position = "fixed";
     c.style.left = ((i + 0.5) * (VW / 48) + (Math.random()*16 - 8)).toFixed(0) + "px";
-    c.style.top = "-14px";
+    c.style.top = "-14px";                                        /* just above the page's top edge */
     c.style.bottom = "auto";
-    c.style.zIndex = "100001";
-    c.style.setProperty("--tx", ((Math.random()*140 - 70)).toFixed(0) + "px");
-    c.style.setProperty("--ty", (VH + 40).toFixed(0) + "px");
+    c.style.zIndex = "100001";                                    /* above the end-screen overlay */
+    c.style.setProperty("--tx", ((Math.random()*140 - 70)).toFixed(0) + "px");   /* gentle drift */
+    c.style.setProperty("--ty", (VH + 40).toFixed(0) + "px");      /* fall the WHOLE page height */
     c.style.animationDelay = (Math.random()*420).toFixed(0) + "ms";
     host.appendChild(c); setTimeout(()=> c.remove(), 2600); } }
+/* ---------- Block Town helpers (flagship) ---------- */
+const BT_COLORS = ["#F9695E","#FDC23C","#4EBE6A","#4EA3F0","#9B7BE8"];
+function btBlock(i){ const b = document.createElement("div"); b.className = "blk"; b.style.background = BT_COLORS[i % BT_COLORS.length]; return b; }
+function btThunk(n){ _tone([360 + n*46], "sine", 0.12, 0.10); }   // pitch climbs one step per block — HEAR the count
+function btDust(plot){ const d = document.createElement("span"); d.className = "bt-dust"; d.textContent = "💨"; plot.appendChild(d); setTimeout(()=> d.remove(), 520); }
+function btSkyline(done, total){ const s = document.createElement("div"); s.className = "bt-skyline";
+  for(let i=0;i<total;i++){ const b = document.createElement("div"); b.className = "bt-bldg" + (i < done ? " done" : "");
+    b.style.height = (26 + ((i*17) % 32)) + "px"; s.appendChild(b); } return s; }
+/* the teach scene: the crane drops N blocks ONE AT A TIME (ascending thunk + spoken count) then a
+   cardinality "freeze" (vo_total_N). Reached from MEET_NUMBER via data.present==='crane'. */
+function btCraneMeet(host, slide){
+  const d = slide.data, N = d.count;
+  state.ownsAudio = true;   // the crane drops+counts blocks on its own timed VO — skip autoPlayChain
+  const stage = document.createElement("div"); stage.className = "bt-stage";
+  const board = document.createElement("div"); board.className = "bt-board";
+  board.innerHTML = `<span class="bt-numeral">${N}</span>` + (d.word ? `<span class="bt-goallbl">${d.word}</span>` : "");   // Arabic numeral (from the integer, not card Devanagari)
+  const track = document.createElement("div"); track.className = "bt-track"; const cells = [];
+  for(let i=1;i<=N;i++){ const c = document.createElement("div"); c.className = "bt-nt"; track.appendChild(c); cells.push(c); }
+  const yard = document.createElement("div"); yard.className = "bt-yard";
+  const crane = document.createElement("div"); crane.className = "bt-crane"; crane.innerHTML = `<img src="assets/Images/obj_crane.png" alt="">`;
+  const plotwrap = document.createElement("div"); plotwrap.className = "bt-plotwrap";
+  const plot = document.createElement("div"); plot.className = "bt-plot ground";
+  plot.style.setProperty("--bh", Math.max(20, Math.min(46, Math.floor(230/N) - 2)) + "px");
+  plotwrap.appendChild(plot); yard.appendChild(crane); yard.appendChild(plotwrap);
+  stage.appendChild(board); stage.appendChild(track); stage.appendChild(yard);
+  host.appendChild(stage);
+  state.gateNavUntilAudio = false; setNavActive(false);
+  $("navBtn").onclick = ()=> completeSlide(true);
+  let i = 0;
+  const step = ()=>{
+    if(i >= N){ if(d.topper){ const t = document.createElement("div"); t.className = "bt-topper snap"; t.innerHTML = `<img src="assets/Images/${d.topper}.png" alt="">`; plot.appendChild(t); }
+      burstStars(); play("assets/Audio/vo_total_" + N + "." + AUDIO_EXT, ()=> setNavActive(true)); return; }
+    const b = btBlock(i); b.classList.add("drop"); plot.appendChild(b); i++;
+    if(cells[i-1]){ cells[i-1].classList.add("lit"); cells[i-1].textContent = i; }
+    btThunk(i); btDust(plot);
+    play("assets/Audio/vo_num_" + i + "." + AUDIO_EXT, ()=> setTimeout(step, 340));
+  };
+  // play the slide prompt FIRST, then start the crane count sequence — so the count VO never cuts the
+  // prompt off (we own the audio here; mountSlide's autoPlayChain is skipped via state.ownsAudio).
+  play(audioFor(slide, "prompt") || null, ()=> setTimeout(step, 400));
+}
 /* slide audio path: per slide, we look at slide.audio.prompt / .phoneme / etc.
    In this v0.1 the embedded card holds short ids; the compiler would replace
    them with base64 data URIs. We resolve to assets/Audio/{id}.mp3 with fallback. */
@@ -447,12 +632,62 @@ function autoPlayChain(slide, onDone){
 
 /* nav button: enable/disable the kit-style pill. When it becomes active (the
    activity is done) but the child doesn't tap आगे, the hand-nudge points at it. */
+/* [r26] FROM PAGE 6 THE TRAIN CARRIES THE CHILD FORWARD, NOT A BUTTON.
+   Yasir: "from page6 we don't need next button, after completing one page the train will
+   animation again and move ahead and get out of the screen (to the left side) and from the right
+   side the train will come for the next page and its instruction of next page will appear."
+
+   Slide index 5 is page 6, the first test screen. The five teaching screens before it keep आगे,
+   because there is nothing to complete on them - the child moves on when they are ready.
+
+   HOOKED AT setNavActive, WHICH IS THE ONE PLACE EVERY MECHANIC UNLOCKS THROUGH. Seven mechanics
+   unlock from six different callbacks (after the success clip, after a silent third-attempt win,
+   after the last card snaps); editing each one would mean six chances to miss a path and strand
+   a child on a screen with no button at all. One choke point cannot drift.
+
+   THE MECHANIC'S OWN HANDLER IS REUSED, not replaced: each assigns navBtn.onclick with the
+   success value it means (`true`, or `state.attempts === 0`), and calling it keeps every emitted
+   signal byte-identical to the button press it stands in for. It is assigned just AFTER
+   setNavActive(true) returns, hence the short defer before reading it. */
+const AUTO_ADVANCE_FROM = 5;
+function autoAdvances(idx){
+  return idx >= AUTO_ADVANCE_FROM && idx < CARD.slides.length - 1;
+}
 function setNavActive(on){
   const btn = $("navBtn");
   btn.disabled = !on;
   btn.classList.toggle("active", on);
   clearTimeout(state.navNudgeTimer);
   /* [20a nudge-03] no auto-nudge on आगे — buttons are known affordances (ruling); nudge is for learning elements only. */
+  if(on && autoAdvances(state.idx)) _autoAdvance(btn);
+}
+function _autoAdvance(btn){
+  const myIdx = state.idx;
+  if(state._autoFired === myIdx) return;          // unlocking twice must not send it twice
+  state._autoFired = myIdx;
+  clearTimeout(state._autoFallback);
+  setTimeout(()=>{
+    if(state.idx !== myIdx) return;               // already moved on
+    const go = (typeof btn.onclick === "function")
+      ? btn.onclick
+      : ()=> completeSlide(state.attempts === 0);
+    /* THE FAIL-SAFE MATTERS MORE THAN THE ANIMATION. With no button on screen, a departure that
+       never calls back would leave the child with no way out at all - the one failure this whole
+       change could introduce. If the advance has not happened a second after the travel should
+       have ended, the button comes back and works exactly as it used to. */
+    state._autoFallback = setTimeout(()=>{
+      if(state.idx !== myIdx) return;
+      document.body.classList.remove("auto-next");
+      setNavActive(true);
+    }, 5200);
+    const done = ()=>{
+      if(state.idx !== myIdx) return;
+      clearTimeout(state._autoFallback);
+      try { go.call(btn); } catch(e){ completeSlide(state.attempts === 0); }
+    };
+    if(typeof state.trainDepart === "function") state.trainDepart(done);
+    else setTimeout(done, 420);                   // no train on this screen (the sentence rounds)
+  }, 80);
 }
 function nudgeNavBtn(){
   const btn = $("navBtn");
@@ -887,8 +1122,13 @@ function mountTapOptions({slide, host, signalName, stimulus, options, isCorrect,
       // word's onEnd is superseded (e.g. the volume chip tapped mid-word) — gender #53 soft-lock fix.
       _busy = true;
       const _vb = setTimeout(()=>{ _busy = false; }, 4000);
-      const _afterWord = (cb)=>{ const done = ()=>{ clearTimeout(_vb); _busy = false; cb(); };
-        if(_word) play(_word, done); else done(); };
+      /* [32a] SPEAKING HIGHLIGHT — Bindu Gupta (HIKGH01_L02_S02 deck, page 10): "हर एक tab पर
+         आवाज़ आनी चाहिए, जिस tab को बोल रहा है उसकी light change हो जाए" (every tab should sound,
+         and the one currently talking should visibly change). `.opt-speaking` is on ONLY for the
+         word-speak beat below and is removed before `cb()` runs, so it can never linger under or
+         fight `.correct` / `.wrong-flash` / `.crossed`. */
+      const _afterWord = (cb)=>{ const done = ()=>{ clearTimeout(_vb); _busy = false; cell.classList.remove("opt-speaking"); cb(); };
+        if(_word){ cell.classList.add("opt-speaking"); play(_word, done); } else done(); };
       if(isCorrect(opt, i)){
         state.locked = true; cell.classList.add("correct"); sfxCorrect(); confettiCannon(); setSwMood("happy");
         if(mastery){ state.masteryAttempts++; if(state.attempts === 0) state.masteryHits++; }
@@ -1099,7 +1339,7 @@ function mountTapOptions({slide, host, signalName, stimulus, options, isCorrect,
       let advanced = false, fb = null;
       const go = ()=>{ if(advanced || _done) return; advanced = true; if(fb) clearTimeout(fb); next(); };
       play(src || null, go);
-      fb = setTimeout(go, 4500);                                    // safety net: never stall on one clip
+      fb = setTimeout(go, _clipMs(src) + 1200);                     // [31y] real clip length + margin, never a flat race
     };
     const _revStep = (i)=>{
       if(_done || CARD.slides[state.idx] !== slide) return;         // [24a bug-hunt F1] navigated away OR net fired → abort the chain
@@ -1145,7 +1385,7 @@ function sortSeqReveal(tray, slide){
     if(done || CARD.slides[state.idx] !== slide) return;
     let advanced = false, fb = null;
     const go = ()=>{ if(advanced || done) return; advanced = true; if(fb) clearTimeout(fb); next(); };
-    play(src || null, go); fb = setTimeout(go, 4500);
+    play(src || null, go); fb = setTimeout(go, _clipMs(src) + 1200);   /* [31y] */
   };
   const step = ()=>{
     if(done || CARD.slides[state.idx] !== slide) return;         // navigated away / net fired -> abort
@@ -1476,7 +1716,7 @@ function centerAllGlyphs(root){
    ONLY valid for RIGHT-SPACING matras (matra owns its own right-hand column). Above/below/left
    matras (े ै ि ु ृ …) have no such column, so callers fall back to the old coloured callout.
    Extend the set ONLY after pixel-verifying the new matra's geometry. */
-const RIGHT_SPACING_MATRAS = new Set(["ा"]);
+const RIGHT_SPACING_MATRAS = new Set(["ा", "ी"]);
 const _COMB = /[ऀ-ःऺ-ॏ॑-ॗॢॣ]/;   // Devanagari combining marks
 let _matraUid = 0, _mCv = null, _mCx = null;
 /* Pixel-accurate RED column(s) for the matra(s) in `word`. The matra's vertical stroke ends at
@@ -1567,6 +1807,12 @@ function makeDraggable(tileEl, onDrop, opts){
     startX = p.clientX; startY = p.clientY;
     dx = 0; dy = 0;
     tileEl.classList.add("dragging");
+    /* [r26] THE HAND STEPS ASIDE THE MOMENT THE CHILD ACTS.
+       Yasir: "when we try to drag element then remove hand nudge animation after 2 incorrect
+       drag". The demonstration loop runs from the card to its cart, so once the child picks that
+       card up the hand is tracing a path over the very thing being moved - it argues with the
+       gesture it just taught. It has served its purpose the instant the drag begins. */
+    if(typeof stopNudge === "function") stopNudge();
     if(opts && opts.onPick) opts.onPick();   // e.g. show a nudge at the slot this tile belongs in
     e.preventDefault();
   }
@@ -1644,7 +1890,16 @@ function makeDraggable(tileEl, onDrop, opts){
     const t = e.target && e.target.closest && e.target.closest(SEL);
     if(!t || t.classList.contains("snapped") || t.classList.contains("matched")){ _decision = 0; return 0; }
     _decidedAt = now;
-    _decision = (isPlaying && now - _voStart < 4000) ? 2 : 1;  // 4s safety: a stuck VO must not freeze the tiles
+    /* [31n] BACK TO 4000ms. 31m widened this to 20s reasoning that real clips outlast 4s — true,
+       but it misread what this window is FOR. Blocking during a live clip is the CSS lock's job
+       (body.vo-lock, exact: on for precisely as long as isPlaying). This window is the escape
+       hatch, and widening it turned a stalled or slow-to-end clip into a twenty-second dead
+       screen: Yasir hit it on SEQUENCE_DRAG, placing one letter correctly and then finding every
+       remaining tile refusing to move. A press must never be swallowed longer than the child will
+       wait before deciding the game is broken. The gap 31m was actually chasing — .cdm-objtile,
+       .cdm-card and .combine-drag having no CSS entry and so relying on this gate alone — is
+       closed properly in the CSS rule, which is where it belonged. Leave this at 4s. */
+    _decision = (isPlaying && now - _voStart < 4000) ? 2 : 1;
     return _decision;
   }
   function gate(e){
@@ -1691,25 +1946,35 @@ function leaveTrayGhost(tile){
    this helper, so NO call site changes. Fully ADDITIVE: a card with no hint1/hint authored still
    plays try_again exactly as before, so sibling games are byte-for-byte unchanged in behaviour. */
 let _dwSlide = null, _dwN = 0;
-/* [LOCAL 2026-08-03 — HIKGH04_L02_S02] RE-ENTERING A SLIDE MUST RESTART THE LADDER AT RUNG 1.
-   The guard below is `sid !== _dwSlide`, so re-entering the SAME slide leaves _dwN where it was and
-   the child's FIRST mistake is answered with the rung-2 hint (hint1 skipped entirely). Caught while
-   measuring the ladder for QA's "hint vo does not play" report: running G4 twice in a row logged
-   [vo_hint2_ghar, ...] the second time instead of [vo_hint1_build, ...]. It matters in practice
-   because QA reviews with the debug slide-picker, jumping between slides, and a replayed slide is a
-   normal thing for a child too. mountSlide() calls this on every entry so the reset lives with the
-   rest of the per-slide state, not in the wrong-answer path. */
-function resetWrongLadder(){ _dwSlide = null; _dwN = 0; }
+/* [local 2026-08-09] PER-TILE RUNG SELECTION. Yasir's rule: "two tries per word" — EVERY word/tile
+   gets its OWN 1st-wrong=hint1, 2nd-wrong=hint2 ladder, independent of what order OTHER tiles were
+   missed in. The rung decision below used to read the SLIDE-GLOBAL `_dwN` even when a specific tile
+   was known, so on P1/P3 a tile's own FIRST wrong could land on hint2 (naming the answer) if a
+   SIBLING tile had already missed earlier in the same slide — e.g. दादा misses once (slide's 1st
+   wrong, correctly hint1), then कान misses for the very first time (the slide's 2nd wrong overall,
+   but कान's OWN 1st) and got handed कान's hint2 immediately, skipping "try again" for a word it had
+   never failed before. Fix: track each tile's own wrong count in a WeakMap keyed by the tile element
+   itself — a fresh DOM node every mount (no cross-slide leak, and WeakMap entries for a removed tile
+   are GC'd automatically, no manual reset needed) — and use THAT count for the rung decision whenever
+   a tile is passed. The 11 other call sites that pass no tile are UNCHANGED, byte-for-byte: they still
+   read the old slide-global `_dwN`, exactly as before. */
+let _dwTileN = new WeakMap();
 function dragWrong(slide, tile){
   sfxWrongSoft(); setSwMood("tryagain");
   const sid = slide && slide.id;
-  if(sid !== _dwSlide){ _dwSlide = sid; _dwN = 0; }   // new slide -> restart the ladder
+  if(sid !== _dwSlide){ _dwSlide = sid; _dwN = 0; }   // new slide -> restart the slide-global ladder (still used by every non-tile caller)
   _dwN++;
+  let rung = _dwN;
+  if(tile){
+    const n = (_dwTileN.get(tile) || 0) + 1;
+    _dwTileN.set(tile, n);
+    rung = n;                                          // this TILE's own wrong count, not the slide's
+  }
   // [25b] PER-PAIR hint2 on drag (Yasir 2026-07-25): the 2nd hint must name the tile the child is
   // holding AND the picture it belongs to — "यह 'क' है, यह 'कमल' की पहली ध्वनि है।" A single
   // slide-level clip can't do that, so when the caller passes the dragged tile we look up that
   // pair's own `hint2_audio`. Falls through to the slide-level hint when a pair has none authored.
-  if(_dwN > 1 && tile && slide && slide.data && Array.isArray(slide.data.pairs)){
+  if(rung > 1 && tile && slide && slide.data && Array.isArray(slide.data.pairs)){
     const L = (tile.textContent || "").trim();
     const pr = slide.data.pairs.find(p => String(p.letter || "").trim() === L);
     if(pr && pr.hint2_audio){
@@ -1717,7 +1982,7 @@ function dragWrong(slide, tile){
       return;
     }
   }
-  const clip = (_dwN <= 1)
+  const clip = (rung <= 1)
     ? (audioFor(slide, "hint1") || audioFor(slide, "try_again"))
     : (midHint(slide) || audioFor(slide, "hint1"));          /* [28k] rung 2 (drag) */
   play(clip || null, ()=>{});
@@ -1728,29 +1993,22 @@ function dragWrong(slide, tile){
    celebration popup, never a "press आगे to continue" gate on a solved activity. `revealed` = the child
    got there via the reveal scaffold → quieter settle (no confetti/cheer) + completeSlide(false) so
    mastery telemetry stays honest. */
-/* [LOCAL 2026-08-03 — HIKGH04_L02_S02] ADVANCE ON THE CLIP'S OWN END, NEVER A FIXED 1400ms.
-   Yasir: "in g6 the audio gets cut when we placed both the correct answer cards." Measured on G6 with
-   real playback: after terminal help, placing the final letter played vo_reveal_word and it was PAUSED
-   at 1.30s of 1.96s by the NEXT slide's prompt — the child hears "यह सही शब…" chopped off.
-   The cause is HERE, not in the phase gate: completeSlide() fired on a hard 1400ms timer while the clip
-   ran 1960ms, so the advance always won. The celebrate path only LOOKED fine because those word clips
-   are ~1.0-1.2s and fit inside 1400ms by luck — vo_reveal_word is the one that does not, and G6 is
-   where the reveal path is easiest to reach. A duration-blind timer in front of authored VO is the bug.
-   The 8s failsafe is NOT optional: play()'s onEnd is generation-guarded, so a replay-chip tap or a
-   stalled clip can supersede it and it would never fire — without the cap that is a bricked slide.
-   _advance is latched so whichever path wins calls completeSlide exactly once. */
 function celebrateThenAdvance(slide, revealed){
-  let _done = false;
-  const _advance = (ok)=>{ if(_done) return; _done = true; completeSlide(ok); };
-  const BREATH = 300, FAILSAFE = 8000;
-  if(revealed){
-    play(audioFor(slide, "reveal") || null, ()=> setTimeout(()=> _advance(false), BREATH));
-    setTimeout(()=> _advance(false), FAILSAFE);
-    return;
-  }
-  sfxCorrect(); confettiCannon(); setSwMood("celebrate");
-  play(audioFor(slide, "correct") || null, ()=> setTimeout(()=> _advance(true), BREATH));
-  setTimeout(()=> _advance(true), FAILSAFE);
+  /* [32b nocut] ADVANCE WHEN THE CLIP ENDS, NOT ON A BLIND TIMER. Both branches used to fire
+     completeSlide() 1400ms after starting a clip, and mountSlide() then stopAudio()d whatever was
+     still speaking — measured on HIKGH04_L01_S02: every reveal line (1.92-3.16s) truncated at
+     ~1403ms, losing 27-35% of the sentence mid-word. Yasir reported it on G4 and P3.
+     The floor keeps the old feel (confetti lands, the beat does not snap); onEnd does the advancing;
+     the cap means a stalled clip can never hold the lesson. play() fires its callback on the
+     error/no-src/blocked paths too, so a missing clip still advances on its silent beat. */
+  var MIN_HOLD = 1400, CAP = 9000, t0 = Date.now(), fired = false;
+  var go = function(){
+    if(fired) return; fired = true;
+    setTimeout(function(){ completeSlide(!revealed); }, Math.max(0, MIN_HOLD - (Date.now() - t0)));
+  };
+  if(!revealed){ sfxCorrect(); confettiCannon(); setSwMood("celebrate"); }
+  play(audioFor(slide, revealed ? "reveal" : "correct") || null, go);
+  setTimeout(go, CAP);
 }
 
 /* ---------- 12. SLIDE MODULES ---------- */
@@ -1773,12 +2031,32 @@ const SlideModules = {
       const GAP = 20, MAXW = 960, n = items.length;
       let rowsOf;
       const CAP = pics ? 250 : 184;
-      let tSize = Math.min(CAP, Math.floor((MAXW - (n-1)*GAP) / n));
-      if (tSize >= 110) { rowsOf = [n]; }
-      else {
+      /* [31f] THE SIZER WAS WIDTH-ONLY, so a wrapped grid overlapped the heading. On wrap it
+         re-expanded tiles back toward CAP (4 of 8 letters fit the row at 184px), building a 392px
+         grid inside the 318px .tut-content box. That box centres its overflow, so half of it (37px
+         layout, 28px on screen at the 0.757 fit-scale) rode UP and the prompt sat behind the
+         letters. Yasir caught it on HIKGH04_L01_S02 P1; measured on P2 too. 8 and 9 letters wrap,
+         5 and 6 do not — which is why only two of the four parts showed it.
+         Row COUNT still comes from width alone (unchanged behaviour); only the SIZE is clamped by
+         the real available height. TOUCH is the floor: below it a tile stops being a reliable
+         KG-sized target, so a genuinely too-short viewport overflows rather than shrink past it. */
+      const TOUCH = 110;
+      /* ROWGAP is the gap BETWEEN the two rows and it is NOT GAP. GAP=20 is the in-row gap this
+         function writes onto each .intro-letters; the row gap comes from CSS, `.intro-stage{gap:24px}`.
+         Using GAP for both left the grid 4px taller than computed and the heading still 2px behind
+         the letters — the same width-only carelessness this fix exists to remove, one level down.
+         Keep this in step with style.css if that rule ever changes. */
+      const ROWGAP = 24;
+      const availH = (host && host.clientHeight) || 318;   // 0 while a phase-gate blur hides the card
+      const fitW = k => Math.floor((MAXW - (k-1)*GAP) / k);
+      let tSize = Math.min(CAP, fitW(n));
+      if (tSize >= TOUCH) {
+        rowsOf = [n];
+        tSize = Math.max(TOUCH, Math.min(tSize, availH));
+      } else {
         const top = Math.ceil(n/2), bot = n - top;
-        tSize = Math.min(CAP, Math.floor((MAXW - (top-1)*GAP) / top));
         rowsOf = [top, bot];
+        tSize = Math.max(TOUCH, Math.min(CAP, fitW(top), Math.floor((availH - ROWGAP) / 2)));
       }
       const tFont = Math.round(tSize * 0.565);
       const rowEls = rowsOf.map(() => {
@@ -1797,8 +2075,16 @@ const SlideModules = {
         tile.className = pics ? "intro-letter intro-pic" : "intro-letter";
         tile.style.width = tile.style.height = tSize + "px";
         if(!pics) tile.style.fontSize = tFont + "px";
-        tile.innerHTML = pics ? imgOrEmoji(it.img, it.emoji, "intro-pic-img", "intro-pic-emoji")
-                              : `<span class="ink-glyph">${it}</span>`;
+        /* [32c] LETTER **WITH** ITS PICTURE. The pics branch was a hard either/or — a tile could show
+           the art or the glyph, never both — so a teach slide that names the letter beside its primer
+           word was not expressible at all. HIKGH04_L01_S01's round-2 SME deck asks for exactly that on
+           T1 ("Add letters with image": अनार-अ, आम-आ, इमली-इ, ईख-ई, उल्लू-उ, ऊँट-ऊ). Gated on the cell
+           carrying a `letter`, so every existing pics/letters INTRO renders byte-identically. */
+        tile.innerHTML = pics
+          ? (imgOrEmoji(it.img, it.emoji, "intro-pic-img", "intro-pic-emoji")
+             + (it.letter ? `<span class="intro-pic-letter ink-glyph">${it.letter}</span>` : ""))
+          : `<span class="ink-glyph">${it}</span>`;
+        if(pics && it.letter) tile.classList.add("has-letter");
         tile.onclick = ()=>{
           // [24a A3] auto walk-through: card taps are IGNORED until every card has been taught
           // (the child can't cut the lesson off / jump ahead mid-teaching); once teaching completes,
@@ -1863,19 +2149,26 @@ const SlideModules = {
       // data.matra = the matra char (e.g. "ा"). For RIGHT-SPACING matras we now colour it RED
       // INSIDE the word itself (_matraWordSVG two-layer overlay); other matras keep the callout.
       const _mlFit = (s)=>{ const n=[...(s||"")].length; return n<=1?200 : n<=2?152 : n<=3?120 : n<=4?96 : 78; };
-      const _box = (txt, matra)=> {
+      /* [32c] fsOverride: the glyph size is written INLINE here, so no stylesheet rule can reach it —
+         a two-up `pair` row therefore carried two 200px glyphs and could not be made to fit the
+         tutorial card from CSS (measured: 210px tall each, which is what pushed .tut-card past the
+         stage). The pair path now asks for a compact size; every single-letter caller is unchanged. */
+      const _box = (txt, matra, fsOverride)=> {
         const iw = matra && RIGHT_SPACING_MATRAS.has(matra);
-        return `<div class="meet-letter-box"${iw ? ` data-mw-word="${txt}" data-mw-matra="${matra}" data-mw-fs="${_mlFit(txt)}"` : ""}>`
-          + (iw ? _matraWordSVG(txt, matra, _mlFit(txt))
-                : `<span class="glyph ink-glyph" style="font-size:${_mlFit(txt)}px">${txt}</span>`)
+        const fs = fsOverride || _mlFit(txt);
+        return `<div class="meet-letter-box"${iw ? ` data-mw-word="${txt}" data-mw-matra="${matra}" data-mw-fs="${fs}"` : ""}>`
+          + (iw ? _matraWordSVG(txt, matra, fs)
+                : `<span class="glyph ink-glyph" style="font-size:${fs}px">${txt}</span>`)
           + `</div>`;
       };
       if(slide.data.pair){
         const pair = document.createElement("div"); pair.className = "meet-pair";
+        // two-up (or wider) rows get the compact glyph; a 1-item pair keeps the full 200px.
+        const _pairFs = slide.data.pair.length > 1 ? 104 : null;
         slide.data.pair.forEach(p => {
           const item = document.createElement("div"); item.className = "meet-pair-item";
           item.innerHTML = `
-            ${_box(p.letter)}
+            ${_box(p.letter, null, _pairFs)}
             
             <div class="meet-pic-box">
               ${imgOrEmoji(p.picture_img, p.picture_emoji, "pic-img", "pic-emoji")}
@@ -1945,7 +2238,7 @@ const SlideModules = {
         $("navBtn").onclick = ()=> completeSlide(true);                 // explicit (dead-button lesson)
         state.replayAudio = ()=> play(audioFor(slide, "prompt") || null, ()=>{});
         setTimeout(step, 400);
-        setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, steps.length * 4000 + 3000);   // FAIL-SAFE: आगे never stays dead if audio blocks/stalls
+        setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, _chainMs(steps.map(s=>s[1]), 450) + 3000);   /* [31y] real chain length; steps.length*4000 fired 2.13s EARLY on a 9.13s chain */   // FAIL-SAFE: आगे never stays dead if audio blocks/stalls
         return;
       }
       // नav unlocks only after the VO has played once (students can't skip the model)
@@ -1961,6 +2254,7 @@ const SlideModules = {
       const wrap = document.createElement("div"); wrap.className = "intro-stage";
       const row  = document.createElement("div"); row.className = "intro-shapes";
       const shapes = slide.data.shapes; const tapped = new Set(); const tiles = [];
+      let _autoDone = false;   // [31g] flips true once every shape has been taught -> taps become replays
       const GAP = 28, MAXW = 1220, n = shapes.length;
       const tSize = Math.max(120, Math.min(184, Math.floor((MAXW - (n-1)*GAP) / n)));
       row.style.gap = GAP + "px";
@@ -1975,6 +2269,15 @@ const SlideModules = {
         tile.innerHTML = `<span class="shape-name">${sh.name || ""}</span>` +
                          shapeSVG(sh.shape, {color: sh.color, size: Math.round(tSize*0.62), rotate: sh.rotate});
         tile.onclick = ()=>{
+          /* [31g] auto mode mirrors INTRO: taps are IGNORED until every shape has been taught, then
+             a tap REPLAYS that shape. The child cannot cut the lesson off or race ahead. */
+          if(slide.data.auto){
+            if(!_autoDone) return;
+            tile.classList.add("played");
+            play(sh.name_audio ? "assets/Audio/" + sh.name_audio + "." + AUDIO_EXT : null);
+            SwiftPAL.emit("intro_shape_tap", { slide_id: slide.id, shape: sh.shape, replay: true });
+            return;
+          }
           tile.classList.add("played");
           play(sh.name_audio ? "assets/Audio/" + sh.name_audio + "." + AUDIO_EXT : null);
           SwiftPAL.emit("intro_shape_tap", { slide_id: slide.id, shape: sh.shape });
@@ -1988,6 +2291,36 @@ const SlideModules = {
       setNavActive(false);
       $("navBtn").onclick = ()=>{ if(tapped.size >= shapes.length) completeSlide(true); };
       nudgeNext();
+      /* [31g] AUTONOMOUS TEACHING — Yasir 2026-08-01: "tutorial/teaching should be completely
+         autonomous, complete teaching without kid interacting." SHAPE_INTRO was the last teaching
+         mechanic with NO auto path at all: it unlocked आगे only at tapped.size >= shapes.length, so
+         the child was held hostage by the lesson. This is INTRO's [16h] chain, shape-for-letter.
+         A missing clip is a silent beat that still advances the chain (play() fires its callback on
+         both the no-src and the error path), so an un-recorded build teaches itself and unlocks
+         rather than stalling on a dead screen. */
+      if(slide.data.auto){
+        stopNudge(); state.ownsAudio = true;
+        let ai = 0;
+        const aStep = ()=>{
+          if(CARD.slides[state.idx] !== slide) return;
+          if(ai >= shapes.length){
+            stopNudge();
+            play(audioFor(slide, "instruction") || null, ()=>{
+              if(CARD.slides[state.idx] !== slide) return;
+              _autoDone = true;
+              state.replayAudio = ()=> play(audioFor(slide, "prompt") || audioFor(slide, "instruction") || null, ()=>{});
+              $("navBtn").onclick = ()=> completeSlide(true); setNavActive(true);
+            });
+            return;
+          }
+          const tile = tiles[ai];
+          tile.classList.add("played"); pointNudgeAt(tile);
+          const clip = shapes[ai].name_audio;
+          ai++;
+          play(clip ? "assets/Audio/" + clip + "." + AUDIO_EXT : null, ()=> setTimeout(aStep, 380));
+        };
+        play(audioFor(slide, "prompt") || null, ()=> setTimeout(aStep, 500));
+      }
     }
   },
 
@@ -2508,7 +2841,8 @@ const SlideModules = {
           makeDraggable(tile, (zone)=>{ if(state.locked || !zone) return;
             if(parseInt(zone.dataset.val,10) === N){ zone.classList.add("filled","correct"); tile.classList.add("snapped"); settleWin(false); }
             else { zone.classList.add("wrong"); setTimeout(()=>zone.classList.remove("wrong"),500); dragWrong(slide);
-              state.attempts=(state.attempts||0)+1; if(state.attempts>=(CARD.scaffold_rules.max_attempts||3)){ const zc=[...dz.children].find(z=>parseInt(z.dataset.val,10)===N); if(zc){zc.classList.add("filled","correct","reveal-glow"); tile.classList.add("snapped"); play(audioFor(slide,"reveal")||null,()=>{}); settleWin(true);} } }
+            /* [32d] HOUSE DEFAULT IS 2, NOT 3. This fallback read ||3 in 10 places, contradicting the ruling that a 3rd attempt is only legitimate when a hint2 is authored (feedback_max_attempts_needs_hint2, closed fleet-wide 2026-08-03 and enforced by _tools/attempts_check.py). No card hits the fallback today — all 33 set max_attempts explicitly — so this is provably inert now; it exists so a NEW game that omits the field cannot silently regain a 3rd attempt with an empty third rung, which is the exact defect that was just closed. */
+        state.attempts=(state.attempts||0)+1; if(state.attempts>=(CARD.scaffold_rules.max_attempts||2)){ const zc=[...dz.children].find(z=>parseInt(z.dataset.val,10)===N); if(zc){zc.classList.add("filled","correct","reveal-glow"); tile.classList.add("snapped"); play(audioFor(slide,"reveal")||null,()=>{}); settleWin(true);} } }
           });
         } else {
           // one BOX is the drop zone; number cards are the draggable tiles
@@ -2518,7 +2852,7 @@ const SlideModules = {
             makeDraggable(tile, (zone)=>{ if(state.locked || zone !== dz) return;
               if(o.value === N){ dz.classList.add("filled","correct"); dz.innerHTML = `<span class="bignum-glyph">${devNumeral(N)}</span>`; tile.classList.add("snapped"); settleWin(false); }
               else { dz.classList.add("wrong"); setTimeout(()=>dz.classList.remove("wrong"),500); dragWrong(slide);
-                state.attempts=(state.attempts||0)+1; if(state.attempts>=(CARD.scaffold_rules.max_attempts||3)){ dz.classList.add("filled","correct","reveal-glow"); dz.innerHTML=`<span class="bignum-glyph">${devNumeral(N)}</span>`; play(audioFor(slide,"reveal")||null,()=>{}); settleWin(true); } }
+                state.attempts=(state.attempts||0)+1; if(state.attempts>=(CARD.scaffold_rules.max_attempts||2)){ dz.classList.add("filled","correct","reveal-glow"); dz.innerHTML=`<span class="bignum-glyph">${devNumeral(N)}</span>`; play(audioFor(slide,"reveal")||null,()=>{}); settleWin(true); } }
             });
           });
         }
@@ -2981,7 +3315,7 @@ const SlideModules = {
             $("hintBtn").classList.add("show","hint-glow");
             // layered ladder, standard-aligned: L1 spoken try-again (buzz + Swiftie, no popup) →
             // L2 flash the answer ghost + spoken hint → L3 reveal ceiling: DEMONSTRATE the placement.
-            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts||3)){
+            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts||2)){
               revealedAny = true; wrongStreak = 0;
               activeGhost().classList.add("reveal-glow");
               play(audioFor(slide,"reveal") || audioFor(slide,"hint") || null, ()=>{});
@@ -3106,32 +3440,14 @@ const SlideModules = {
           if(t._num === d.path[blanks[bi]]){ wrongStreak = 0; placeCorrect(); }
           else {
             state.attempts++;
-            /* [LOCAL FIX 2026-08-03] was "shake" — an undefined keyframe anywhere in this engine, so
-               a wrong letter tap rendered NOTHING while every other mechanic flashes red. Reuse the
-               fleet-standard .wrong-flash + buzzShake (see .opt-cell.wrong-flash in style.css). */
-            t.classList.add("wrong-flash"); setTimeout(()=> t.classList.remove("wrong-flash"), 700);
-            activeGhost().classList.add("wrong-flash"); setTimeout(()=> activeGhost().classList.remove("wrong-flash"), 700);
+            t.classList.add("shake"); setTimeout(()=> t.classList.remove("shake"), 420);
+            activeGhost().classList.add("shake"); setTimeout(()=> activeGhost().classList.remove("shake"), 420);
             SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts });
             $("hintBtn").classList.add("show","hint-glow");
-            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts || 3)){
+            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts || 2)){
               revealedAny = true; wrongStreak = 0;
               activeGhost().classList.add("reveal-glow");
-              /* [LOCAL 2026-08-03 — HIKGH04_L02_S02] THE TERMINAL RUNG MUST SPEAK THE HINT THAT
-                 NAMES THE ANSWER, not the terse reveal line. QA reported "hint vo does not play at
-                 places"; measured on G6/P4/P7 from a fresh slide entry, the ladder ran
-                 vo_hint1_build -> vo_reveal_word ("यह सही शब्द है।", 1.96s) and the authored naming
-                 hint (vo_hint2_ghar/_nal/_bas/_jag) was UNREACHABLE on all four build slides.
-                 Cause: max_attempts is 2, so the `attempts >= 2` mid-rung further down can never be
-                 entered — this branch is the ONLY terminal path, and it preferred `reveal`.
-                 mountTapOptions.revealAnswer already prefers `hint` here, so the two mechanics
-                 disagreed about the same rung on the same card; the tap contract is the blessed one
-                 ("speak the rung that NAMES the answer, then wait for the child").
-                 Reveal-first is kept for the auto-solve path ONLY (tutorial, where the engine is
-                 about to demonstrate and "this is the correct word" is the apt line). */
-              const _termClip = maySolveFor(slide)
-                ? (audioFor(slide, "reveal") || audioFor(slide, "hint"))
-                : (audioFor(slide, "hint")   || audioFor(slide, "reveal"));
-              play(_termClip || null, ()=>{});
+              play(audioFor(slide, "reveal") || audioFor(slide, "hint") || null, ()=>{});
               /* [28l] was: setTimeout(placeCorrect, 1000) — the engine ANSWERED for the child. */
               if(maySolveFor(slide)) setTimeout(()=> placeCorrect(), 1000);
               else terminalHold([...tray.children].find(x=> x._num === d.path[blanks[bi]]
@@ -3304,7 +3620,7 @@ const SlideModules = {
         else { state.attempts++; t.classList.add("shake"); setTimeout(()=> t.classList.remove("shake"), 420);
           SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts });
           $("hintBtn").classList.add("show","hint-glow");
-          if(++wrongStreak >= (CARD.scaffold_rules.max_attempts || 3)){ revealed = true; wrongStreak = 0;
+          if(++wrongStreak >= (CARD.scaffold_rules.max_attempts || 2)){ revealed = true; wrongStreak = 0;
             const c = nextTile(); if(c){ c.classList.add("reveal-glow"); play(audioFor(slide,"reveal")||null, ()=>{});
               setTimeout(()=>{ c.classList.remove("reveal-glow"); placeInto(c); }, 1000); }
           } else dragWrong(slide);
@@ -3409,7 +3725,7 @@ const SlideModules = {
           placeToSlot(t, ()=> setTimeout(()=>{ busy = false; autoLast(); }, 250));
         } else {   // lighter of the pair, but an even lighter one is still unplaced
           state.attempts++; SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts }); $("hintBtn").classList.add("show","hint-glow");
-          if(++wrongStreak >= (CARD.scaffold_rules.max_attempts || 3)){ revealed = true; wrongStreak = 0; resetPans();
+          if(++wrongStreak >= (CARD.scaffold_rules.max_attempts || 2)){ revealed = true; wrongStreak = 0; resetPans();
             const c = nextTile(); if(c){ c.classList.add("reveal-glow"); play(audioFor(slide, "reveal") || null, ()=>{});
               setTimeout(()=>{ c.classList.remove("reveal-glow"); busy = true; placeToSlot(c, ()=> setTimeout(()=>{ busy = false; autoLast(); }, 250)); }, 900); } }
           else { dragWrong(slide); resetPans(); }
@@ -3683,7 +3999,7 @@ const SlideModules = {
         };
         $("navBtn").onclick = ()=> completeSlide(true);
         setTimeout(step, 400);
-        setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, cats.length * 4500 + 3000);   // FAIL-SAFE: never dead-button
+        setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, _chainMs(cats.map(c=>(c&&c.audio)||null), 450) + 3000);   /* [31y] */   // FAIL-SAFE: never dead-button
         return;
       }
       state.gateNavUntilAudio = true;   // nav unlocks after the concept VO
@@ -3719,7 +4035,7 @@ const SlideModules = {
         $("navBtn").onclick = ()=> completeSlide(true);
         state.replayAudio = ()=> play(audioFor(slide, "prompt") || null, ()=>{});
         setTimeout(step, 400);
-        setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, steps.length * 4000 + 3000);   // FAIL-SAFE: never dead-button
+        setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, _chainMs(steps.map(s=>s[1]), 450) + 3000);   /* [31y] real chain length; steps.length*4000 fired 2.13s EARLY on a 9.13s chain */   // FAIL-SAFE: never dead-button
         return;
       }
       state.gateNavUntilAudio = true;   // nav unlocks after the model VO
@@ -3769,6 +4085,30 @@ const SlideModules = {
             t.classList.add("snapped");
             bin.querySelector(".bin-items").appendChild(t);
             placed++; _sgWrong.delete(t);          /* [28p] this tile is done */
+            /* [28u] RELEASE THE TERMINAL HOLD ON A CORRECT DROP — this slide was UNWINNABLE.
+               28p armed the terminal rung here but the correct-drop branch cleared none of it:
+               terminalHold() puts .reveal-hold on the tile, .tile-disabled plus INLINE
+               pointer-events:none/opacity:.4 on every OTHER tile, marks the bins, and starts
+               travelNudge's looping hand. So once the child finally got the drop right, the hand kept
+               looping over the empty ghost slot and every remaining tile stayed dead — `placed === need`
+               could never be reached, which is a soft-lock, i.e. a straight QA fail rather than a
+               cosmetic bug. Found and reproduced with real pointer drags on G3 and G6 by
+               HI01H05_L01_S01, which asked for this to be fixed first.
+               clearHold() already existed for exactly this and also removes the INLINE styles — the
+               class alone would not, which is why a class-only cleanup looks right and still leaves the
+               tiles dead. helpShown/scaffoldLevel reset so the NEXT hard tile can earn its own rung:
+               the ladder in this mechanic is per-tile (_sgWrong), not per-slide.
+               Guarded on state.helpShown so a slide that never armed a rung is untouched — and note
+               this is a guard on CLEANUP, not the `state.helpShown` early-RETURN that stranded a card
+               red in 28r. Deliberately NOT lifting the sibling `speak_on_drop` gate from the same local
+               diff: that was a per-game ruling, and defaulting speak-on-match off fleet-wide would
+               silently mute games that rely on it. */
+            if(state.helpShown){
+              stopNudge();
+              t.classList.remove("reveal-hold");
+              clearHold(tray); clearHold(binsRow);
+              state.helpShown = false; state.scaffoldLevel = 0;
+            }
             if(t.dataset.audio && placed < need) play("assets/Audio/" + t.dataset.audio + "." + AUDIO_EXT, ()=>{});   // [20a SORT-01] speak-on-match
             SwiftPAL.emit("gender_sort_item", { slide_id: slide.id, gender: t.dataset.gender, attempts: state.attempts });
             if(placed === need){
@@ -3842,7 +4182,16 @@ const SlideModules = {
         const t = [...tileRow.children].find(x=> !x.classList.contains("matched") && x.dataset.pairId === zone.dataset.accept); if(!t) return;
         revealed = true; wrongStreak = 0;
         zone.classList.add("reveal-glow"); t.classList.add("reveal-glow");
-        play(audioFor(slide,"reveal") || null, ()=>{});
+        /* [32b nocut] DO NOT SPEAK THE REVEAL OVER THE RUNG-2 HINT. This runs in the SAME event as
+           dragWrong(slide), which has just started hint2 — the longest clip in the lesson and the
+           one that names the order — so play() here stopAudio()d it after ONE MILLISECOND and the
+           child who failed twice heard none of it (measured 1ms of 5931-8651ms on all four parts of
+           HIKGH04_L01_S02). It also spoke "यह सही क्रम है।" while nothing was placed yet, which is
+           the same premature-reveal defect [25d] removed from MATCH_DRAG_N. The reveal line is not
+           lost: celebrateThenAdvance(slide, revealed=true) speaks it when the child then places the
+           tile correctly. Guarded on isPlaying so a revealOne() reached with nothing speaking still
+           says it. */
+        if(!isPlaying) play(audioFor(slide,"reveal") || null, ()=>{});
         zone.classList.add("reveal-hold");                 /* [25d] glow and WAIT — never settle() it for the child */
         terminalHold(t, tileRow.children, slide, zone);   /* [28l] dim distractors + [28o] hand travels to the zone */
       };
@@ -3856,13 +4205,14 @@ const SlideModules = {
               slide_id: slide.id, phase: slide.phase, value: true,
               pair: t.dataset.pairId, attempts: state.attempts
             });
+            clearHold(tileRow);   /* [31o] same leak as SEQUENCE_DRAG — see the note there */
             settle(zone, t);
           } else {
             zone.classList.add("filled","wrong");
             setTimeout(()=> zone.classList.remove("filled","wrong"), 600);
             dragWrong(slide);
             SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts });
-            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts||3)) revealOne();
+            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts||2)) revealOne();
           }
         });
       });
@@ -3907,7 +4257,7 @@ const SlideModules = {
           setTimeout(()=> zone.classList.remove("filled","wrong"), 600);
           dragWrong(slide);
           SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts });
-          if(state.attempts >= (CARD.scaffold_rules.max_attempts||3)){
+          if(state.attempts >= (CARD.scaffold_rules.max_attempts||2)){
             state.locked = true;
             // reveal = DEMONSTRATE, don't just tell: snap the letter into its picture (dimmed pulse)
             // with the spoken reveal line, then move on as success=false.
@@ -3927,6 +4277,14 @@ const SlideModules = {
 
   MATCH_DRAG_N: {
     mount(host, slide){
+      /* [31g] no आगे on a self-advancing task. Yasir 2026-08-02: "we dont need the buttons in
+         guided and independent." Every tap mechanic already hid it (see the `no आगे on a pick`
+         line); these two drag mechanics were the only non-tutorial slides still showing one, so a
+         run read as button-free then sprouted a button on the drag pages. It was never a completion
+         signal here: filling the last zone calls celebrateThenAdvance -> completeSlide by itself,
+         so the button could only skip the child PAST their own finished work. Nothing is stranded —
+         same contract the tap slides have had all along. */
+      $("navBtn").style.display = "none"; setNavActive(false);
       const wrap = document.createElement("div"); wrap.className = "dd-stage";
       const zoneRow = document.createElement("div"); zoneRow.className = "dd-row";
       // shuffle zones so order ≠ tile order
@@ -4027,15 +4385,20 @@ const SlideModules = {
         if(filled === need){ state.locked = true;
           // [24a C-fix] the LAST correct DROP also speaks its WORD (flag#4) — wait for it to end
           // before the celebrate VO (play() would cut it at ~250ms). 4s cap: a stalled clip can
-          // never hold the celebration hostage. [bug-hunt F6] Skip the wait on the REVEAL path:
-          // revealOne already spoke "reveal" and played no word to protect, so waiting would just let
-          // that clip finish and then celebrateThenAdvance(revealed) would speak "reveal" a 2nd time.
-          if(revealed){ setTimeout(()=> celebrateThenAdvance(slide, true), 250); }
-          else {
+          // never hold the celebration hostage.
+          /* [32b nocut] WAIT FOR THE WORD ON THE REVEAL PATH TOO. [bug-hunt F6] skipped the wait when
+             the child got there via terminal help, on the stated grounds that "revealOne already spoke
+             reveal and played no word to protect". BOTH halves of that are false: the last correct DROP
+             always speaks its pair's word (flag#4, right above), and MATCH_DRAG_N's terminalHelp() never
+             speaks reveal at all (that fires once, later, from celebrateThenAdvance). So the shortcut
+             fired the reveal 250ms into a 0.77-1.20s word clip and cut 66-78% of it — measured on all
+             four parts of HIKGH04_L01_S02 (vo_word_rail 263ms of 1080ms, vo_word_hathi 264ms of 771ms,
+             vo_word_dibba 263ms of 1200ms...). One path now: let the word finish, then celebrate. */
+          {
             const t0 = Date.now();
             setTimeout(function waitWord(){
               if(CARD.slides[state.idx] !== slide) return;                // navigated away → abort
-              if(!isPlaying || Date.now() - t0 > 4000){ celebrateThenAdvance(slide, false); return; }
+              if(!isPlaying || Date.now() - t0 > 4000){ celebrateThenAdvance(slide, revealed); return; }
               setTimeout(waitWord, 150);
             }, 250);
           }
@@ -4107,7 +4470,7 @@ const SlideModules = {
             SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts });
             setTimeout(()=> zone.classList.remove("filled","wrong"), 600);
             t._wrong++;
-            if(t._wrong >= (CARD.scaffold_rules.max_attempts || 3) && !t._guideLock) terminalHelp(t);
+            if(t._wrong >= (CARD.scaffold_rules.max_attempts || 2) && !t._guideLock) terminalHelp(t);
           }
         });
       });
@@ -4116,6 +4479,9 @@ const SlideModules = {
 
   SEQUENCE_DRAG: {
     mount(host, slide){
+      /* [31g] no आगे — placing the last tile hits `placed === need` and celebrateThenAdvance
+         advances on its own. See the MATCH_DRAG_N note above for the full reasoning. */
+      $("navBtn").style.display = "none"; setNavActive(false);
       const wrap = document.createElement("div"); wrap.className = "dd-stage" + (slide.data.word_mode ? " seq-words" : "");
       // slots row
       const slots = document.createElement("div"); slots.className = "seq-slots";
@@ -4173,7 +4539,16 @@ const SlideModules = {
         const t = [...tileRow.children].find(x=> x.textContent.trim() === zone.dataset.accept); if(!t) return;
         revealed = true; wrongStreak = 0;
         zone.classList.add("reveal-glow"); t.classList.add("reveal-glow");
-        play(audioFor(slide,"reveal") || null, ()=>{});
+        /* [32b nocut] DO NOT SPEAK THE REVEAL OVER THE RUNG-2 HINT. This runs in the SAME event as
+           dragWrong(slide), which has just started hint2 — the longest clip in the lesson and the
+           one that names the order — so play() here stopAudio()d it after ONE MILLISECOND and the
+           child who failed twice heard none of it (measured 1ms of 5931-8651ms on all four parts of
+           HIKGH04_L01_S02). It also spoke "यह सही क्रम है।" while nothing was placed yet, which is
+           the same premature-reveal defect [25d] removed from MATCH_DRAG_N. The reveal line is not
+           lost: celebrateThenAdvance(slide, revealed=true) speaks it when the child then places the
+           tile correctly. Guarded on isPlaying so a revealOne() reached with nothing speaking still
+           says it. */
+        if(!isPlaying) play(audioFor(slide,"reveal") || null, ()=>{});
         zone.classList.add("reveal-hold");                 /* [25d] glow and WAIT — never settle() it for the child */
         terminalHold(t, tileRow.children, slide, zone);   /* [28l] dim distractors + [28o] hand travels to the zone */
       };
@@ -4184,13 +4559,21 @@ const SlideModules = {
           const ok = (zone.dataset.accept === t.textContent.trim());
           if(ok){
             wrongStreak = 0;
+            /* [31o] RELEASE THE TERMINAL HOLD. revealOne() -> terminalHold() disables every OTHER
+               tile with inline pointer-events:none !important + opacity:.4, and nothing here ever
+               undid it — so after two wrong tries, placing the revealed letter correctly left the
+               whole rest of the tray dead and faded for the remainder of the slide. Yasir hit it
+               twice on P3's SEQUENCE_DRAG. clearHold() has existed for exactly this since [28l];
+               PATTERN_BUILD, SEQUENCE_COMPLETE and SORT_GENDER all call it, this mechanic and
+               MATCH_GENDER_PAIRS were simply never wired up. */
+            clearHold(tileRow);
             settle(zone, t);
           } else {
             zone.classList.add("wrong");
             setTimeout(()=> zone.classList.remove("wrong"), 600);
             dragWrong(slide);
             SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: state.attempts });
-            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts||3)) revealOne();
+            if(++wrongStreak >= (CARD.scaffold_rules.max_attempts||2)) revealOne();
           }
         }, wordMode ? { onTap: ()=>{ if(tile.dataset.audio) play("assets/Audio/" + tile.dataset.audio + "." + AUDIO_EXT, ()=>{}); } } : undefined);   // [21c flag#5] tap a word-tile → speak that word
       });
@@ -4427,9 +4810,17 @@ const SlideModules = {
     mount(host, slide){
       // celebration SFX — own Audio element so it overlaps the spoken VO chain
       playSfx(slide.audio && slide.audio.sfx ? slide.audio.sfx : "sfx_celebrate");
-      // show end screen overlay + a big Hindi headline (== the VO) so the finale feels like a reward
-      /* [30i] NO text on the last page (Yasir): only the button carries writing. Emptied,
-         not removed — .end-title:empty / .end-subtitle:empty are already display:none. */
+      /* [30i] NO TEXT ON THE LAST PAGE — Yasir 2026-07-30: "there should be no sentence on the last
+         page, no praising nothing. the only writings allowed on that page is inside the button, other
+         than that, no other sentences, no other words."
+         This used to paint slide.prompt_hi as a 44px headline plus an optional data.end_subtitle. Both
+         are now deliberately set EMPTY rather than deleted from the DOM: `.end-title:empty` and
+         `.end-subtitle:empty` are already `display:none` in style.css, so they collapse and take their
+         margins with them — and any card still carrying an `end_subtitle` simply stops rendering it,
+         instead of needing all 28 cards edited.
+         The celebration VO is untouched: he banned writing on the page, not the spoken praise. And
+         verify_bundle's "every slide SPEAKS its prompt (incl. celebration)" gate reads the card's audio
+         map, not the DOM, so clearing the visible text cannot turn that green check red. */
       const et = $("endTitle"); if(et) et.textContent = "";
       const st = $("endSubtitle"); if(st) st.textContent = "";
       const es = $("endScreen"); es.classList.add("show","hint-glow");
@@ -4441,10 +4832,17 @@ const SlideModules = {
       SwiftPAL.emit("lesson_completed", { skill_code: CARD.skill_code, total_signals: SwiftPAL.signals.length });
       runValidator();
       setNavActive(false);
-      // "आगे बढ़ें" appears only AFTER the celebration VO finishes (see autoPlayChain onDone)
-      /* [30i] button present the moment the screen is (Yasir). Was hidden until
-         autoPlayChain onDone released state.endBtnPending, which left the child on a dead
-         end screen for the length of the clip — or forever if the clip was missing. */
+      /* [30i] THE BUTTON IS THERE THE MOMENT THE SCREEN IS — Yasir 2026-07-30: "on the last
+         screen/the celebration page, the button appears after the VO is completed. the button should be
+         there as we get on that screen."
+         It used to hide the button and set state.endBtnPending, which autoPlayChain's onDone released
+         (see the `if(state.endBtnPending)` line further down). On a long celebration clip — or a missing
+         one that fell back to the TTS placeholder — the child sat on a dead end screen with nothing to
+         press, which is exactly the "silent non-response" failure we keep hitting elsewhere.
+         Shown immediately, and endBtnPending is left FALSE so the onDone branch is a no-op. That branch
+         is deliberately NOT deleted: it is the only consumer of the flag, and leaving it means a card or
+         a future mechanic that still sets the flag keeps working rather than silently never showing its
+         button. `hint-glow` is kept so the button still draws the eye. */
       const eb = $("endBtn"); eb.classList.add("show","hint-glow");
       state.endBtnPending = false;
       // dev-only: a small "download results" button (teacher/QA), never in child flow
@@ -4791,6 +5189,5792 @@ SlideModules.TAP_VACHAN            = SlideModules.TAP_GENDER;
 SlideModules.TAP_PICTURE_BY_VACHAN = SlideModules.TAP_PICTURE_BY_GENDER;
 SlideModules.SORT_VACHAN           = SlideModules.SORT_GENDER;
 SlideModules.MATCH_VACHAN_PAIRS    = SlideModules.MATCH_GENDER_PAIRS;
+
+/* == TRAIN MODULE SET :: BEGIN (engine_local, HI02H11_L02_S02) == */
+
+/* ============================================================================================
+   «मात्राओं की रेल» — TRAIN MODULE SET                        [local to HI02H11_L02_S02]
+   ============================================================================================
+   Built to the SME's recommendations recorded verbatim in
+   ../HI02H11_L02_S01/_SME_RECOMMENDATIONS.md (16 screens, deck of 2026-09-16).
+
+   Everything here is ADDITIVE: new entries on SlideModules plus one CSS block. No existing
+   module, helper or style is modified, so every other lesson on this engine line renders
+   byte-identically. This is the kit's documented per-game route (engine_local/), not an edit
+   to the shared engine.
+
+   THREE ENGINE FACTS THIS CODE IS BUILT AROUND — change them at your peril:
+
+   1. capture_pages.py injects `*{animation:none!important;transition:none!important}` to settle
+      the renderer for review captures. So every element here is authored in its FINAL position
+      with the entry motion applied as an added class. Kill the animation and you get the settled
+      slide, not an empty one. (Four attempts were lost to this on the landing glow.)
+   2. makeDraggable(tile, onDrop) hit-tests `.dd-zone` and calls onDrop(zone, tile). Coaches that
+      accept a drop therefore carry `.dd-zone`; coaches that are only tap targets must NOT, or a
+      stray drag would highlight them.
+   3. A module that drives its own audio MUST set state.ownsAudio = true, or mountSlide's
+      autoPlayChain fires the prompt concurrently and truncates the module's own chain.
+
+   THE LADDER IS 3-ATTEMPT HERE, per the SME on all nine test screens:
+      wrong 1 -> shake + hint1 VO, explicitly NO hand
+      wrong 2 -> shake + hint2 VO + hand on the CORRECT target
+      3rd try correct -> confetti + glow, and SILENT (no praise for a twice-missed item)
+   Implemented inside these modules rather than by changing the shared scaffold, so the blast
+   radius stays inside this game. Reads scaffold_rules.max_attempts, default 3.
+   ============================================================================================ */
+(function(){
+  "use strict";
+
+  const A = (slide, key) => (typeof audioFor === "function" ? audioFor(slide, key) : null);
+  const maxTries = () => ((CARD.scaffold_rules && CARD.scaffold_rules.max_attempts) || 3);
+  /* [h2] REVIEW-1 LADDER. `hint_levels` is 3 on this card; with anything less every module falls
+     back to the two-rung behaviour it shipped with, so the engine stays usable by a card that
+     has not been re-authored. */
+  const hintLevels  = () => ((CARD.scaffold_rules && CARD.scaffold_rules.hint_levels) || 2);
+  const handOnHint3 = () => !!(CARD.scaffold_rules && CARD.scaffold_rules.hand_on_hint3);
+
+  /* Run `steps` one after another; each is called with the continuation. Every rung-2
+     demonstration is a chain of clips with something lit while each one sounds, and a chain
+     written by hand three times over is a chain with three different bugs in it. */
+  /* THE SCREEN IS HELD FOR A WHOLE DEMONSTRATION, NOT FOR EACH OF ITS CLIPS.
+     `state.revealing` is the flag makeDraggable already honours, so raising it stops a drag from
+     even starting; `hintBusy` covers the tap paths, which go through their own handlers. Both are
+     cleared together when the chain ends, and `newVoEpoch()` clears hintBusy on every mount so a
+     screen left mid-demonstration cannot arrive stuck. */
+  let hintBusy = false;
+  function hintHold(run, after){
+    hintBusy = true;
+    state.revealing = true;
+    run(function(){
+      hintBusy = false;
+      state.revealing = false;
+      if(after) after();
+    });
+  }
+
+  function hintSeq(steps, done){
+    let i = 0;
+    (function step(){
+      if(i >= steps.length){ if(done) done(); return; }
+      steps[i++](step);
+    })();
+  }
+
+  /* Take a matra highlight back off. matraHL() replaces the element's text and lays overlays on
+     top of it, keeping the original in dataset.mhWord - so undoing it is: drop the overlays,
+     drop the class, put the text back. Rung 2 lights each word only WHILE it is being read
+     ("हर शब्द पढ़ते समय उसकी मात्रा highlight करें"), so it has to come off again. */
+  function matraClear(el){
+    if(!el) return;
+    el.querySelectorAll(".mh-ov").forEach(o => o.remove());
+    el.classList.remove("mh");
+    if(el.dataset.mhWord) el.textContent = el.dataset.mhWord;
+  }
+
+  /* THE HAND, ON RUNG 3, ON EVERY SCREEN.
+     [28f]/[28j]: the hand is allowed in tutorial and guided and never in practice, and the rule
+     is enforced inside pointNudgeAt because ~25 call sites reach it directly - gating the call
+     sites is what produced three rounds of "fixed" that were not. Review-1 asks for a rung-3
+     hand on screens 6-11, all of which are practice.
+     So the rule is not edited: the phase set is widened around this ONE call and restored in a
+     finally. Everything inside pointNudgeAt / travelNudge runs synchronously (the animation is
+     started, not awaited), so nothing else can observe the widened set. Set
+     scaffold_rules.hand_on_hint3 to false and [28f] applies exactly as before. */
+  function withHand3(fn){
+    if(!handOnHint3() || typeof HAND_PHASES === "undefined"){ fn(); return; }
+    const had = HAND_PHASES.has("practice");
+    if(!had) HAND_PHASES.add("practice");
+    try { fn(); } finally { if(!had) HAND_PHASES.delete("practice"); }
+  }
+
+  /* Turn a bare clip ID into a playable path. `audioFor()` does this for ids that live in
+     slide.audio, but several modules carry ids INSIDE slide.data (a MEET_PAIR example's line, a
+     MATRA_INTRO pair's name, a MATRA_FILL slot's word) and those never pass through it.
+
+     THIS EXISTS BECAUSE THE BUG SHIPPED. MEET_PAIR called `say(ex.audio_line)` with the raw id
+     "vo_meet_pul", so the browser requested `/vo_meet_pul` — 404 — and the child heard SILENCE on
+     the line that teaches the word, on all three example screens. It was invisible to every check
+     we had: the clip exists on disk, the preloader fetches it correctly by id, the asset sweep
+     found it, and say()'s 9s fallback timer meant the chain still advanced and the slide still
+     completed. Only the browser's own network log showed the 404.
+     Found by reading the network log of the packaged handoff copy. */
+  function clip(idOrPath){
+    if(!idOrPath) return null;
+    if(idOrPath.indexOf("/") >= 0 || idOrPath.indexOf(".") >= 0) return idOrPath;  // already a path
+    return "assets/Audio/" + idOrPath + "." + AUDIO_EXT;
+  }
+
+  /* Speak `src`, run `next` when it ENDS. Per-clip fallback timer so one missing or slow clip
+     can never stall a chain — the same belt-and-braces sortSeqReveal uses.
+     `src` may be a path OR a bare clip id; clip() normalises it, so no caller can reintroduce
+     the 404-on-a-bare-id bug described above. */
+  /* ONE CHAIN AT A TIME, EVER.
+     Every module here drives a chain of clips that call each other's callbacks, and a chain has
+     no idea the screen under it has changed. Mount a slide while a previous chain is still in
+     flight — a re-mount, a replay, a fast आगे — and the two talk over each other. Measured on
+     this bundle: two concurrent MATRA_INTRO mounts put `vo_pair_u` on top of itself for 2.1s.
+     So every chain carries the epoch it started in, and a callback whose epoch has moved on is
+     simply dropped. Nothing else has to know about it. */
+  let _voGen = 0;
+  function newVoEpoch(){
+    hintBusy = false;                 /* a screen left mid-demonstration must not arrive stuck */
+    /* the no-heading opt-out is per SLIDE, so it is cleared on every mount and re-applied only by
+       a module whose card asks for it. Round 2 hid the band GLOBALLY and shipped 14 screens with
+       a mascot sitting next to nothing; this cannot do that. */
+    const st = document.getElementById("stage");
+    if(st){ st.classList.remove("no-band"); st.classList.remove("mp-center"); }
+    return ++_voGen;
+  }
+  function say(src, next){
+    const gen = _voGen;
+    let done = false;
+    const go = () => { if(done) return; done = true;
+      if(gen !== _voGen) return;                 // the screen moved on; this chain is stale
+      if(next) next(); };
+    try { play(clip(src) || null, go); } catch(e){ go(); return; }
+    setTimeout(go, 9000);
+  }
+  /* say() for an OPTIONAL clip: a null/absent id runs `next` immediately instead of handing
+     play() a null source and then sitting out the 9-second fallback timer. Round 3 has
+     several rungs the SME deliberately SILENCES — the 3rd-attempt win on every test screen,
+     the completion line on every sort screen — and each of those is an absent clip, not a
+     pause the child should sit through. */
+  function sayOpt(src, next){ if(!src){ if(next) next(); return; } say(src, next); }
+
+  function sayAll(list, next){
+    let i = 0;
+    (function step(){ if(i >= list.length){ if(next) next(); return; } say(list[i++], step); })();
+  }
+
+  /* ---------------------------------------------------------------- procedural SFX */
+  /* The SME asks for a train arrival sound, a soft pop as each matra lands and a sparkle when
+     one is highlighted. The engine already synthesises its SFX with _tone() rather than
+     shipping audio files, so these are built the same way — no new assets, nothing to 404. */
+  const _t = (f, w, d, v) => { if(typeof _tone === "function") _tone(f, w, d, v); };
+  /* REAL RECORDED SFX, brought over from the sibling lesson. The SME asks for "a soft train
+     arrival / whistle SFX when the train enters" on the landing and on every train screen; round
+     3 first synthesised those with the engine's own _tone(), which gives a two-note beep rather
+     than a train. These play the actual files and fall back to the synthesised tone if one is
+     ever missing, so a stripped bundle still makes a noise rather than going silent. */
+  function sfxFile(name, fallback){
+    try{
+      /* [r17] versioned like every other clip - see _av() in the engine */
+      const a = new Audio(typeof _av === "function"
+        ? _av("assets/Audio/" + name + "." + AUDIO_EXT)
+        : "assets/Audio/" + name + "." + AUDIO_EXT);
+      a.volume = 0.55;
+      a.play().catch(()=> fallback && fallback());
+    }catch(e){ if(fallback) fallback(); }
+  }
+  const _toneWhistle = ()=> _t([430, 660, 560], "sine", 0.55, 0.075);
+  const sfxWhistle      = ()=> sfxFile("sfx_whistle",      _toneWhistle);  // the toot
+  /* [r73] Yasir's feedback sounds for a right and a wrong answer, on every screen of this lesson.
+     The engine's sfxCorrect() / sfxWrongSoft() are synthesised tones; they stay as the fallback
+     if a file cannot play. Levelled to -15 LUFS (prepare step in CHANGES_HINTS r73). */
+  const fbCorrect = ()=> sfxFile("sfx_fb_correct",
+                                 ()=>{ if(typeof sfxCorrect === "function") sfxCorrect(); });
+  const fbWrong   = ()=> sfxFile("sfx_fb_incorrect",
+                                 ()=>{ if(typeof sfxWrongSoft === "function") sfxWrongSoft(); });
+  const sfxTrainMove    = ()=> sfxFile("sfx_train_move",   null);          // the chug bed
+  const sfxPopSoft = ()=> _t([720], "sine", 0.10, 0.07);
+  const sfxSparkle = ()=> _t([1180, 1560], "sine", 0.22, 0.055);
+
+  /* ================================================================ matra highlight */
+  /* Colour ONLY the matra inside a rendered word — the SME's most repeated teach-screen note
+     («Highlight only the ा matra in the word»), and the one thing the first build could not do
+     for this skill.
+
+     WHY THE ENGINE'S OWN METHOD CANNOT DO IT. RIGHT_SPACING_MATRAS + _matraClipCols clip a
+     vertical PIXEL COLUMN range out of a duplicate of the word. That works for ा and ी, which
+     occupy their own advance width to the right of the consonant. ु and ू are BELOW-BASE marks
+     with ZERO advance: they sit under their consonant and share its columns. A column clip
+     therefore selects the consonant and whatever follows. Forced on and measured, «पुल» put
+     11,342 red pixels on the ल and «फूल» produced a 13-pixel sliver. Both are silently wrong,
+     which is worse than no highlight, so the builder hard-fails if either matra is added to
+     RIGHT_SPACING_MATRAS.
+
+     WHAT WORKS: clip in TWO dimensions instead of one.
+       1. Segment the word into grapheme clusters (Intl.Segmenter, 'hi'), so «पुल» → ["पु","ल"]
+          and the mark is never separated from its base.
+       2. For each cluster containing the target mark, take that cluster's x-range with a Range
+          rect — exact, and it costs nothing that guessing at character widths would save.
+       3. Intersect with the band BELOW the baseline (found with a zero-size inline-block strut,
+          which sits exactly on it). Nothing else in these words descends, so the intersection
+          contains the mark and only the mark.
+     For a right-spacing matra the below-baseline band is empty, so mode "right" clips the
+     cluster's x-range at FULL height minus the base's advance — measured the same way, by
+     rendering the cluster without its mark. Both modes are exercised; भाग 2 (ए/ऐ) will need the
+     third, "above", for े/ै, and the hook is here.
+
+     Verified at 150px on पुल, फूल and मुकुट — the last of which correctly reddens BOTH marks.
+     The overlay duplicates the whole word and is clipped, so it can never drift out of register
+     with the original, at any size or weight. aria-hidden keeps the word read once. */
+  const _segmenter = (typeof Intl !== "undefined" && Intl.Segmenter)
+    ? new Intl.Segmenter("hi", { granularity: "grapheme" }) : null;
+
+  function clustersOf(word){
+    if(_segmenter) return [..._segmenter.segment(word)].map(s => s.segment);
+    return [...word];                                   // never hit in Chromium; safe fallback
+  }
+
+  /* Measure the advance width of `txt` in the same computed font as `ref`. */
+  function _advance(txt, ref){
+    const m = document.createElement("span");
+    const cs = getComputedStyle(ref);
+    m.style.cssText = "position:absolute;visibility:hidden;white-space:pre;left:-9999px;" +
+      "font:" + cs.font + ";font-family:" + cs.fontFamily + ";font-size:" + cs.fontSize +
+      ";font-weight:" + cs.fontWeight + ";letter-spacing:" + cs.letterSpacing;
+    m.textContent = txt;
+    document.body.appendChild(m);
+    const w = m.getBoundingClientRect().width;
+    m.remove();
+    return w;
+  }
+
+  /* el: an element whose ONLY child is the word text. Rewrites it as .mh + clipped overlays. */
+  /* ---------------------------------------------------------------- matra ink mask
+     THE MATRA'S PIXELS, FOUND BY SUBTRACTION RATHER THAN BY GEOMETRY.
+
+     Yasir, round 13: "when we highlight the matra then highlight only the matra, currently many
+     place some matra is half highlighted, some are highlighted with the letter as well."
+
+     Both symptoms come from the same thing: every previous version drew a RECTANGLE around where
+     the matra was calculated to be, and then painted whatever ink fell inside it.
+       · too small  -> the mark's tail or its lower curl sits outside the box and stays navy
+                       ("half highlighted"),
+       · too large  -> it catches the consonant's foot or the next letter's stem
+                       ("highlighted with the letter as well").
+     Every fix moved the edges and traded one symptom for the other, because a below-base matra is
+     not rectangular and no rectangle can contain it exactly.
+
+     So stop guessing the box. Raster the word TWICE at the same origin - once as written, once
+     with the matra deleted - and take the difference. Those pixels are the matra and nothing else,
+     by construction, whatever the font does with the cluster. The result is used as a MASK on the
+     orange overlay, so the highlight is the mark's own silhouette.
+
+     WHY THIS IS SAFE FOR ु / ू AND NOT FOR EVERY MATRA: ु and ू are non-spacing - they add no
+     advance, so deleting one leaves every other glyph exactly where it was and the difference is
+     purely the mark. A spacing matra (ा, ी) shifts the letters after it, and ि reorders, so the
+     difference would include half the word. Those keep the advance-based path below, which is
+     what the sibling lesson uses and what works for them. */
+  const _MI_CACHE = new Map();
+  function _matraInkMask(word, matra, fontPx, dpr){
+    const key = word + "|" + matra + "|" + fontPx + "|" + dpr;
+    if(_MI_CACHE.has(key)) return _MI_CACHE.get(key);
+
+    const base = word.split(matra).join("");
+    if(!base || base === word) return null;
+
+    const S = Math.max(1, Math.round(fontPx * dpr));
+    const font = '800 ' + S + 'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    const cv = document.createElement("canvas");
+    const cx = cv.getContext("2d", { willReadFrequently: true });
+    cx.font = font;
+    const w = Math.ceil(cx.measureText(word).width) + Math.ceil(S * 0.4);
+    /* generous vertical room: ु / ू hang well under the baseline and the shirorekha sits high */
+    const asc = Math.round(S * 1.05), desc = Math.round(S * 0.75);
+    const h = asc + desc;
+    cv.width = w; cv.height = h;
+
+    const raster = (txt)=>{
+      cx.setTransform(1, 0, 0, 1, 0, 0);
+      cx.clearRect(0, 0, w, h);
+      cx.font = font; cx.textBaseline = "alphabetic"; cx.fillStyle = "#000";
+      cx.fillText(txt, Math.round(S * 0.2), asc);
+      return cx.getImageData(0, 0, w, h).data;
+    };
+    const A = raster(word), B = raster(base);
+
+    /* A pixel belongs to the matra when the full word inks it and the stripped word does not.
+       The 26/40 split is deliberate: a pixel only just touched in A but solidly absent from B is
+       still the mark's anti-aliased edge, and dropping those left a navy fringe around the
+       orange - which read as "half highlighted" at 3x. */
+    const out = cx.createImageData(w, h);
+    const o = out.data;
+    let any = false, minX = w, maxX = -1, minY = h, maxY = -1;
+    for(let i = 0, p = 0; i < A.length; i += 4, p++){
+      if(A[i + 3] > 26 && B[i + 3] <= 40){
+        o[i] = o[i + 1] = o[i + 2] = 255;
+        o[i + 3] = A[i + 3];
+        any = true;
+        const x = p % w, y = (p / w) | 0;
+        if(x < minX) minX = x; if(x > maxX) maxX = x;
+        if(y < minY) minY = y; if(y > maxY) maxY = y;
+      }
+    }
+    if(!any){ _MI_CACHE.set(key, null); return null; }
+
+    cx.putImageData(out, 0, 0);
+    const res = { url: cv.toDataURL("image/png"), w: w, h: h, asc: asc,
+                  padX: Math.round(S * 0.2), dpr: dpr,
+                  box: [minX, minY, maxX, maxY] };
+    _MI_CACHE.set(key, res);
+    return res;
+  }
+
+  function matraHL(el, matra, opts){
+    if(!el || !matra) return false;
+    const word = (el.dataset.mhWord || el.textContent || "").trim();
+    if(!word || word.indexOf(matra) < 0) return false;
+    el.dataset.mhWord = word;
+    el.textContent = word;                              // reset if we are re-highlighting
+    el.classList.add("mh");
+
+    const clusters = clustersOf(word);
+    const rect = el.getBoundingClientRect();
+    if(!rect.width || !rect.height) return false;       // not laid out yet — caller retries
+
+    /* baseline, via an inline-block strut: its top edge sits on the baseline.
+       [r14] The strut is 100 CSS px wide so it ALSO measures the local scale. Everything below
+       comes from getBoundingClientRect(), which is in SCREEN pixels - the stage's --scale has
+       already been applied - while style.left/top are written in CSS pixels and get scaled again.
+       Dividing by _mhScale converts one to the other. Without it the overlay lands at
+       `offset x scale`, which at a real window size (--scale 0.54-0.81) is a whole second matra
+       sitting beside the first. */
+    /* [r65] A ZERO-WIDTH STRUT. [r14]'s 100px strut measured the scale as a bonus - and inside a
+       card label that is 22px wide and width-locked by its flex parent, a 100px inline-block
+       WRAPS onto a second line, so its top edge reported the second line's baseline. That is
+       what put the orange a whole line off on every snapped card (measured: सुई's band 33px
+       under its label; आलू's 20px above it, from the label growing to fit). The strut takes no
+       width now, and the scale comes from the element's own two measurements of itself -
+       screen px over CSS px - which needs no room at all. */
+    const strut = document.createElement("span");
+    strut.style.cssText = "display:inline-block;width:0;height:0";
+    el.appendChild(strut);
+    const _sr = strut.getBoundingClientRect();
+    const _cssW = el.offsetWidth || 0;
+    const _mhScale = (_cssW > 0 && rect.width > 0) ? rect.width / _cssW : 1;
+    const baseline = (_sr.top - rect.top) / _mhScale;
+    strut.remove();
+
+    const tn = el.firstChild;
+    if(!tn || tn.nodeType !== 3) return false;
+
+    /* [r13] NON-SPACING MARKS GO THROUGH THE INK MASK. ु and ू add no advance, so the word can
+       be rastered with and without the mark and the difference IS the mark - no rectangle, no
+       edges to tune, nothing of the consonant caught. One overlay for the whole word, because the
+       mask already contains every occurrence of the matra in it. */
+    /* [r65] THE INK MASK IS RETIRED. Yasir: "you are making another matra with highlighted
+       colour and placing it on top of the existing and this is where the misalignment is
+       happening". Exactly so: the mask was cut on a canvas with its own font string and its own
+       hinting, and landed a few px off the page's own glyph in every coach and on every card.
+       The geometric path below draws the page's OWN text again, in orange, clipped to the band
+       under the baseline - and a word cannot be out of register with itself. Kept behind a
+       constant rather than deleted, so the measurement that led here is still in the file. */
+    const USE_INK_MASK = false;
+    if(USE_INK_MASK && !RIGHT_SPACING_MATRAS.has(matra)){
+      const fs = parseFloat(getComputedStyle(el).fontSize) || 0;
+      const dpr = Math.min(3, window.devicePixelRatio || 1);
+      const m = fs ? _matraInkMask(word, matra, fs, dpr) : null;
+      if(m){
+        const full = document.createRange();
+        full.setStart(tn, 0); full.setEnd(tn, word.length);
+        const tb = full.getBoundingClientRect();
+        const ov = document.createElement("span");
+        ov.className = "mh-ov mh-ink" + (opts && opts.glow ? " mh-glow" : "");
+        ov.setAttribute("aria-hidden", "true");
+        const W = m.w / m.dpr, H = m.h / m.dpr;
+        ov.style.left   = ((tb.left - rect.left) / _mhScale - m.padX / m.dpr) + "px";
+        ov.style.top    = (baseline - m.asc / m.dpr) + "px";
+        ov.style.width  = W + "px";
+        ov.style.height = H + "px";
+        ov.style.webkitMaskImage = ov.style.maskImage = 'url("' + m.url + '")';
+        ov.style.webkitMaskSize  = ov.style.maskSize  = W + "px " + H + "px";
+        el.appendChild(ov);
+        if(opts && opts.pulse) el.classList.add("mh-pulse");
+        if(typeof sfxSparkle === "function") sfxSparkle();
+        return true;
+      }
+      /* no mask (missing font metrics, or the mark left no difference) -> fall through to the
+         geometric path rather than silently painting nothing */
+    }
+
+    let off = 0, made = 0;
+    clusters.forEach(cl => {
+      if(cl.indexOf(matra) >= 0){
+        const r = document.createRange();
+        r.setStart(tn, off); r.setEnd(tn, off + cl.length);
+        const cb = r.getBoundingClientRect();
+        let x0 = (cb.left - rect.left) / _mhScale, x1 = (cb.right - rect.left) / _mhScale,
+            y0 = baseline, y1 = rect.height / _mhScale;
+
+        /* right-spacing marks (ा, ी) carry their own advance, so the mark is the slice of the
+           cluster BEYOND the base's width, and it runs the full height rather than below the
+           baseline. Detected by measuring, not by a hard-coded list of matras. */
+        const base = cl.split(matra).join("");
+        let below = true;
+        if(base){
+          const grow = (_advance(cl, el) - _advance(base, el)) / _mhScale;
+          if(grow > 3){ x0 = x0 + (x1 - x0) - grow; y0 = 0; below = false; }
+        }
+        /* [r12] BELOW-BASE MARKS CURL PAST THEIR CLUSTER. ु and ू add no advance, so x1 is the
+           base consonant's right edge - and the mark's tail sweeps a few px beyond it and was
+           being clipped off, left navy against an orange body. Reach further, but ONLY in the
+           below-baseline band this branch already restricts us to: down there the next letter
+           has no ink to catch, so nothing else can be painted by the extra room. */
+        if(below){
+          x1 = Math.min(rect.width / _mhScale, x1 + Math.max(3, (x1 - x0) * 0.18));
+          /* [r12] AND THE FLOOR HAS TO DROP. y1 was rect.height, but these panels set
+             line-height:1 and the mark descends below the content box - so the bottom of
+             every ु / ू was left navy under an orange body, which is what made the
+             highlight look like a band rather than a mark. Nothing else is down there. */
+          const _fs = parseFloat(getComputedStyle(el).fontSize) || 0;
+          y1 = rect.height + _fs * 0.34;
+        }
+
+        const ov = document.createElement("span");
+        ov.className = "mh-ov" + (opts && opts.glow ? " mh-glow" : "");
+        ov.setAttribute("aria-hidden", "true");
+        /* THE OVERLAY'S TEXT LIVES IN AN ATTRIBUTE, NOT IN A TEXT NODE, and is painted by
+           .mh-ov::before{content:attr(data-w)}. This is not a style preference — the engine's
+           centerInkGlyph() measures a glyph with `span.textContent`, which CONCATENATES
+           descendants. A plain text-node overlay would make «पुल» measure as «पुलपुल», so the
+           engine would compute a double-width ink box and shrink the real word to fit it.
+           A pseudo-element is invisible to textContent, so the two systems stop fighting. */
+        ov.setAttribute("data-w", word);
+        ov.style.clipPath = "polygon(" + x0 + "px " + y0 + "px," + x1 + "px " + y0 + "px," +
+                            x1 + "px " + y1 + "px," + x0 + "px " + y1 + "px)";
+        el.appendChild(ov);
+        made++;
+      }
+      off += cl.length;
+    });
+    if(made && opts && opts.pulse) el.classList.add("mh-pulse");
+    if(made && typeof sfxSparkle === "function") sfxSparkle();
+    return made > 0;
+  }
+
+  /* Retry until the element is actually laid out.
+
+     matraHL needs a real getBoundingClientRect, and there are three ways it can be zero at the
+     moment a module mounts: the slide is still mid slide-in, the webfont has not resolved so
+     the glyph has no metrics yet, or the engine's own centerInkGlyph is mid-measure. A single
+     rAF retry was NOT enough — verified on the built page, where a MEET_PAIR word came back
+     with zero overlays and no error, which is exactly the silent-failure mode this lesson has
+     been bitten by before. So: retry across several frames, then give up quietly.
+     Also re-run after document.fonts.ready, because a font swap changes every measurement. */
+  function matraHLSoon(el, matra, opts){
+    let tries = 0;
+    (function attempt(){
+      if(!el || !el.isConnected) return;
+      if(matraHL(el, matra, opts)) return;
+      if(++tries > 10) return;
+      (tries < 4 ? requestAnimationFrame : (f)=> setTimeout(f, 60))(attempt);
+    })();
+    if(document.fonts && document.fonts.ready){
+      document.fonts.ready.then(()=>{
+        if(el && el.isConnected && !el.querySelector(".mh-ov")) matraHL(el, matra, opts);
+      });
+    }
+  }
+
+  /* The locomotive, shared. Round 3 puts a train on the landing and on MATRA_INTRO too
+     («the matras can be shown inside two train bogies … so the lesson visually continues as
+     a «मात्राओं की रेल» journey»), so the drawing is lifted out of buildTrain rather than
+     copied three times. */
+  const LOCO_SVG =
+      '<svg viewBox="0 0 190 130" width="190" height="130" aria-hidden="true">' +
+      '<rect x="8" y="46" width="104" height="52" rx="12" fill="#E8453C" stroke="#7A1F1A" stroke-width="5"/>' +
+      '<rect x="104" y="20" width="62" height="78" rx="12" fill="#E8453C" stroke="#7A1F1A" stroke-width="5"/>' +
+      '<rect x="116" y="34" width="38" height="30" rx="7" fill="#BFE3FF" stroke="#7A1F1A" stroke-width="5"/>' +
+      '<rect x="20" y="26" width="26" height="26" rx="5" fill="#F7C948" stroke="#7A1F1A" stroke-width="5"/>' +
+      '<rect x="2" y="92" width="176" height="12" rx="6" fill="#7A1F1A"/>' +
+      '<circle cx="36" cy="110" r="17" fill="#3B3B4F" stroke="#1C1C2A" stroke-width="5"/>' +
+      '<circle cx="36" cy="110" r="6" fill="#F7C948"/>' +
+      '<circle cx="100" cy="110" r="17" fill="#3B3B4F" stroke="#1C1C2A" stroke-width="5"/>' +
+      '<circle cx="100" cy="110" r="6" fill="#F7C948"/>' +
+      '<circle cx="150" cy="110" r="14" fill="#3B3B4F" stroke="#1C1C2A" stroke-width="5"/>' +
+      '</svg>';
+
+
+  /* ==========================================================================================
+     TRAIN CHROME — ported verbatim from HI02H11_L02_S01, whose [r7] note describes the exact
+     defect this bundle had: "The cover ran the painted train while pages 8-14 drew a DIFFERENT
+     locomotive next to CSS-drawn boxes. Same lesson, two trains."
+
+     It slices the painted artwork at its couplings — measured columns in BOTH the hi-res parked
+     png and the 36-cell sprite sheet, which agree to within 0.3% of the train's width — so every
+     coach is a positioned DIV with a background-position rather than a flat image. That is what
+     lets a painted coach still glow, shake, lock and accept a drop.
+
+     THIS LESSON HAS TWO MATRAS AND THE ARTWORK HAS THREE COACHES, and slicing is what makes that
+     a non-problem: a two-coach train is parts 0..2 and part 3 is simply never drawn. The earlier
+     cropped sheet (train2_spritesheet.webp) is therefore gone, along with the script that made
+     it — the original artwork is used unmodified.
+     ========================================================================================== */
+  /* [r7] Sampled from the painted train itself (assets/Images/train.png), so a coach's label
+     plate is bordered in its OWN coach's colour. The old palette was a guess and put a pink
+     plate over the yellow coach. Darkened a little from the raw fill so the border reads as a
+     border against a cream plate. */
+  const TRAIN_COACH_COLORS = ["#E9B400", "#37C425", "#F0559A", "#4EA3F0"];
+
+  /* A BARE MATRA IS AN ORPHAN COMBINING MARK. Rendered alone it is font-dependent: a dotted
+     placeholder on some platforms, a floating stroke on others. U+25CC is the standard carrier
+     and is already the engine's own convention in the matra callout, so every bare matra goes
+     through here and reads identically everywhere — and it shows the child WHERE the matra sits
+     relative to a letter, which is the whole point of the lesson. */
+  const _BARE_MATRA = /^[ा-ौॢॣ]$/;
+  function matraGlyph(m){ return _BARE_MATRA.test(String(m || "")) ? "◌" + m : m; }
+
+  /* a coach label / body cell may be plain text, a picture, or an emoji */
+  function _coachCell(spec){
+    if(spec == null) return "";
+    if(typeof spec === "string") return spec;
+    if(spec.img || spec.emoji) return imgOrEmoji(spec.img, spec.emoji, "cl-img", "cl-emoji");
+    if(spec.html) return spec.html;
+    return spec.text || "";
+  }
+
+  /* ==========================================================================================
+     THE TRAIN ITSELF — one artwork for the cover and for every interactive train screen.
+     [r7] The cover ran the painted train (a locomotive and three coaches with cream panels,
+     wheels turning through 36 frames) while pages 8-14 drew a DIFFERENT locomotive next to
+     CSS-drawn boxes. Same lesson, two trains. These screens now use the cover's train and the
+     cover's sounds, and its wheels turn as it pulls in.
+
+     Two files, one drawing, measured off both so they can be laid out interchangeably:
+       · assets/Images/train.png ........ 2171x724, the parked pose at full resolution. What is
+                                          on screen once the train has stopped, so a word sits on
+                                          a crisp panel rather than an upscaled sprite cell.
+       · assets/UI/train_spritesheet.webp 6x6 cells of 634x182 — the same drawing animated. Runs
+                                          ONLY while the train is travelling, where its lower
+                                          resolution is invisible because the thing is moving.
+     Both are cut at the couplings, found by scanning for the columns where the ink is thin
+     enough to be coupling-and-wheels only: art px 17/650/1151/1642/2155, sheet px 2/188/336/
+     481/632. The two agree to within 0.3% of the train's width, which is why one geometry can
+     drive both layers — they are aligned on their INK boxes, not their canvases, because the
+     png carries more transparent padding than a sheet cell does. */
+  const TRAIN_ART = {
+    /* the lossless WebP re-encode of assets/Images/train.png (1184KB -> 814KB, pixel-exact when
+       composited). Lossy was measured and rejected: at q90 4.6% of pixels moved, peak delta 112 —
+       the same damage flat vector art with hard edges took when the cover's GIF was re-encoded. */
+    src: "assets/UI/train_still.webp", W: 2171, H: 724,
+    ink: { x: 17, y: 48, w: 2138, h: 592 },
+    cut: [17, 650, 1151, 1642, 2155],
+    /* [r24] THE CREAM PANEL, MEASURED OFF THE ARTWORK - not estimated.
+       These said h:417/418/417. The painted panels are 228/222/226 art px tall: the declared
+       height was very nearly DOUBLE the real one, so the drop rectangle hung far below the cream
+       and down into the wheels, which is exactly what Yasir's screenshot shows. The widths were
+       out too, by 7-16px.
+       Found by scanning each coach's x-range for rows carrying a long unbroken run of the cream
+       colour and taking that region's bounds, then checked by drawing the result back over the
+       art - the boxes land on the panels with nothing to spare. */
+    panel: [null, { cx: 898, cy: 330, w: 402, h: 228 },
+                  { cx: 1394, cy: 327, w: 392, h: 222 },
+                  { cx: 1898, cy: 330, w: 409, h: 226 }]
+  };
+  const TRAIN_SPR = {
+    src: "assets/UI/train_spritesheet.webp", cw: 634, ch: 182, cols: 6, rows: 6,
+    ink: { x: 2, y: 3, w: 630, h: 175 },
+    cut: [2, 188, 336, 481, 632],
+    /* REST and SPIN are the cover's, and must stay the cover's: SPIN is the cells advanced over
+       the whole travel and is congruent to REST mod 36 (71 % 36 = 35), so the last frame lands
+       exactly on the parked pose instead of jumping to it. */
+    spin: 71, rest: 35
+  };
+  const TRAIN_TRAVEL_MS = 3400;        /* the cover's travel, shared so the two feel like one train */
+
+  /* The cover's easing, solved for y given x (Newton, then clamped). The frame advance rides
+     the SAME curve as the movement, so the chug is a function of distance covered rather than of
+     the clock and cannot drift out of sympathy with the loco. */
+  function _trainEase(){
+    const p1x = .40, p1y = .20, p2x = .45, p2y = 1;
+    const cx = 3*p1x, bx = 3*(p2x-p1x)-cx, ax = 1-cx-bx;
+    const cy = 3*p1y, by = 3*(p2y-p1y)-cy, ay = 1-cy-by;
+    const fx = t=> ((ax*t + bx)*t + cx)*t, fy = t=> ((ay*t + by)*t + cy)*t;
+    const dfx = t=> (3*ax*t + 2*bx)*t + cx;
+    return (x)=>{ let t = x;
+      for(let i = 0; i < 8; i++){ const e = fx(t) - x;
+        if(Math.abs(e) < 1e-5) break;
+        const d = dfx(t); if(Math.abs(d) < 1e-6) break; t -= e/d; }
+      return fy(Math.min(1, Math.max(0, t))); };
+  }
+
+  const TrainChrome = {
+    /* cfg: { coaches, coach_label[], coach_body[], drop_zone, multi, entry, on_enter } */
+    mount(host, cfg){
+      cfg = cfg || {};
+      const n = cfg.coaches || (cfg.coach_label || []).length || 3;
+      const A = TRAIN_ART, S = TRAIN_SPR;
+      /* part i of the drawing: 0 is the locomotive, 1..3 the coaches. More than three coaches
+         reuses the three that exist, which is what the artwork has. */
+      const artPart = (i)=> ({ x0: A.cut[i], w: A.cut[i+1] - A.cut[i] });
+      const sprPart = (i)=> ({ x0: S.cut[i], w: S.cut[i+1] - S.cut[i] });
+      const idx = (i)=> i === 0 ? 0 : ((i - 1) % 3) + 1;
+
+      let artW = artPart(0).w;
+      for(let i = 0; i < n; i++) artW += artPart(idx(i + 1)).w;
+      /* Fit to BOTH axes. The artwork is 3.6:1, so sizing on width alone made a 1160px train
+         321px tall — which pushed TRAIN_SORT's coach labels off the top of the stage and left the
+         tray sitting on the आगे button. A screen that also carries labels and a tray passes a
+         smaller maxH. 0.56 is the cap that stops the png being upscaled past its own pixels.
+         [r9] The width budget is 86% of the room available, not a fixed number: the track has to be
+         visibly LONGER than the train, and a train filling its container left no line to arrive
+         along. Measured before: train and track were both exactly the host width. */
+      const avail = host.clientWidth || 1160;
+      const k = Math.min(0.56, (cfg.maxW || avail * 0.86) / artW, (cfg.maxH || 300) / A.ink.h);
+      const partH = A.ink.h * k;
+
+      const shell = document.createElement("div"); shell.className = "train-shell";
+      const rail  = document.createElement("div"); rail.className  = "train-rail";
+      rail.style.setProperty("--tc-h", partH + "px");
+      rail.style.setProperty("--tc-rail-h", Math.max(14, Math.round(partH * 0.07)) + "px");
+      rail.style.setProperty("--lt-travel", TRAIN_TRAVEL_MS + "ms");
+
+      /* The track is laid on the SHELL, not on the rail. The rail is the thing that translates
+         in from the right, so a track parented to it slid in with the train — rails that arrive
+         with the locomotive. The shell never moves, so the line is already there and the train
+         runs along it. */
+      const track = document.createElement("div"); track.className = "train-track";
+
+      const sprEls = [];
+      /* One part: the parked artwork underneath, the animated sheet on top. The sheet layer is
+         what moves; it is faded out and dropped the moment the train stops, which is also the
+         moment the resolution difference would first be visible. */
+      const paint = (el, i)=>{
+        const a = artPart(idx(i)), s = sprPart(idx(i));
+        el.style.width = (a.w * k) + "px";
+        el.style.height = partH + "px";
+        const art = document.createElement("div"); art.className = "tc-art";
+        art.style.backgroundImage = 'url("' + A.src + '")';
+        art.style.backgroundSize = (A.W * k) + "px " + (A.H * k) + "px";
+        art.style.backgroundPosition = (-a.x0 * k) + "px " + (-A.ink.y * k) + "px";
+        el.appendChild(art);
+
+        const sk = (A.ink.w * k) / S.ink.w;            /* sheet scale that matches the png's ink box */
+        const spr = document.createElement("div"); spr.className = "tc-spr";
+        spr.style.backgroundImage = 'url("' + S.src + '")';
+        spr.style.backgroundSize = (S.cw * S.cols * sk) + "px " + (S.ch * S.rows * sk) + "px";
+        spr.dataset.x0 = String(s.x0); spr.dataset.sk = String(sk);
+        el.appendChild(spr);
+        sprEls.push(spr);
+        return { a, s };
+      };
+      const setCell = (cellIn)=>{
+        const CELLS = S.cols * S.rows;
+        const cell = ((cellIn % CELLS) + CELLS) % CELLS;
+        const c = cell % S.cols, r = (cell / S.cols) | 0;
+        sprEls.forEach(spr=>{
+          const sk = parseFloat(spr.dataset.sk), x0 = parseFloat(spr.dataset.x0);
+          spr.style.backgroundPosition =
+            (-(c * S.cw + x0) * sk) + "px " + (-(r * S.ch + S.ink.y) * sk) + "px";
+        });
+      };
+
+      const loco = document.createElement("div"); loco.className = "train-loco tc-part";
+      paint(loco, 0);
+      /* appendChild, never `innerHTML +=` — that serialises and RE-PARSES the whole subtree, which
+         silently replaces the .tc-spr node paint() just handed to setCell. Measured: the loco's
+         wheels stopped turning while the coaches' kept going, because its sprite element was a
+         detached orphan. */
+      /* the funnel mouth, measured off this artwork (see the CSS note): 28.4% across the
+         locomotive part, 11.8% down the ink band. The puff size and the drift scale with the
+         train so a small train does not get cover-sized smoke. */
+      const steam = document.createElement("div"); steam.className = "train-steam";
+      steam.style.left = (artPart(0).w * k * 0.284) + "px";
+      steam.style.top  = (partH * 0.118) + "px";
+      /* the cover sizes its puff at 4.6% of the rendered train width and its plume at about
+         0.57x the train's height; kept proportional here so a short train gets short smoke. */
+      const IW = A.ink.w * k;
+      steam.style.setProperty("--tc-puff",       Math.round(IW * 0.040) + "px");
+      steam.style.setProperty("--tc-rise",       Math.round(-partH * 0.62) + "px");
+      steam.style.setProperty("--tc-drift",      Math.round(IW * 0.012) + "px");
+      steam.style.setProperty("--tc-drift-move", Math.round(IW * 0.046) + "px");
+      const PUFFS = 7;
+      for(let i = 0; i < PUFFS; i++){
+        const p = document.createElement("span");
+        p.style.animationDelay = (i * (1610 / PUFFS) - 1610) + "ms";
+        steam.appendChild(p);
+      }
+      loco.appendChild(steam);
+      rail.appendChild(loco);
+
+      const coachEls = [], faceEls = [], labelEls = [];
+      for(let i = 0; i < n; i++){
+        const pi = idx(i + 1), a = artPart(pi), pan = A.panel[pi];
+        const c = document.createElement("div"); c.className = "train-coach";
+        c.style.setProperty("--coach-c", TRAIN_COACH_COLORS[i % TRAIN_COACH_COLORS.length]);
+
+        const lab = document.createElement("div"); lab.className = "coach-label";
+        const labSpec = (cfg.coach_label || [])[i];
+        if(labSpec == null) lab.style.display = "none";   /* not `visibility` — that still reserves 50px */
+        lab.innerHTML = _coachCell(labSpec);
+
+        const body = document.createElement("div"); body.className = "coach-body tc-part";
+        paint(body, pi);
+        if(cfg.drop_zone) body.classList.add("dropzone", "dd-zone");
+
+        /* the word/card sits ON the coach's painted cream panel, placed from the measurement
+           above rather than from padding — the panel is not centred in the coach slice */
+        const face = document.createElement("div"); face.className = "coach-face" + (cfg.multi ? " multi" : "");
+        face.style.left   = ((pan.cx - a.x0) * k) + "px";
+        face.style.top    = ((pan.cy - A.ink.y) * k) + "px";
+        /* [r24] EXACTLY the panel. The 0.94/0.90 shrink was compensating for a panel table
+           that was too big - a fudge on top of a wrong number, which still left the box the
+           wrong shape. With the table measured, the face IS the rectangle painted on the cart:
+           "the drop area should be exactly same as the rectangle made in the coach". */
+        face.style.width  = (pan.w * k) + "px";
+        face.style.height = (pan.h * k) + "px";
+        face.innerHTML = _coachCell((cfg.coach_body || [])[i]);
+        body.appendChild(face);
+
+        c.appendChild(lab); c.appendChild(body);
+        c.dataset.coach = String(i);
+        rail.appendChild(c);
+        coachEls.push(c); faceEls.push(body.querySelector(".coach-face")); labelEls.push(lab);
+      }
+      shell.appendChild(track);        /* behind the rail in DOM order, so the train paints over it */
+      shell.appendChild(rail);
+      host.appendChild(shell);
+
+      /* If the painted train cannot be fetched, fall back to the structured locomotive exactly as
+         the old <img> onerror did — a background-image has no error event, so probe separately. */
+      (function(){ const probe = new Image();
+        probe.onerror = ()=>{ shell.classList.add("tc-noart"); };
+        probe.src = TRAIN_ART.src; })();
+
+      setCell(S.rest);
+
+      /* "Train comes through animation from right to left. Train stops at the centre of the
+         screen." (rows #8, #95, #107, #116, #124, #144, #175)
+         The cover's entrance, beat for beat: whistle as it appears, the chug bed under the
+         travel, the wheels turning on the travel's own easing curve, and the arrival sound as it
+         settles. Rows X4/#95: "Soft train arrival sound." */
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let _raf = 0;
+      /* "Train comes through animation ... Train stops at the centre. On screen: no instruction
+         text, only VO should play." The VO waits for the train: mountSlide's auto chain is held
+         here and released once the arrival sound has had a beat to clear. */
+      let _promptGo = null, _parked = false;
+      const _afterPrompt = ()=>{ if(typeof cfg.on_prompt_done === "function") cfg.on_prompt_done(); };
+      const _release = (go)=> go(_afterPrompt);
+      /* the sibling's engine reads state.promptGate to hold its auto prompt chain until the train
+       parks. THIS engine has no such hook — it is set and never read — and the modules here gate
+       their own prompts through buildTrain's whenParked() instead. Left assigned (harmless, and
+       it keeps the ported block diffable against the sibling) but nothing depends on it. */
+    state.promptGate = (go)=>{ if(_parked) _release(go); else _promptGo = go; };
+      const settle = ()=>{
+        rail.classList.remove("tr-entering");
+        shell.classList.add("tc-parked");               /* drops the sprite layer, reveals the png */
+        _parked = true;
+        if(_promptGo){ const g = _promptGo; _promptGo = null; setTimeout(()=> _release(g), 320); }
+        if(typeof cfg.on_enter === "function") cfg.on_enter();
+      };
+      if(cfg.entry !== false && !reduce){
+        rail.classList.add("tr-entering");
+        sfxWhistle(); sfxTrainMove();
+        const ease = _trainEase(), t0 = performance.now();
+        const tick = ()=>{
+          if(!rail.isConnected) return;                 /* navigated away mid-run */
+          const p = Math.min(1, (performance.now() - t0) / TRAIN_TRAVEL_MS);
+          setCell(Math.floor(ease(p) * S.spin));
+          if(p < 1) _raf = requestAnimationFrame(tick);
+          else setCell(S.rest);                         /* exact landing, no rounding drift */
+        };
+        _raf = requestAnimationFrame(tick);
+        /* [r65] Yasir: "Don't use sfx_train_arrive.ogg in any pages." The clip stays on disk
+           (COPY_AUDIO still carries it); nothing calls for it. */
+        setTimeout(()=>{ settle(); }, TRAIN_TRAVEL_MS);
+      } else {
+        setTimeout(settle, 0);
+      }
+
+      return {
+        shell, rail, coachEls, faceEls, labelEls,
+        body: (i)=> coachEls[i].querySelector(".coach-body"),
+        /* "Coach labels आ (ा), इ (ि), ई (ी) appear one by one." (row #175) */
+        popLabels(gapMs){
+          labelEls.forEach((l, i)=>{
+            l.classList.remove("cl-pop"); void l.offsetWidth;
+            /* sfxSparkle removed: train chrome sounds like a train and nothing else. The pop is
+               still visual; the answer-feedback effects in the slide modules are untouched. */
+            setTimeout(()=>{ l.classList.add("cl-pop"); }, i * (gapMs || 260));
+          });
+        },
+        /* "all three coaches glow · train gives a small whistle/steam animation"
+           (rows #136, #143, #160, #174) */
+        complete(){ shell.classList.add("complete"); sfxWhistle(); },
+        /* [r26] THE TRAIN LEAVES THE WAY IT CAME.
+           Yasir: "after completing one page the train will animation again and move ahead and
+           get out of the screen (to the left side) and from the right side the train will come
+           for the next page and its instruction of next page will appear."
+           The arrival already exists - .tr-entering slides the rail in from +86% over
+           TRAIN_TRAVEL_MS while the sprite sheet rolls the wheels, then `settle` swaps the
+           sprite for the still. Leaving is that in reverse: put the rolling sprite back (drop
+           .tc-parked), run the same eased cell advance, and carry the rail off to the left.
+           `done` fires when it is gone, whether or not the animation was allowed to run - a
+           child on reduced motion must still get to the next screen. */
+        depart(done){
+          const finish = ()=>{ if(done){ const f = done; done = null; f(); } };
+          if(reduce){ setTimeout(finish, 120); return; }
+          shell.classList.remove("tc-parked");     /* the rolling wheels come back */
+          rail.classList.remove("tr-entering");
+          void rail.offsetWidth;
+          rail.classList.add("tr-leaving");
+          sfxWhistle(); sfxTrainMove();
+          const ease = _trainEase(), t0 = performance.now();
+          const tick = ()=>{
+            if(!rail.isConnected){ finish(); return; }
+            const p = Math.min(1, (performance.now() - t0) / TRAIN_TRAVEL_MS);
+            setCell(Math.floor(ease(p) * S.spin));
+            if(p < 1) _raf = requestAnimationFrame(tick);
+          };
+          _raf = requestAnimationFrame(tick);
+          setTimeout(finish, TRAIN_TRAVEL_MS);
+        }
+      };
+    },
+
+    /* Structured SVG locomotive — kept as the last-resort drawing if the painted train is
+       missing. Deliberately simple and flat-vector, matching the mockup's silhouette. */
+    locoSVG(){
+      const w = document.createElement("div");
+      w.innerHTML =
+        '<svg viewBox="0 0 206 150" width="206" height="150" role="img" aria-label="रेलगाड़ी">' +
+        '<rect x="4" y="112" width="198" height="10" rx="3" fill="#5A6672"/>' +
+        '<rect x="96" y="34" width="86" height="78" rx="12" fill="#E4453C"/>' +
+        '<rect x="112" y="48" width="48" height="36" rx="8" fill="#BFE4FF" stroke="#FFFFFF" stroke-width="4"/>' +
+        '<rect x="88" y="24" width="102" height="16" rx="8" fill="#2F7BE0"/>' +
+        '<rect x="30" y="62" width="74" height="50" rx="12" fill="#E4453C"/>' +
+        '<rect x="24" y="74" width="12" height="26" rx="4" fill="#F2A33C"/>' +
+        '<path d="M46 62 L46 34 L70 34 L70 62 Z" fill="#2F3A44"/>' +
+        '<path d="M40 34 L76 34 L70 22 L46 22 Z" fill="#F2A33C"/>' +
+        '<circle cx="62" cy="122" r="16" fill="#2F3A44"/><circle cx="62" cy="122" r="6" fill="#F2A33C"/>' +
+        '<circle cx="126" cy="122" r="20" fill="#2F3A44"/><circle cx="126" cy="122" r="8" fill="#F2A33C"/>' +
+        '<circle cx="172" cy="122" r="20" fill="#2F3A44"/><circle cx="172" cy="122" r="8" fill="#F2A33C"/>' +
+        '</svg>';
+      const svg = w.firstChild; svg.classList.add("train-loco-svg");
+      return svg;
+    }
+  };
+
+
+  /* ---------------------------------------------------------------- the train shell */
+  /* ADAPTER, not a second train. Every module in this bundle was written against buildTrain()'s
+     shape — `coaches[i].el / .body / .label` plus nudge/shake/correct/lock/finish — so rather
+     than rewrite seven modules, buildTrain now mounts TrainChrome and presents that same shape
+     over it. The payoff is that TRAIN_TAP, TRAIN_SORT, WORD_BUILD and MATRA_INTRO all get the
+     painted train, its 36-frame roll-in and its real SFX without any of them knowing.
+
+     TWO COMPATIBILITY DETAILS, both deliberate:
+       · `.coach-body` also carries this bundle's old `.tr-body` class and its `data-idx`, because
+         makeDraggable's drop handlers hit-test `zone.closest(".tr-body")`. One extra class keeps
+         every drop path working unchanged.
+       · `coaches[i].body` is the `.coach-face` — the painted cream panel — NOT the coach body.
+         That is where a word, a blank or a snapped card belongs; the body is the coach's
+         painted slice and is the drop target. */
+  function buildTrain(host, opts){
+    const n = opts.coaches;
+    /* THE PROMPT MUST NOT TALK OVER THE TRAIN. The train takes 3.4s to pull in, with a whistle
+       and a chug bed under it, and every module used to fire its prompt VO at mount — so the
+       child heard the instruction under a moving train on all seven train screens. The SME's own
+       ordering is explicit: "Train comes through animation from right to left. Train stops at the
+       centre of the screen." and only then "VO: जिस डिब्बे में …". `whenParked` is the gate; the
+       sibling does the same thing through state.promptGate. */
+    let parked = false, waiting = [];
+    /* THE EPOCH HAS TO BE CAPTURED HERE, NOT INSIDE say(). A deferred callback — whenParked, a
+       setTimeout, anything that runs later — calls say() fresh, and say() reads the epoch at CALL
+       time, which by then is the NEW screen's. So the previous slide's held prompt sailed through
+       the guard and spoke over the next screen: measured, T1's pair chain landing on top of T3.
+       Capturing the mount's epoch and checking it before running the callback closes that. */
+    const myGen = _voGen;
+    state.trainDepart = null;          /* [r26] cleared per mount; set once the train exists */
+    const tc = TrainChrome.mount(host, {
+      coaches: n,
+      coach_label: (opts.labels || []).map(h => (h == null || h === "") ? null : { html: h }),
+      coach_body:  (opts.bodies || []).map(h => ({ html: h || "" })),
+      drop_zone:   !!opts.dropZone,
+      multi:       !!opts.multi,
+      maxH:        opts.maxH || 270,
+      on_enter:    ()=>{ parked = true;
+                         const q = waiting; waiting = [];
+                         q.forEach(fn => fn());
+                         if(typeof opts.on_enter === "function") opts.on_enter(); }
+    });
+    const coaches = tc.coachEls.map((el, i) => {
+      const body = tc.body(i);
+      body.classList.add("tr-body");          /* makeDraggable hit-tests this */
+      body.dataset.idx = String(i);
+      return { el, body: tc.faceEls[i], zone: body, label: tc.labelEls[i] };
+    });
+    /* [r26] the engine drives the departure through this, without knowing about trains */
+    state.trainDepart = (done)=> tc.depart(done);
+    return {
+      wrap: tc.shell, rail: tc.rail, coaches, chrome: tc,
+      /* run `fn` once the train has stopped — immediately if it already has, and never at all
+         if the screen has moved on in the meantime */
+      whenParked(fn){ const run = ()=>{ if(myGen !== _voGen) return; fn(); };
+                      if(parked) run(); else waiting.push(run); },
+      /* [28f] THE GUIDING HAND IS PHASE-GATED and handOnAnswer() is the one place that can
+         enforce it: tutorial and guided get the hand, practice gets the coach glow only. */
+      nudge(i, slide){ const c = coaches[i]; if(!c) return;
+        c.el.classList.add("is-nudge");
+        if(typeof handOnAnswer === "function") handOnAnswer(c.el, slide);
+      },
+      /* [r25] THE HAND SHOWS THE MOVE, not just the destination.
+         Yasir: "in case of 2nd wrong attempt you are showing hand nudge but I want to show the
+         animation how to drag and drop using hand nudge." A hand parked on the right cart says
+         WHICH one but never says that the card has to be carried there - which, on a drag screen,
+         is the whole gesture the child is being asked to make.
+         travelNudge already exists in the engine for exactly this ([28o], written for the
+         matching mechanics) and loops the hand from the tile to its target; the train screens
+         simply never called it. `dest` lets WORD_BUILD point at its blank rather than the whole
+         panel. Falls back to the static point wherever the hand cannot travel. */
+      nudgeTo(i, fromEl, slide, dest){ const c = coaches[i]; if(!c) return;
+        c.el.classList.add("is-nudge");
+        const to = dest || c.body.querySelector(".coach-face") || c.body;
+        if(fromEl && typeof travelNudge === "function") travelNudge(fromEl, to, slide);
+        else if(typeof handOnAnswer === "function") handOnAnswer(c.el, slide);
+      },
+      shake(i){ const c = coaches[i]; if(!c) return;
+        c.el.classList.remove("is-shake"); void c.el.offsetWidth; c.el.classList.add("is-shake");
+        setTimeout(()=> c.el.classList.remove("is-shake"), 520);
+      },
+      correct(i){ const c = coaches[i]; if(!c) return;
+        c.el.classList.add("is-correct");
+        if(typeof confettiCannon === "function") confettiCannon();
+      },
+      lock(i){ const c = coaches[i]; if(c) c.el.classList.add("is-locked"); },
+      popLabels(gap){ tc.popLabels(gap); },
+      /* [r26] Registered here rather than in each mechanic: buildTrain is the one place every
+         train screen passes through, so TRAIN_TAP, TRAIN_SORT and WORD_BUILD all get the
+         departure without knowing it exists - the same reasoning that put the painted train
+         behind this adapter. A screen with no train simply never sets it, and the engine falls
+         back to advancing without one. */
+      depart(done){ tc.depart(done); },
+      /* SME, on every sort screen: "all coaches glow, train gives a small whistle/steam
+         animation, Next button becomes active". */
+      finish(){ coaches.forEach(c => c.el.classList.add("is-correct")); tc.complete(); }
+    };
+  }
+
+  /* Shared 3-attempt ladder. Returns a `wrong()` you call on each miss. */
+  /* [r29] ORDER IS NOT PART OF THE QUESTION.
+     Yasir: "in all the pages if we have multiple options then reshuffle all the options each
+     time." Every screen authored its options in a fixed order, and on most of them the ANSWER
+     was written first - so a child who noticed that could clear the tap screens without reading
+     a word, and a second run through the lesson is the same shape as the first.
+     Fisher-Yates on a COPY: the card's own data is never reordered, so `answer`, `bin` and the
+     correct-coach lookups keep pointing at the same items. Each module works out what is correct
+     from the item itself, never from its position, which is what makes this safe to do at all. */
+  function shuffled(list){
+    const a = (list || []).slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function makeLadder(slide, train, correctIdx, opts){
+    opts = opts || {};
+    let tries = 0;
+    return function wrong(coachIdx){
+      tries++;
+      state.attempts = tries;
+      fbWrong();
+      if(typeof setSwMood === "function") setSwMood("tryagain");
+      if(coachIdx != null) train.shake(coachIdx);
+      SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: tries });
+      if(tries === 1){
+        /* RUNG 1 - refocus. "गलत शब्द वाले डिब्बे पर soft shake। कोई सही उत्तर highlight नहीं
+           होगा।" The shake above is the whole of the UI; nothing is marked and no hand appears. */
+        say(A(slide, "hint1") || A(slide, "try_again"), ()=>{});
+      } else if(tries === 2 && hintLevels() >= 3){
+        /* RUNG 2 - demonstrate. The screen reads the three words out and lights each word's own
+           matra as it does, THEN says the line. Support first, instruction after: the line tells
+           the child what to do with what they have just been shown. Still no hand. */
+        state.scaffoldLevel = 2; state.hintUsed = true;
+        SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 2 });
+        const line = ()=> say(A(slide, "hint2") || A(slide, "hint") || A(slide, "try_again"), ()=>{});
+        if(opts.demo) opts.demo(line); else line();
+      } else {
+        /* RUNG 3 - guide. The answer glows, the hand goes to it and everything else locks, and
+           only THEN is the line spoken, so the child is looking at the thing being named rather
+           than hearing about something that is not lit yet. */
+        state.scaffoldLevel = 3; state.hintUsed = true;
+        SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 3 });
+        if(opts.lock) opts.lock();
+        if(opts.guide) opts.guide();
+        else if(correctIdx != null) withHand3(()=> train.nudge(correctIdx, slide));
+        say(A(slide, "hint3") || A(slide, "hint2") || A(slide, "hint") || A(slide, "try_again"),
+            ()=>{});
+      }
+      return tries;
+    };
+  }
+
+  /* Finish a test slide. `silent` = solved on the final attempt -> celebrate visually only,
+     which is the SME's "Correct Answer on 3rd Attempt … No VO." */
+  function finishSlide(slide, train, silent, signal){
+    state.locked = true;
+    if(typeof stopNudge === "function") stopNudge();
+    fbCorrect();
+    if(typeof setSwMood === "function") setSwMood("celebrate");
+    train.finish();
+    SwiftPAL.emit(signal || "train_first_try", {
+      slide_id: slide.id, phase: slide.phase, value: true,
+      first_try: state.attempts === 0, attempts: state.attempts + 1,
+      latency_ms: Date.now() - state.slideStart
+    });
+    const unlock = ()=>{ setNavActive(true); $("navBtn").onclick = ()=> completeSlide(state.attempts === 0); };
+    if(silent) setTimeout(unlock, 900); else say(A(slide, "correct"), unlock);
+  }
+
+  /* ================================================================ 1 · TRAIN_TAP */
+  /* Tap the coach whose word carries the target matra.
+     data: { coaches:[{word, correct?}], target } */
+  SlideModules.TRAIN_TAP = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      /* [r29] the carts are dealt in a fresh order every time; `correct` travels with the cart */
+      const coachList = shuffled(d.coaches);
+      const correctIdx = coachList.findIndex(c => c.correct);
+      /* SME, on all three tap screens: "Train comes through animation from right to left. Train
+         stops at the centre of the screen. **After the train stops**, the three coaches पुल, दूध,
+         सूरज appear clearly." So the words are held back until the train has parked — they are
+         not part of the arriving picture, they are what the child is then asked to read. */
+      const train = buildTrain(host, {
+        coaches: coachList.length,
+        labels: coachList.map(()=> ""),
+        bodies: coachList.map(c => '<span class="tr-word ink-glyph tt-hold">' + c.word + "</span>"),
+        dropZone: false,
+        on_enter: ()=> [...host.querySelectorAll(".tt-hold")].forEach((w, i)=>
+          setTimeout(()=> w.classList.add("tt-in"), i * 180))
+      });
+      state.ownsAudio = true;
+      state.replayAudio = ()=> say(A(slide, "prompt"), ()=>{});
+      setNavActive(false);
+
+      /* RUNG 2, screens 1-3: "तीनों शब्दों को एक-एक करके read out करें ... हर शब्द पढ़ते समय उसकी
+         मात्रा highlight/glow करें"। The word is lit while its clip sounds and goes dark again
+         after it, because the mark is a reading aid for that moment - leaving all three lit
+         would turn the demonstration into a permanent answer key.
+         Each coach carries its OWN matra, not the screen's: on screen 2 the child hears गुड़ and
+         मुकुट with their ु lit against फूल's ू, which is the contrast the screen is asking about.
+         मुकुट has two, and the ink mask marks both - which is what the doc asks for by name. */
+      const tapDemo = (done)=> hintHold((fin)=> hintSeq(train.coaches.map((c, i)=> (next)=>{
+        const w = c.body.querySelector(".tr-word");
+        const src = coachList[i];
+        if(w && src.matra) matraHLSoon(w, src.matra, { glow:true, pulse:true });
+        if(w) c.el.classList.add("is-read");
+        say(clip(src.audio), ()=> setTimeout(()=>{
+          c.el.classList.remove("is-read");
+          matraClear(w);
+          next();
+        }, 260));
+      }), fin), done);
+
+      /* RUNG 3: "'सूरज' और 'दूध' वाले डिब्बे lock हो जाएँगे (टैप नहीं होंगे)।" */
+      const tapLock = ()=> train.coaches.forEach((c, i)=>{
+        if(i === correctIdx) return;
+        c.el.classList.remove("is-press", "is-tappable");
+        c.el.classList.add("is-out");
+        c.el.onclick = null;
+      });
+
+      const wrong = makeLadder(slide, train, correctIdx, { demo: tapDemo, lock: tapLock });
+      let armed = false;                 /* see train.whenParked at the foot of this module */
+
+      /* [r19/r20] "if user tap on incorrect cart then that cart will wiggle and if he does
+         mistake 2 times then hand nudge appears on the correct option and that particular cart
+         will be disabled." The hand was already here; the wiggle was here in name only (see
+         [r20] in the stylesheet); the disable is below, and applies to that cart alone. */
+      train.coaches.forEach((c, i) => {
+        c.el.classList.add("is-tappable");
+        /* the press colour, mirrored onto a class because :active does not survive a finger */
+        c.el.addEventListener("pointerdown", ()=>{
+          if(!armed || hintBusy || state.locked || isPlaying) return;
+          c.el.classList.add("is-press");
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach(ev =>
+          c.el.addEventListener(ev, ()=> c.el.classList.remove("is-press")));
+        c.el.onclick = ()=>{
+          c.el.classList.remove("is-press");
+          /* `armed` closes the window between the carts mounting and the prompt being spoken -
+             see the note on whenParked below. `hintBusy` closes the gaps INSIDE a rung-2 chain. */
+          if(!armed || hintBusy || state.locked || isPlaying) return;
+          if(typeof sfxTap === "function") sfxTap();
+          if(i === correctIdx){
+            const silent = state.attempts >= maxTries() - 1;
+            train.correct(i);
+            /* Mark the matra in the word they just chose. The SME's correct-answer VO is
+               «शाबाश! पुल शब्द में छोटी उ की मात्रा है» — this is that sentence made visible,
+               and on a silent 3rd-attempt win it is the ONLY feedback the child gets. */
+            const w = train.coaches[i].body.querySelector(".tr-word");
+            if(w && d.matra) matraHLSoon(w, d.matra, { glow:true, pulse:true });
+            finishSlide(slide, train, silent, "train_tap_first_try");
+          } else {
+            /* [r20 / h2] WHICH CART GETS RETIRED, AND WHEN.
+               r19 retired every cart tried so far, which on a three-cart screen left the answer
+               as the only thing still alive - it removed the choice instead of narrowing it.
+               Yasir: "do not disable both the cart, disable only the cart on which we tap on
+               last." That was written when the 2nd wrong was the LAST rung.
+               Review-1 adds a third, and makes the 2nd a demonstration: "तीनों शब्दों को एक-एक
+               करके read out करें ... हर शब्द पढ़ते समय उसकी मात्रा highlight करें"। Retiring a
+               cart there greys out one of the three words the screen is about to read aloud -
+               it argues with the very thing rung 2 exists to do. Measured on G2: गुड़ sat at
+               grayscale(.5) opacity(.45) while its own clip played.
+               So the retirement moves to rung 3, where the doc asks for it anyway and asks for
+               ALL of it ("'सूरज' और 'दूध' वाले डिब्बे lock हो जाएँगे") - see tapLock. r20's
+               concern, that the child must still have a choice to make, is what rungs 1 and 2
+               now protect: nothing is taken away until the answer is being named outright. */
+            wrong(i);
+          }
+        };
+      });
+      /* instruction is VOICE only — the SME asks for no on-screen text on every test screen,
+         and it waits for the train to stop so it is never spoken under the arrival.
+         THE CARTS ARM HERE, not at mount. They were tappable for the whole of the train's
+         arrival, while their words were still held at opacity 0 - so a tap in that window fed a
+         hint clip to a child who had not been asked the question yet, AND the prompt then
+         started on top of the hint. Measured: 2.5-3.2s of two voices at once on all three tap
+         screens. `armed` flips in the same tick that say() raises isPlaying, so it leaves no
+         window of its own. */
+      train.whenParked(()=>{ armed = true; say(A(slide, "prompt"), ()=>{}); });
+    }
+  };
+
+  /* ================================================================ 2 · TRAIN_SORT */
+  /* Drag cards into coaches. Three shapes, all one module:
+       kind "word"    — coaches labelled by matra, cards are words (+picture)
+       kind "matra"   — coaches labelled by WORD, cards are matras      (the reverse round)
+       kind "picture" — coaches labelled by matra, cards are PICTURES ONLY, word still spoken
+     data: { kind, bins:[{label, key}], cards:[{bin, word, img, emoji, audio}] } */
+  SlideModules.TRAIN_SORT = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      /* SME, word and picture rounds: "More than one word can be placed inside each coach."
+         `multi` is what lets the painted coach's cream panel hold two cards side by side instead
+         of stacking the second on top of the first. The matra round is `single` — "Only one matra
+         card can be placed inside each coach" — and sets `filled` on the body instead. */
+      const train = buildTrain(host, {
+        coaches: d.bins.length,
+        labels: d.bins.map(b => b.label),
+        bodies: d.bins.map(()=> ""),
+        dropZone: true,
+        multi: d.kind !== "matra"
+      });
+      /* SME round 3, on the picture-sort screen: "Coach labels उ and ऊ appear one by one."
+         Settled by default (engine fact 1) — `tr-lblseq` only drives the staggered fade-in, so a
+         frozen capture still photographs BOTH labels rather than an empty coach roof. */
+      requestAnimationFrame(()=> train.coaches.forEach((c, i) => {
+        c.label.style.setProperty("--tr-lbl-delay", (i * 340) + "ms");
+        c.label.classList.add("tr-lblseq");
+      }));
+
+      const tray = document.createElement("div");
+      tray.className = "tr-tray";
+      /* [r29] Fisher-Yates, not `sort(()=> Math.random()-0.5)`. That idiom is not a shuffle: the
+         comparator is inconsistent, so the result is not a uniform permutation and V8's sort
+         leaves short lists near their original order far more often than chance. On a four-card
+         tray that is exactly the case that matters. */
+      const cards = shuffled(d.cards);
+      cards.forEach(c => {
+        const t = document.createElement("div");
+        t.className = "tr-card k-" + d.kind;
+        t.dataset.bin = c.bin;
+        if(c.audio) t.dataset.audio = c.audio;
+        /* Review-1 writes rungs 2 and 3 with the CARD's name in them - «'सूरज' में बड़ी 'ऊ' की
+           मात्रा है» - so both lines travel with the card, not with the screen. */
+        if(c.word) t.dataset.word = c.word;
+        if(c.hint2_audio) t.dataset.h2 = c.hint2_audio;
+        if(c.hint3_audio) t.dataset.h3 = c.hint3_audio;
+        /* ROUND 3: the praise line is PER CARD now, not one line for the whole screen. The SME
+           writes it out card by card — «शाबाश! 'सुई' शब्द में उ की मात्रा है।» — and asks for NO
+           completion VO, so the last card's own line is the last thing the child hears. */
+        if(c.correct_audio) t.dataset.okaudio = c.correct_audio;
+        if(d.kind === "matra"){
+          t.innerHTML = '<span class="tr-matra ink-glyph">' + c.word + "</span>";
+        } else if(d.kind === "picture"){
+          /* SME: pictures only, the word must NEVER be shown — but it must still be SPOKEN,
+             which is what keeps this a listening task rather than picture matching. */
+          t.innerHTML = imgOrEmoji(c.img, c.emoji, "tr-pic", "tr-emoji");
+        } else {
+          t.innerHTML = imgOrEmoji(c.img, c.emoji, "tr-pic", "tr-emoji") +
+                        '<span class="tr-cardlbl">' + c.word + "</span>";
+        }
+        tray.appendChild(t);
+      });
+      host.appendChild(tray);
+
+      state.ownsAudio = true;
+      state.replayAudio = ()=> say(A(slide, "prompt"), ()=>{});
+      setNavActive(false);
+
+      let placed = 0;
+      const need = cards.length;
+      const perCard = new Map();
+      const binIdx = k => d.bins.findIndex(b => b.key === k);
+
+      /* "दोनों डिब्बों के ऊपर लिखी मात्राएँ एक-एक करके read out करें: 'उ', 'ऊ'।" - screen 4 - and
+         on screen 5 the same walk, but "हर अक्षर के साथ उसकी मात्रा कुछ देर के लिए दिखाएँ और glow
+         करें: 'उ' के पास 'ु', 'ऊ' के पास 'ू'।" Screen 4's labels already read «उ (ु)», so the
+         mark is only conjured on the screen whose labels are bare. */
+      function binReadSteps(showMatra){
+        return d.bins.map((b, i)=> (next)=>{
+          const c = train.coaches[i];
+          if(!c || !b.audio) return next();
+          c.label.classList.add("tr-lblread");
+          let tag = null;
+          if(showMatra && b.matra){
+            tag = document.createElement("span");
+            tag.className = "tr-lblmatra ink-glyph";
+            tag.textContent = "\u25CC" + b.matra;      /* dotted circle: the mark, carried */
+            c.label.appendChild(tag);
+            requestAnimationFrame(()=> tag.classList.add("in"));
+          }
+          say(clip(b.audio), ()=> setTimeout(()=>{
+            c.label.classList.remove("tr-lblread");
+            if(tag){ tag.classList.remove("in"); setTimeout(()=> tag.remove(), 320); }
+            next();
+          }, 300));
+        });
+      }
+
+      function sortDemo(tile, done){
+        hintHold(function(fin){
+        const steps = [];
+        if(d.kind === "word"){
+          /* "जो शब्द गलत डाला गया, उसे read out करें ... शब्द में उसकी मात्रा highlight/glow करें" */
+          const lbl = tile.querySelector(".tr-cardlbl");
+          steps.push((next)=>{
+            if(lbl) matraHLSoon(lbl, tile.dataset.bin, { glow:true, pulse:true });
+            say(clip(tile.dataset.audio), ()=> setTimeout(()=>{ matraClear(lbl); next(); }, 260));
+          });
+          steps.push.apply(steps, binReadSteps(false));
+        } else if(d.kind === "picture"){
+          /* "चित्र के नीचे कुछ देर के लिए शब्द दिखाएँ और उसकी मात्रा highlight/glow करें"।
+             This is the one place the picture round shows its word, and it shows it for this
+             beat only - see flag F3. The round-3 note "the word should not be displayed at any
+             point" is superseded here by the later document, and nowhere else: the word is
+             removed again before the rung ends. */
+          steps.push((next)=>{
+            const w = document.createElement("span");
+            w.className = "tr-revealword ink-glyph";
+            w.textContent = tile.dataset.word || "";
+            tile.appendChild(w);
+            /* [r65] the picture lifts to make room and the word sits INSIDE the card - it was
+               hanging off the bottom edge ("the name is getting out of that option box") */
+            tile.classList.add("tr-revealing");
+            requestAnimationFrame(()=> w.classList.add("in"));
+            matraHLSoon(w, tile.dataset.bin, { glow:true, pulse:true });
+            say(clip(tile.dataset.audio), ()=> setTimeout(()=>{
+              w.classList.remove("in");
+              tile.classList.remove("tr-revealing");
+              setTimeout(()=> w.remove(), 340);
+              next();
+            }, 900));
+          });
+        } else {
+          steps.push.apply(steps, binReadSteps(true));
+        }
+        hintSeq(steps, fin);
+        }, done);
+      }
+
+      /* RUNG 3: "दूसरा डिब्बा lock हो जाएगा (शब्द सिर्फ सही डिब्बे में जाएगा)।"
+         Scoped to the CARD, not to the screen - the attempt ladder here is per item, and a
+         screen-wide lock earned by one card would refuse a different card the coach it actually
+         belongs in. The drop handler reads `only` and hands the card back without counting it,
+         so a child who keeps trying the wrong coach is not punished for it either. */
+      const lockToBin = (tile, want)=>{ tile.dataset.only = String(want); };
+
+      [...tray.children].forEach(tile => {
+        tile.onclick = ()=>{ if(tile.dataset.audio && !isPlaying && !hintBusy)
+          say(clip(tile.dataset.audio), ()=>{}); };
+        /* SME lists TWO sounds here, not one: "Light tap / pick-up sound when a card is selected"
+           and "Soft drop sound when the card is placed". They were both the same tap. */
+        makeDraggable(tile, (zone)=>{
+          if(hintBusy) return;                      /* a demonstration is speaking */
+          const body = zone.closest(".tr-body"); if(!body) return;
+          const ci = parseInt(body.dataset.idx, 10);
+          /* rung 3 has already named this card's coach: every other one simply will not take it,
+             and refusing is NOT a wrong attempt - the child has run out of ladder. */
+          if(tile.dataset.only != null && String(ci) !== tile.dataset.only){
+            tile.style.transform = "";
+            tile.classList.remove("tr-cshake"); void tile.offsetWidth;
+            tile.classList.add("tr-cshake");
+            setTimeout(()=> tile.classList.remove("tr-cshake"), 560);
+            return;
+          }
+          if(d.bins[ci].key === tile.dataset.bin){
+            /* SME: "Correct Answer on 3rd Attempt … No VO." Counted PER CARD, because on a sort
+               screen each card carries its own attempt ladder. */
+            const quiet = (perCard.get(tile) || 0) >= maxTries() - 1;
+            /* [r27] LEAVE A SHADOW WHERE THE CARD WAS - AND MEASURE IT FIRST. Moving the tile
+               into the cart takes it out of the tray's flex row, so the cards after it slid left:
+               the row reshuffled under the child's finger on every drop and nothing showed which
+               had already gone. An empty box of the card's own footprint holds the gap open.
+               It has to be measured BEFORE `snapped` is added - that class resizes the card to
+               its in-cart size (112x124 -> 86x103), so measuring after leaves a shadow smaller
+               than the card that cast it and the row still moves.
+               offsetWidth/offsetHeight, not a client rect: the stage carries a --scale transform,
+               so a rect would be screen px and the box would be wrong on any non-1:1 display. */
+            if(!tile._ghost && tile.parentNode){
+              const g = document.createElement("div");
+              g.className = "tr-ghost";
+              g.style.width  = tile.offsetWidth + "px";
+              g.style.height = tile.offsetHeight + "px";
+              tile.parentNode.insertBefore(g, tile);
+              tile._ghost = g;
+            }
+            tile.classList.add("snapped");
+            /* the card belongs on the coach's painted CREAM PANEL, not loose in the coach body.
+               `body` is the drop target (it is what carries .dd-zone); `.coach-face` is the panel
+               the artwork actually draws, and it is what centres and clips the cards. Appending
+               to the body instead put them at its top-left and let them spill out of the coach. */
+            (body.querySelector(".coach-face") || body).appendChild(tile);
+            /* SME, matra round: "Only one matra card can be placed inside each coach."
+               `filled` is the flag makeDraggable already hit-tests, so a second drop on a full
+               coach springs back instead of counting as a wrong attempt. */
+            if(d.single) body.classList.add("filled");
+            /* [r23] THE CART IS CARRYING SOMETHING NOW, so the empty-tray chrome comes off it -
+               see .coach-body.dropzone.tr-has-card in the stylesheet. */
+            body.classList.add("tr-has-card");
+            /* On the WORD round the card still shows its word once it is in the coach, so mark
+               the matra the child just sorted on. Not on the picture round — the SME is
+               explicit there that "the word should not be displayed at any point". */
+            if(d.kind === "word"){
+              const lbl = tile.querySelector(".tr-cardlbl");
+              if(lbl) matraHLSoon(lbl, tile.dataset.bin, { glow:true });
+            }
+            placed++;
+            train.correct(ci);
+            sfxPopSoft();                      /* the DROP, distinct from the pick-up tap */
+            SwiftPAL.emit("matra_sort_item", { slide_id: slide.id, bin: tile.dataset.bin });
+            const okvo = quiet ? null : (tile.dataset.okaudio || tile.dataset.audio);
+            if(placed >= need){
+              /* SME: "No extra completion VO required." finishSlide's silent branch skips
+                 slide.audio.correct, so the per-card line above is the final word. */
+              sayOpt(clip(okvo), ()=> finishSlide(slide, train, true, "matra_sort_first_try"));
+            } else {
+              sayOpt(clip(okvo), ()=>{});
+            }
+          } else {
+            const n = (perCard.get(tile) || 0) + 1;
+            perCard.set(tile, n);
+            state.attempts++;
+            fbWrong();
+            if(typeof setSwMood === "function") setSwMood("tryagain");
+            train.shake(ci);
+            tile.style.transform = "";
+            /* "गलत डिब्बे में डाला गया शब्द soft shake करके अपनी जगह वापस आ जाएगा।" The COACH
+               shook already; the CARD did not - makeDraggable clears its transform before it
+               hands over, so it was simply home a frame later with nothing to see. */
+            tile.classList.remove("tr-cshake"); void tile.offsetWidth;
+            tile.classList.add("tr-cshake");
+            setTimeout(()=> tile.classList.remove("tr-cshake"), 560);
+            SwiftPAL.emit("answer_wrong", { slide_id: slide.id, attempts: state.attempts });
+            const want = binIdx(tile.dataset.bin);
+            if(n === 1){
+              say(A(slide, "hint1") || A(slide, "try_again"), ()=>{});
+            } else if(n === 2 && hintLevels() >= 3){
+              state.hintUsed = true;
+              SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 2 });
+              sortDemo(tile, ()=> say(clip(tile.dataset.h2) || A(slide, "hint2")
+                                      || A(slide, "hint") || A(slide, "try_again"), ()=>{}));
+            } else {
+              state.hintUsed = true;
+              SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 3 });
+              lockToBin(tile, want);
+              /* [r25] from the card the child is holding to the cart it belongs in */
+              withHand3(()=> train.nudgeTo(want, tile, slide));
+              if(train.coaches[want]) train.coaches[want].el.classList.add("is-nudge");
+              say(clip(tile.dataset.h3) || A(slide, "hint3") || A(slide, "hint2")
+                  || A(slide, "hint") || A(slide, "try_again"), ()=>{});
+            }
+          }
+        }, { onPick: ()=>{ if(typeof sfxTap === "function") sfxTap(); } });
+      });
+
+      /* prompt first, then each card speaks itself, then the tray unlocks — the same
+         listen-before-you-act contract sortSeqReveal gives the stock sort. */
+      state.revealing = true;
+      [...tray.children].forEach(t => t.classList.add("tr-seq-hidden"));
+      train.whenParked(()=> say(A(slide, "prompt"), ()=>{
+        const tiles = [...tray.children];
+        let i = 0;
+        (function step(){
+          if(i >= tiles.length){ state.revealing = false; return; }
+          const t = tiles[i++]; t.classList.remove("tr-seq-hidden");
+          say(clip(t.dataset.audio),
+              ()=> setTimeout(step, 160));
+        })();
+      }));
+      setTimeout(()=>{ if(!hintBusy) state.revealing = false;   /* never cut a demonstration short */
+        [...tray.children].forEach(t => t.classList.remove("tr-seq-hidden")); }, 20000);
+    }
+  };
+
+  /* ================================================================ 3 · MATRA_FILL */
+  /* A word with a BLANK where its matra belongs; drag the right matra in.
+     data: { slots:[{word, pre, post, matra, img, emoji, audio}], options:[matra,…] }
+     `pre`/`post` are authored as the DRAWN halves of the word, so a reordering matra (ि) can
+     never be inserted at the wrong visual position. For उ/ऊ they are simply the two halves. */
+  SlideModules.MATRA_FILL = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      const train = buildTrain(host, {
+        coaches: d.slots.length,
+        labels: d.slots.map(s => imgOrEmoji(s.img, s.emoji, "tr-slotpic", "tr-emoji")),
+        bodies: d.slots.map((s, i) =>
+          '<span class="tr-fill" data-i="' + i + '">' +
+            '<span class="ink-glyph">' + s.pre + "</span>" +
+            '<span class="tr-blank dd-zone" data-idx="' + i + '"></span>' +
+            '<span class="ink-glyph">' + s.post + "</span>" +
+          "</span>"),
+        dropZone: false
+      });
+      const tray = document.createElement("div");
+      tray.className = "tr-tray";
+      shuffled(d.options).forEach(m => {     /* [r29] */
+        const t = document.createElement("div");
+        t.className = "tr-card k-matra";
+        t.dataset.matra = m;
+        t.innerHTML = '<span class="tr-matra ink-glyph">◌' + m + "</span>";
+        tray.appendChild(t);
+      });
+      host.appendChild(tray);
+
+      state.ownsAudio = true;
+      state.replayAudio = ()=> say(A(slide, "prompt"), ()=>{});
+      setNavActive(false);
+      let filled = 0;
+      const perCard = new Map();
+
+      [...tray.children].forEach(tile => {
+        makeDraggable(tile, (zone)=>{
+          const blank = zone.closest(".tr-blank"); if(!blank) return;
+          if(blank.classList.contains("filled")) return;
+          const i = parseInt(blank.dataset.idx, 10);
+          const slot = d.slots[i];
+          if(tile.dataset.matra === slot.matra){
+            blank.classList.add("filled");
+            blank.innerHTML = '<span class="ink-glyph tr-inmatra">' + slot.matra + "</span>";
+            /* the completed word replaces the split form, so the child reads it whole */
+            const holder = blank.closest(".tr-fill");
+            setTimeout(()=>{
+              holder.innerHTML = '<span class="ink-glyph tr-doneword">' + slot.word + "</span>";
+              /* the completed word keeps the matra marked, so the child sees WHICH mark they
+                 just supplied rather than only that the word is now whole */
+              matraHLSoon(holder.querySelector(".tr-doneword"), slot.matra, { glow:true });
+            }, 450);
+            tile.style.transform = "";
+            filled++;
+            train.correct(i);
+            fbCorrect();
+            SwiftPAL.emit("matra_fill_item", { slide_id: slide.id, word: slot.word });
+            if(filled >= d.slots.length){
+              finishSlide(slide, train, false, "matra_fill_first_try");
+            } else {
+              say(clip(slot.audio), ()=>{});
+            }
+          } else {
+            const n = (perCard.get(tile) || 0) + 1; perCard.set(tile, n);
+            state.attempts++;
+            fbWrong();
+            train.shake(i);
+            tile.style.transform = "";
+            SwiftPAL.emit("answer_wrong", { slide_id: slide.id, attempts: state.attempts });
+            if(n === 1) say(A(slide, "hint1") || A(slide, "try_again"), ()=>{});
+            else { state.hintUsed = true;
+              say(A(slide, "hint2") || A(slide, "hint"), ()=> train.nudge(i, slide)); }
+          }
+        });
+      });
+      say(A(slide, "prompt"), ()=>{});
+    }
+  };
+
+  /* ================================================================ 4 · MATRA_BUILD */
+  /* «पल → प + ◌ु = पु → पुल» — the transformation teach, ported from HI02H11_L02_S01's page 2.
+     Yasir: "page2 of my previous file is exactly same as page2 of my current file (just element,
+     images changes rest animation, its flow it same) so try to match exactly with that file."
+
+     So the STAGING is the sibling's, step for step: three panels revealed in turn, the consonant
+     lighting inside the base word, the matra FLYING into the equation slot and handing over to
+     it with a cross-fade, the syllable dissolving up while the equation gives a small nod, the
+     result panel arriving, the matra pulsing inside the finished word, and the three-sound
+     contrast pulsing the equation. The previous build did all of this as four nested say()
+     callbacks with hard class swaps — same beats, none of the motion.
+
+     TWO THINGS ARE DELIBERATELY NOT THE SIBLING'S, and both are forced by the matra:
+
+     1. THE HIGHLIGHT. The sibling paints its matra with `_matraWordSVG`, which clips by COLUMN —
+        an x-range over the full height. That works for ा / ि / ी, which are SPACING marks with
+        an advance of their own. ु and ू have NO advance: they hang under the consonant, so the
+        consonant's advance and the cluster's advance are the same number and the column comes
+        out zero-width. This lesson's `matraHL` exists for exactly that — a 2-D clip, the
+        cluster's x-range intersected with the below-baseline band. Using the sibling's helper
+        here would silently paint nothing, or paint the next letter.
+     2. THE DIRECTION OF TRAVEL. The sibling sends ा / ी in from the RIGHT and ि from the LEFT,
+        because that is where those marks live. ु lives UNDERNEATH, and the note says so: "The ु
+        मात्रा should softly pop/slide into its correct position below प." `data.travel` carries
+        it, so the flight is vertical here and the keyframes take both axes.
+
+     SFX are the note's three, and only those three: a soft pop as the matra arrives, a light
+     chime as प becomes पु, a small success sound as पुल completes. The sibling also chimes when
+     the consonant lights; the note lists three and asks to "keep SFX subtle so the pronunciation
+     remains clear", so that fourth one is left out. */
+  SlideModules.MATRA_BUILD = {
+    mount(host, slide){
+      const d = slide.data || {};
+      newVoEpoch();
+      if(d.no_heading){ const _st = document.getElementById("stage"); if(_st) _st.classList.add("no-band"); }
+
+      const row = document.createElement("div"); row.className = "mb-row";
+
+      /* --- panel 1: the base word ------------------------------------------------------
+         पल / फल are bare consonant pairs with no combining marks, so splitting them per
+         character is safe — there is no cluster for the browser to shape. NEVER do this to a
+         word that carries a matra; that is what panel 3 is careful about. */
+      /* [r18] hidden until the opening line has played — see step 2 */
+      const p1 = document.createElement("div"); p1.className = "mb-panel mb-p1 mb-hidden";
+      const baseChars = [...(d.base_word || "")].map(ch =>
+        '<span class="mb-c" data-ch="' + ch + '">' + ch + "</span>").join("");
+      p1.innerHTML = '<div class="mb-word">' + baseChars + "</div>" +
+                     '<div class="mb-pic">' +
+                       ((d.base_img || d.base_emoji)
+                         ? imgOrEmoji(d.base_img, d.base_emoji, "mb-img", "mb-emoji") : "") +
+                     "</div>";
+      row.appendChild(p1);
+
+      const a1 = document.createElement("div");
+      a1.className = "mb-arrow mb-panel mb-hidden"; a1.textContent = "→";
+      row.appendChild(a1);
+
+      /* --- panel 2: the equation  consonant + matra = syllable -------------------------- */
+      /* ONE DOTTED CIRCLE, NOT TWO. This was '<span class=mb-dot>◌</span><span
+         class=mb-mk>ु</span>' - two spans so the placeholder could be greyed and the matra
+         coloured. But ु is a COMBINING mark: alone in its own span it has no base to attach to,
+         so the renderer supplies a dotted circle OF ITS OWN. The result was the grey ◌ we asked
+         for, followed by a second, orange one carrying the matra.
+         One span, one cluster, one circle - and the colouring is done by matraHL, which clips the
+         below-baseline band and so paints the matra while leaving the placeholder alone. That is
+         also what the note asks for: "highlight only matra not any other letter". */
+      const chip = matraGlyph(d.matra || "");
+      const p2 = document.createElement("div"); p2.className = "mb-panel mb-p2 mb-hidden";
+      p2.innerHTML =
+        '<div class="mb-eq"><div class="mb-eq-line">' +
+          '<span class="mb-cons ink-glyph">' + (d.consonant || "") + "</span>" +
+          '<span class="mb-op">+</span>' +
+          '<span class="mb-m mb-slot"></span>' +
+          '<span class="mb-op">=</span>' +
+          '<span class="mb-syl ink-glyph"></span>' +
+        "</div></div>";
+      row.appendChild(p2);
+
+      const a2 = document.createElement("div");
+      a2.className = "mb-arrow mb-panel mb-hidden"; a2.textContent = "→";
+      row.appendChild(a2);
+
+      /* --- panel 3: the finished word + its picture ------------------------------------- */
+      const p3 = document.createElement("div"); p3.className = "mb-panel mb-p3 mb-hidden";
+      p3.innerHTML = '<div class="mb-word"><span class="mb-result ink-glyph">' +
+                       (d.result_word || "") + "</span></div>" +
+                     '<div class="mb-pic">' +
+                       imgOrEmoji(d.result_img, d.result_emoji, "mb-img", "mb-emoji") + "</div>";
+      row.appendChild(p3);
+
+      host.appendChild(row);
+
+      const consEl = p1.querySelector('.mb-c[data-ch="' + (d.consonant || "") + '"]');
+      const slot   = p2.querySelector(".mb-slot");
+      const sylEl  = p2.querySelector(".mb-syl");
+      const resEl  = p3.querySelector(".mb-result");
+      const show   = (el)=>{ el.classList.remove("mb-hidden"); el.classList.remove("mb-in");
+                             void el.offsetWidth; el.classList.add("mb-in"); };
+
+      state.ownsAudio = true; state.demoRunning = true;
+      if(typeof setSwMood === "function") setSwMood("teach");
+      setNavActive(false);
+      state.replayAudio = null;
+
+      /* PAINT THE SETTLED STATE AT MOUNT TOO. Live, panels 2 and 3 are `mb-hidden` until the
+         chain reveals them, so the child never sees the highlight early. But the review capture
+         strips the staging classes and freezes before any audio runs, so a highlight applied
+         only in a callback photographs missing — which is how the round-3b deck shipped «पुल»
+         with no orange ु while the running game coloured it. matraHL is idempotent. */
+      matraHLSoon(resEl, d.matra, { glow:true });
+
+      let finished = false;
+      const finish = ()=>{
+        if(finished) return; finished = true;
+        state.demoRunning = false;
+        [p1, a1, p2, a2, p3].forEach(e => e.classList.remove("mb-hidden"));
+        if(consEl) consEl.classList.add("lit");
+        slot.innerHTML = chip;
+        slot.classList.remove("mb-slot-wait"); slot.classList.add("mb-slot-in");
+        sylEl.textContent = d.syllable || "";
+        matraHLSoon(sylEl, d.matra, { glow:true });
+        matraHLSoon(resEl, d.matra, { glow:true });
+        state.replayAudio = ()=> sayAll(
+          [A(slide,"base"), A(slide,"onset"), A(slide,"result"), A(slide,"sounds")].filter(Boolean), ()=>{});
+        $("navBtn").onclick = ()=> completeSlide(true);
+        setNavActive(true);
+      };
+
+      /* Each step waits for the PREVIOUS CLIP TO END and then holds a short beat — the note asks
+         for "a short pause between each sound so the child can hear how the sound changes". */
+      const steps = [
+        // 1 · «आइए, देखें कि छोटी उ की मात्रा लगने से शब्द की आवाज़ कैसे बदलती है।»
+        (next)=> say(A(slide, "prompt"), ()=> setTimeout(next, 420)),
+        // 2 · «यह शब्द देखिए — पल।»
+        /* [r18] पल AND ITS PICTURE arrive first, and only then the line that names them.
+           They were on screen from mount, so «आइए, देखें कि …» played over a screen with
+           nothing left to reveal — the same fault as page 3, and why that line read as absent. */
+        (next)=>{ show(p1); sfxPopSoft();
+                  setTimeout(()=> say(A(slide, "base"), ()=> setTimeout(next, 520)), 260); },
+        // 3 · the consonant lights inside the base word ("Highlight प")
+        (next)=>{ if(consEl) consEl.classList.add("lit"); setTimeout(next, 620); },
+        /* 4 · the matra flies to its place BELOW the consonant and hands over to the slot.
+           It is parked over the slot's MEASURED centre first and the keyframes then describe
+           only the travel, so it lands where the slot actually is. offsetLeft/offsetTop, never
+           getBoundingClientRect: the stage carries a --scale transform, so rects come back in
+           screen px while style.left is written in CSS px. */
+        (next)=>{
+          show(a1); show(p2);
+          const eq = p2.querySelector(".mb-eq");
+          /* fill the slot NOW but hold it invisible, so the equation's layout is already final
+             when the flier is parked — otherwise the slot grows as it fills and the matra lands
+             a few px off the mark it was aimed at */
+          slot.innerHTML = chip;
+          slot.classList.add("mb-slot-wait");
+          const fly = document.createElement("span");
+          fly.className = "mb-fly"; fly.innerHTML = chip;
+          eq.appendChild(fly);
+          requestAnimationFrame(()=>{
+            fly.style.left = (slot.offsetLeft + (slot.offsetWidth  - fly.offsetWidth)  / 2) + "px";
+            fly.style.top  = (slot.offsetTop  + (slot.offsetHeight - fly.offsetHeight) / 2) + "px";
+            /* ु and ू hang UNDER the consonant, so they arrive from below — the note's own
+               words. A side entry is for the spacing matras the sibling teaches. */
+            const down = (d.travel || "down") === "down";
+            fly.style.setProperty("--mb-fx", down ? "0px"
+              : (RIGHT_SPACING_MATRAS.has(d.matra) ? "118px" : "-118px"));
+            fly.style.setProperty("--mb-fy", down ? "96px" : "-38px");
+            fly.classList.add("mb-fly-go");
+            sfxPopSoft();                    // note: "a soft pop when ु appears"
+          });
+          setTimeout(()=>{                   // cross-fade: the slot fades up as the flier fades out
+            slot.classList.remove("mb-slot-wait");
+            slot.classList.add("mb-slot-in");
+            fly.classList.add("mb-fly-done");
+            setTimeout(()=> fly.remove(), 300);
+            say(A(slide, "matra_name"), ()=> setTimeout(next, 300));
+          }, 760);
+        },
+        /* 5 · प becomes पु. A bare textContent swap made the old glyph vanish and the new one
+           appear between two frames; it dissolves up now, and the equation gives a small nod so
+           the eye follows the change. */
+        (next)=>{
+          /* [r18] प BECOMES पु ON THE WORDS THAT SAY SO — the clip starts first and the
+             syllable forms at «बनता», instead of being written and then described. */
+          const eq = p2.querySelector(".mb-eq");
+          const _formSyl = ()=>{
+            sylEl.textContent = d.syllable || "";
+            sylEl.classList.remove("mb-syl-in"); void sylEl.offsetWidth; sylEl.classList.add("mb-syl-in");
+            matraHLSoon(sylEl, d.matra, { glow:true });
+            if(eq){ eq.classList.remove("mb-settle"); void eq.offsetWidth; eq.classList.add("mb-settle"); }
+          };
+          const _t1 = setTimeout(()=>{
+            if(CARD.slides[state.idx] !== slide || myGen !== _voGen) return;
+            _formSyl();
+            sfxSparkle();                    // note: "a light chime when प changes to पु"
+          }, Math.max(0, d.syl_ms || 340));
+          say(A(slide, "onset"), ()=>{ clearTimeout(_t1);
+            if(CARD.slides[state.idx] !== slide || myGen !== _voGen) return;
+            _formSyl();                      // never leave the equation half written
+            setTimeout(next, 560); });
+        },
+        // 6 · ल joins, the finished word and its bridge picture arrive
+        /* [r18] ल JOINS ON «जुड़ने», inside its own line — the finished word and its picture
+           used to arrive a whole step BEFORE the sentence that announces them. */
+        (next)=>{
+          const _t2 = setTimeout(()=>{
+            if(CARD.slides[state.idx] !== slide || myGen !== _voGen) return;
+            show(a2); show(p3);
+            fbCorrect();   // "a small success sound"
+            matraHLSoon(resEl, d.matra, { glow:true, pulse:true });
+          }, Math.max(0, d.join_ms || 320));
+          say(A(slide, "result"), ()=>{ clearTimeout(_t2);
+            if(CARD.slides[state.idx] !== slide || myGen !== _voGen) return;
+            [a2, p3].forEach(e => e.classList.remove("mb-hidden"));
+            matraHLSoon(resEl, d.matra, { glow:true });
+            setTimeout(next, 420); });
+        },
+        /* 7 · the matra is highlighted inside the finished word while that word is spoken —
+           «अब 'ल' जुड़ने पर 'पुल' बनता है।» The note: "In पुल, highlight the ु मात्रा again so
+           the child clearly notices where the matra is placed." */
+
+        /* 8 · the three sounds contrasted — «प। पु। पुल।» One clip, because three clips back to
+           back lose the deliberate pause the note asks for. */
+        (next)=>{ const src = A(slide, "sounds");
+                  if(!src){ next(); return; }
+                  const eq = p2.querySelector(".mb-eq");
+                  /* EACH SOUND LIFTS THE THING IT IS. «प» -> the consonant in पल, «पु» -> the
+                     equation's syllable, «पुल» -> the finished word. `sound_ms` is measured at
+                     build time from the SILENCE BETWEEN THE SOUNDS in this very clip, so the
+                     three cues follow a re-record instead of drifting off it. With no cues
+                     (an older card, or a clip that would not segment) the equation glows once,
+                     as it used to - a weaker beat, never a wrong one. */
+                  const cues = d.sound_ms, marks = [consEl, sylEl, resEl];
+                  const timers = [];
+                  if(cues && cues.length === 3){
+                    cues.forEach((ms, i)=>{
+                      const el = marks[i];
+                      if(!el) return;
+                      timers.push(setTimeout(()=>{
+                        if(CARD.slides[state.idx] !== slide || myGen !== _voGen) return;
+                        marks.forEach(m => m && m.classList.remove("mb-now"));
+                        void el.offsetWidth; el.classList.add("mb-now");
+                      }, Math.max(0, ms)));
+                    });
+                  } else if(eq){ eq.classList.add("mb-say"); }
+                  say(src, ()=>{ timers.forEach(clearTimeout);
+                                 marks.forEach(m => m && m.classList.remove("mb-now"));
+                                 if(eq) eq.classList.remove("mb-say");
+                                 setTimeout(next, 300); }); }
+      ];
+
+      let si = 0;
+      const myGen = _voGen;
+      const run = ()=>{
+        if(CARD.slides[state.idx] !== slide) return;   // navigated away -> abort
+        if(myGen !== _voGen) return;                   // a newer mount owns the audio now
+        if(si >= steps.length){ finish(); return; }
+        steps[si++](run);
+      };
+      setTimeout(run, 380);
+      /* FAIL-SAFE: आगे never stays dead if a clip blocks or is missing */
+      setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, 46000);
+    }
+  };
+
+  /* ================================================================ 5 · MEET_PAIR */
+  /* «गुड़» then «धनुष» — two example words, one at a time, ported from the sibling's page 3
+     (MEET_EXAMPLES). Yasir: "page3 of my previous file is exactly same as page3 of my current
+     file (just element, images changes rest animation, its flow it same)."
+
+     THE ORDER WAS INVERTED BEFORE THIS. The note's sequence is: word appears · image appears ·
+     the matra is highlighted — and only around that does the line play. The previous build spoke
+     the whole line FIRST and revealed the picture and the highlight on its callback, so the child
+     heard «इसमें ग पर छोटी उ की मात्रा लगी है» while nothing on screen had changed yet, and the
+     mark lit up after the sentence naming it had finished. Now it is the sibling's staging:
+        word + pop → 520ms → picture fades in + pop → 380ms → matra lights + chime, THEN the line.
+
+     The «इस शब्द की मात्रा — ◌ु» callout is gone. It was already display:none from an earlier
+     round (the mark is highlighted inside the word now, so the callout was saying twice what the
+     word shows once), and the guiding hand that used to point at it went with it — it was
+     pointing at an invisible element, and the sibling's page 3 has no hand either.
+
+     data: { examples:[{word, matra, img, emoji, audio_line, matra_audio}] } */
+  SlideModules.MEET_PAIR = {
+    mount(host, slide){
+      const d = slide.data || {};
+      const exs = d.examples || [];
+      newVoEpoch();
+      if(d.no_heading){ const _st = document.getElementById("stage"); if(_st) _st.classList.add("no-band"); }
+
+      /* [r14] THE SIBLING'S OWN MARKUP, not a look-alike. `.meet-col / .meet-stage /
+         .meet-letter-box / .meet-pic-box / .pic-img` are SHARED-ENGINE classes and their CSS is
+         byte-identical in both builds - so rendering into them reproduces the sibling's page 3
+         exactly: 120px navy word in a 300-420x340 cream card, a 320x340 picture card beside it,
+         80px apart. The previous `.mp-card` markup was this lesson's own invention and measured
+         80px/146px against the sibling's 120px/219px, which is what Yasir was seeing. */
+      const col = document.createElement("div"); col.className = "meet-col mex-col";
+      const wrap = document.createElement("div"); wrap.className = "meet-stage";
+      col.appendChild(wrap);
+      host.appendChild(col);
+
+      state.ownsAudio = true; state.demoRunning = true;
+      if(typeof setSwMood === "function") setSwMood("teach");
+      setNavActive(false);
+      state.replayAudio = null;
+
+      /* one example, staged: the word is there, the picture is held back a beat */
+      const render = (ex)=>{
+        wrap.innerHTML =
+          '<div class="meet-letter-box">' +
+            '<span class="glyph ink-glyph mp-word" style="font-size:120px">' + ex.word + "</span>" +
+          "</div>" +
+          '<div class="meet-pic-box mex-pic mp-wait">' +
+            imgOrEmoji(ex.img, ex.emoji, "pic-img", "pic-emoji") + "</div>";
+        return { card: wrap.querySelector(".meet-letter-box"),
+                 word: wrap.querySelector(".mp-word"),
+                 pic:  wrap.querySelector(".mex-pic") };
+      };
+
+      const myGen = _voGen;
+      let i = 0, finished = false;
+      const finish = ()=>{
+        if(finished) return; finished = true;
+        state.demoRunning = false;
+        state.replayAudio = ()=> sayAll(
+          [A(slide, "prompt")].concat(exs.map(e => clip(e.audio_line))).filter(Boolean), ()=>{});
+        $("navBtn").onclick = ()=> completeSlide(true);
+        setNavActive(true);
+      };
+
+      const runOne = (after)=>{
+        const ex = exs[i];
+        if(!ex){ after(); return; }
+        const { card, word, pic } = render(ex);
+
+        /* [r15] THE VOICE DRIVES THE PICTURE AND THE GLOW, not a pair of fixed delays.
+           Before this the word, the picture and the mark all arrived inside ~950ms and THEN the
+           3.4s line played over a screen that had already finished moving - measured: pop at
+           7060ms, picture at 7588ms, glow and clip together at 8012ms. Nothing on screen
+           corresponded to what was being said, which is what "animation must sync with VO" is
+           about. The line's three clauses each own their beat now:
+               «गुड़,»                -> the word (already up; the clip opens by naming it)
+               «बोलकर देखिए।»         -> the picture arrives
+               «इसमें ग पर … लगी है।»  -> the mark lights
+           `pic_ms` and `matra_ms` are measured off each clip at BUILD time, so they follow a
+           re-record rather than drifting away from it. The old fixed delays remain as fallbacks
+           for a card that predates them. */
+        const alive = ()=> CARD.slides[state.idx] === slide && myGen === _voGen;
+        const timers = [];
+
+        /* 1 · the word arrives */
+        card.classList.remove("mp-in"); void card.offsetWidth; card.classList.add("mp-in");
+        sfxPopSoft();                         // note: "soft pop sound when word/image appears"
+
+        /* 2 · a short beat, then the line starts and carries the rest */
+        timers.push(setTimeout(()=>{
+          if(!alive()) return;
+          timers.push(setTimeout(()=>{        // 3 · «बोलकर देखिए।» -> the picture
+            if(!alive()) return;
+            pic.classList.remove("mp-wait");
+            sfxPopSoft();
+          }, Math.max(0, ex.pic_ms || 520)));
+          timers.push(setTimeout(()=>{        // 4 · «इसमें … मात्रा लगी है।» -> the mark
+            if(!alive()) return;
+            pic.classList.remove("mp-wait");   // never strand it if the cue overran the clip
+            matraHLSoon(word, ex.matra, { glow:true, pulse:true });
+            sfxSparkle();                     // note: "soft highlight chime when matra glows"
+          }, Math.max(0, ex.matra_ms || 900)));
+          say(clip(ex.audio_line), ()=>{
+            timers.forEach(clearTimeout);
+            if(!alive()) return;
+            /* whatever the cues did, the example ends fully shown */
+            pic.classList.remove("mp-wait");
+            matraHLSoon(word, ex.matra, { glow:true });
+            word.classList.remove("mh-pulse");
+            sayOpt(clip(ex.matra_audio), ()=> setTimeout(after, 520));
+          });
+        }, 260));
+      };
+
+      const step = ()=>{
+        if(CARD.slides[state.idx] !== slide) return;   // navigated away -> abort
+        if(myGen !== _voGen) return;                   // a newer mount owns the audio
+        if(i >= exs.length){ finish(); return; }
+        runOne(()=>{ i++; step(); });
+      };
+
+      /* [r16] THE STAGE STAYS EMPTY WHILE THE OPENING LINE PLAYS. It used to paint example 1
+         at mount so a frozen capture would never catch a blank slide - but that put गुड़ on
+         screen at 48ms, while «आइए, छोटी उ की मात्रा वाले कुछ शब्द देखें।» was still
+         being spoken. The line then had no beat of its own: nothing happened while it played and
+         the word was already there when it finished, which is why it read as missing.
+         The note's order is explicit - the VO plays, THEN गुड़ appears. The capture is safe
+         without the early paint: that harness stubs play() to 15ms, so the chain has rendered the
+         first example long before the shot is taken. */
+
+      // «आइए, छोटी उ की मात्रा वाले कुछ शब्द देखें।» then the examples, one by one
+      say(A(slide, "prompt"), ()=> setTimeout(step, 320));
+      /* FAIL-SAFE: आगे never stays dead if a clip blocks or is missing */
+      setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, 42000);
+    }
+  };
+
+  /* ================================================================ 6 · CONTRAST_PAIR */
+  /* The minimal pair taught head to head — «फुल / फूल». The curriculum row asks for exactly
+     this: «मिलते-जुलते जोड़े (फूल/फल) विपर्यय राउंड में», and names the error it prevents
+     («'फूल' को 'फुल' पढ़ता है»). Autonomous teach, zero taps.
+     data: { left:{word,matra,label}, right:{word,matra,img,emoji,label} } */
+  SlideModules.CONTRAST_PAIR = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      const wrap = document.createElement("div");
+      wrap.className = "cp-stage";
+      const side = (s, cls)=>
+        '<div class="cp-side ' + cls + '">' +
+          '<span class="ink-box"><span class="cp-word ink-glyph">' + s.word + "</span></span>" +
+          '<span class="cp-matra">◌' + s.matra + "</span>" +
+          '<span class="cp-lbl">' + (s.label || "") + "</span>" +
+        "</div>";
+      wrap.innerHTML = side(d.left, "cp-a") + '<div class="cp-vs">≠</div>' + side(d.right, "cp-b");
+      host.appendChild(wrap);
+      const a = wrap.querySelector(".cp-a"), b = wrap.querySelector(".cp-b"), vs = wrap.querySelector(".cp-vs");
+      [a, b, vs].forEach(e => e.classList.add("mb-seq-hidden"));
+
+      state.ownsAudio = true; state.demoRunning = true; setNavActive(false);
+      if(typeof setSwMood === "function") setSwMood("teach");
+      /* The contrast IS the two marks, so highlighting them is not decoration here — a child
+         who cannot see which mark differs cannot learn फुल ≠ फूल. Both are highlighted as
+         their side is revealed. */
+      const aw = a.querySelector(".cp-word"), bw = b.querySelector(".cp-word");
+      /* painted at mount for the capture; both sides are mb-seq-hidden live (see MATRA_BUILD) */
+      matraHLSoon(aw, d.left.matra,  { glow:true });
+      matraHLSoon(bw, d.right.matra, { glow:true });
+      say(A(slide, "prompt"), ()=>{
+        a.classList.remove("mb-seq-hidden"); a.classList.add("mb-in");
+        matraHLSoon(aw, d.left.matra, { glow:true });
+        say(A(slide, "left"), ()=>{
+          vs.classList.remove("mb-seq-hidden"); vs.classList.add("mb-in");
+          b.classList.remove("mb-seq-hidden"); b.classList.add("mb-in");
+          matraHLSoon(bw, d.right.matra, { glow:true, pulse:true });
+          say(A(slide, "right"), ()=>{
+            say(A(slide, "explain"), ()=>{
+              state.demoRunning = false;
+              state.replayAudio = ()=> sayAll([A(slide,"left"), A(slide,"right")], ()=>{});
+              $("navBtn").onclick = ()=> completeSlide(true);
+              setNavActive(true);
+            });
+          });
+        });
+      });
+      setTimeout(()=>{ if(state.demoRunning){ state.demoRunning = false; setNavActive(true);
+        $("navBtn").onclick = ()=> completeSlide(true); } }, 30000);
+    }
+  };
+
+  /* ================================================================ 8 · MATRA_INTRO */
+  /* The SME's screen 1, which the first build did not implement.
+
+     Their note asks for the LETTER AND ITS MATRA SHOWN AS A PAIR, one pair at a time:
+        "Show the letter and its corresponding matra symbol as a pair, one by one.
+         Each pair should light up/highlight when its VO plays.
+         Keep only one pair active at a time.
+         Sequence: आ → ा · इ → ि · ई → ी"
+     The stock INTRO module draws a row of bare symbols, so the built screen showed «◌ु ◌ू»
+     with no letters at all — the child was never told which VOWEL each mark stands for, which
+     is the whole point of the screen. For this skill the sequence is उ → ◌ु and ऊ → ◌ू.
+
+     Also per the note: the Next button stays locked "only after all pairs have been shown and
+     spoken", and a soft pop plays as each mark appears.
+     data: { pairs:[{letter, matra, audio}] } */
+  SlideModules.MATRA_INTRO = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      /* ROUND 3: the SME asks to "keep the train-theme continuity by showing each pair inside a
+         train-style card / bogie / box", and round 3b makes that the SAME painted train the cover
+         and every test screen use — one train through the whole lesson, which is the point of the
+         note. Each «उ → ◌ु» pair is painted onto its coach's cream panel. */
+      const wrapHost = document.createElement("div");
+      wrapHost.className = "mi-stage";
+      host.appendChild(wrapHost);
+      const train = buildTrain(wrapHost, {
+        coaches: d.pairs.length,
+        labels: d.pairs.map(()=> null),
+        bodies: d.pairs.map(p =>
+          '<span class="mi-pair-in">' +
+            '<span class="mi-letter ink-glyph">' + p.letter + "</span>" +
+            '<span class="mi-arrow">\u2192</span>' +
+            '<span class="mi-matra ink-glyph">' + matraGlyph(p.matra) + "</span>" +
+          "</span>"),
+        dropZone: false, maxH: 210
+      });
+      const wrap = wrapHost;   /* the rest of this module refers to `wrap` */
+      train.coaches.forEach((c)=> c.el.classList.add("mi-pair"));
+      const pairs = train.coaches.map(c => c.el);
+
+      state.ownsAudio = true; state.demoRunning = true; setNavActive(false);
+      if(typeof setSwMood === "function") setSwMood("teach");
+
+      /* WITHIN EACH PAIR THE TWO GLYPHS ARRIVE SEPARATELY. The SME's animation note is explicit:
+         "First उ appears, then ु appears beside it with a soft glow. After that, both can fade
+         slightly / dim softly. Then ऊ appears, and ू appears beside it." Until now both glyphs
+         were painted together and only the PAIR sequenced, so the one thing the screen exists to
+         teach — that this letter owns this mark — was never actually shown happening.
+
+         SETTLED BY DEFAULT, held back live. The hold class is named `mi-seq-hidden` on purpose:
+         this bundle's capture settler strips anything ending in `seq-hidden`, so a frozen review
+         capture still photographs the finished screen instead of two empty coaches. */
+      const parts = train.coaches.map(c => ({
+        letter: c.body.querySelector(".mi-letter"),
+        arrow:  c.body.querySelector(".mi-arrow"),
+        matra:  c.body.querySelector(".mi-matra")
+      }));
+      const reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches);
+      const showAll = ()=> parts.forEach(pt => [pt.letter, pt.arrow, pt.matra]
+        .forEach(e => e && e.classList.remove("mi-seq-hidden")));
+      if(!reduced) parts.forEach(pt => [pt.letter, pt.arrow, pt.matra]
+        .forEach(e => e && e.classList.add("mi-seq-hidden")));
+
+      const done = ()=>{
+        state.demoRunning = false;
+        pairs.forEach(p => p.classList.remove("is-dim"));
+        showAll();                       /* nothing may be left invisible once the beat is over */
+        state.replayAudio = ()=> sayAll(d.pairs.map(p => clip(p.audio)), ()=>{});
+        $("navBtn").onclick = ()=> completeSlide(true);
+        setNavActive(true);
+      };
+      let i = 0;
+      const step = ()=>{
+        if(i >= pairs.length){ done(); return; }
+        const k = i++;
+        const pt = parts[k];
+        /* "Keep only one pair active at a time" · "Each active pair should light up when its VO
+           plays" — the pair before this one dims rather than disappearing. */
+        pairs.forEach((p, n) => p.classList.toggle("is-dim", n !== k));
+        pairs[k].classList.add("is-on");
+        /* the letter lands with «यह है उ», … */
+        if(pt.letter){ pt.letter.classList.remove("mi-seq-hidden"); pt.letter.classList.add("mi-pop"); }
+        /* … and the matra beside it a beat later, on «इसकी मात्रा है — ु», with the soft glow and
+           the chime the note asks for. 1500ms is roughly where that half of the line starts in a
+           ~4s clip; it is a beat, not a claim of lip-sync. */
+        setTimeout(()=>{
+          if(!pt.matra || !pt.matra.isConnected) return;
+          if(pt.arrow){ pt.arrow.classList.remove("mi-seq-hidden"); pt.arrow.classList.add("mi-pop"); }
+          pt.matra.classList.remove("mi-seq-hidden");
+          pt.matra.classList.add("mi-pop", "mi-glow");
+          sfxPopSoft();                  /* SME: "a soft pop / chime when each MATRA symbol appears" */
+        }, 1500);
+        say(clip(d.pairs[k].audio), ()=> setTimeout(step, 320));
+      };
+      /* `instruction` is optional in round 3 — the SME's VO list for this screen is the intro
+         line and then the two pair lines, nothing between them. */
+      train.whenParked(()=> say(A(slide, "prompt"), ()=> sayOpt(A(slide, "instruction"), step)));
+      /* never strand the slide, and never leave a glyph hidden if the chain stalls */
+      setTimeout(()=>{ if(state.demoRunning) done(); else showAll(); }, 30000);
+    }
+  };
+
+
+  /* ================================================================ 12 · MATRA_PAIRS */
+  /* PORTED FROM HI02H11_L02_S01, which built this exact screen for आ/इ/ई. The SME's page-1 note
+     is the same note in both decks, and the sibling's reading of it is the one to match:
+
+       "First उ appears, THEN ु appears beside it with a soft glow."
+       "After that, both can fade slightly / dim softly. Then ऊ appears, and ू appears beside it."
+       "Use a simple pop / fade animation." · "Do not add extra decorative elements."
+
+     So NOTHING is on screen at mount; a pair arrives only when its turn comes; inside a pair the
+     LETTER lands first and the matra follows beside it; and a pair already taught stays FADED
+     rather than being restored to full — the note never asks for that.
+
+     NO CARD, NO BOGIE, NO HEADING. The sibling's own comment records why the card chrome went:
+     it was "exactly the 'extra decorative element' the note rules out". The train belongs to the
+     screens that need coaches to sort into; page 1 is two glyphs and a relationship between them.
+
+     NO `.ink-glyph` ON THESE SPANS, deliberately, and this is the sibling's measurement: the
+     engine's centerInkGlyph() squares up the ink BOUNDING BOX, which translated the letter ~2.5px
+     but the matra ~13.3px, so the two never shared a baseline. Plain baseline alignment puts the
+     letter and its dotted circle on one line. */
+  SlideModules.MATRA_PAIRS = {
+    mount(host, slide){
+      newVoEpoch();
+      const d = slide.data || {};
+      const pairs = d.pairs || [];
+      /* the SME asks for no heading on this screen; the band is hidden per-slide rather than
+         globally, so an ACCIDENTALLY empty heading anywhere else still fails the build */
+      if(d.no_heading){ const st = document.getElementById("stage");
+        if(st){ st.classList.add("no-band");
+                /* r7: this screen is two cards and a lot of air, so it centres on the
+                   MAIN BOX rather than on the content box the nav-button clearance
+                   leaves behind. Scoped to a class this module owns and newVoEpoch
+                   drops, so no other screen loses that clearance. */
+                st.classList.add("mp-center"); } }
+
+      const row = document.createElement("div"); row.className = "mp-row";
+      const els = pairs.map(p => {
+        const el = document.createElement("div"); el.className = "mp-pair";
+        el.innerHTML = '<span class="mp-letter">' + p.letter + "</span>" +
+                       '<span class="mp-arrow">\u2192</span>' +
+                       '<span class="mp-matra">' + matraGlyph(p.matra) + "</span>";
+        row.appendChild(el);
+        return el;
+      });
+      host.appendChild(row);
+
+      /* "Keep the Next button disabled during the sequence. Activate it only after both pairs
+         have been shown and spoken." */
+      state.ownsAudio = true; state.demoRunning = true;
+      if(typeof setSwMood === "function") setSwMood("teach");
+      setNavActive(false);
+      $("navBtn").onclick = ()=> completeSlide(true);
+
+      let i = 0, finished = false;
+      /* the deck's END STATE is the last pair still lit and the earlier one faded slightly */
+      const finish = ()=>{
+        if(finished) return; finished = true;
+        state.demoRunning = false;
+        els.forEach((e, k) => {
+          e.classList.toggle("active", k === els.length - 1);
+          e.classList.toggle("shown",  k !== els.length - 1);
+          e.querySelectorAll(".mp-arrow, .mp-matra").forEach(x => x.classList.add("mp-in"));
+          /* the glow belongs to the pair that is still lit; a faded pair must not keep it */
+          const mm = e.querySelector(".mp-matra");
+          if(mm) mm.classList.toggle("mp-hl", k === els.length - 1);
+        });
+        setNavActive(true);
+      };
+
+      const step = ()=>{
+        if(CARD.slides[state.idx] !== slide) return;      // navigated away -> drop the chain
+        if(i >= els.length){ finish(); return; }
+        const k = i, el = els[k], p = pairs[k]; i++;
+        /* a pair already taught fades; the one arriving lights up */
+        els.forEach(e => { if(e !== el && e.classList.contains("active")){
+          e.classList.remove("active"); e.classList.add("shown"); } });
+
+        /* 1 · the LETTER arrives on its own */
+        el.classList.add("active");
+        const arrow = el.querySelector(".mp-arrow"), m = el.querySelector(".mp-matra");
+
+        /* 2 · then the matra lands beside it with the soft glow and a subtle chime */
+        setTimeout(()=>{
+          if(CARD.slides[state.idx] !== slide) return;
+          arrow.classList.add("mp-in");
+          m.classList.remove("mp-in"); void m.offsetWidth; m.classList.add("mp-in");
+          sfxPopSoft();                                    // kept subtle so the VO stays clear
+          /* 3 · the pair is lit, so now its line plays — "light up when its VO plays" */
+          say(clip(p.audio), ()=> setTimeout(step, 560));
+          /* 4 · AND THE MATRA LIGHTS UP ON THE WORDS THAT NAME IT. The line is «यह है उ। इसकी
+             मात्रा है — ु।»: the first half names the LETTER, and lighting the matra there would
+             point at the wrong mark while the right one is being spoken. `cue_ms` is where
+             «इसकी» starts, measured off the clip itself at build time, so the two clips (4.13s
+             and 3.85s) each get their own moment rather than sharing a guess. */
+          const cue = Math.max(0, p.cue_ms || 1300);
+          setTimeout(()=>{
+            if(CARD.slides[state.idx] !== slide) return;   // navigated away mid-line
+            if(!el.classList.contains("active")) return;   // a later pair already took the light
+            m.classList.add("mp-hl");
+          }, cue);
+        }, 480);
+      };
+
+      state.replayAudio = ()=> sayAll(
+        [A(slide, "prompt")].concat(pairs.map(p => clip(p.audio))).filter(Boolean), ()=>{});
+      say(A(slide, "prompt"), ()=> setTimeout(step, 350));
+      /* FAIL-SAFE: आगे never stays dead if a clip blocks or is missing */
+      setTimeout(()=>{ if(CARD.slides[state.idx] === slide) finish(); }, 30000);
+    }
+  };
+
+  /* ================================================================ 7 · POEM_SEARCH */
+  /* «मात्रा खोजो» — a poem card, a draggable magnifying glass that magnifies whatever word is
+     under it, N sequential rounds over the same poem, and THE GHOST.
+     data: { lines:[[word,…],…], rounds:[{matra, targets:[word,…]}] }
+     The target list is authored per round and every word carrying an in-scope matra MUST be in
+     one — a child who taps a correct word that is not listed would be marked wrong, which is
+     how the sibling's poem screen was caught. The builder audits this.
+
+     THE GHOST WAS SPECIFIED IN FULL BY THE SME AND WAS MISSING FROM THE FIRST BUILD. Their
+     note is unusually precise about it, and about the fact that it is a GUIDE rather than
+     decoration — the same note deletes the old scenic art ("Remove extra decorative elements
+     like: Ravi, kite, girl, tree") and keeps only the poem card, the lens, the targets and the
+     ghost. All seven behaviours they list are implemented below and labelled SME-GHOST:
+        entry flight · idle cue · happy bounce · thinking face · 2nd-attempt drift to a real
+        target · round-completion fly-across with a sparkle trail · final spin.
+     It is drawn rather than generated art because it has to fly to an arbitrary word position
+     and change expression; a PNG can do neither. */
+  SlideModules.POEM_SEARCH = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      const wrap = document.createElement("div");
+      wrap.className = "ps-stage";
+      const card = document.createElement("div");
+      card.className = "ps-card";
+      d.lines.forEach(line => {
+        const ln = document.createElement("div"); ln.className = "ps-line";
+        line.forEach(w => {
+          const sp = document.createElement("span");
+          sp.className = "ps-w ink-glyph"; sp.textContent = w; sp.dataset.w = w;
+          ln.appendChild(sp);
+        });
+        card.appendChild(ln);
+      });
+      wrap.appendChild(card);
+
+      /* round progress: the SME wants no instruction TEXT, but with six words to find over two
+         rounds and no counter a child cannot tell a round ended. Dots carry it without words. */
+      const dots = document.createElement("div");
+      dots.className = "ps-dots";
+      card.appendChild(dots);
+      const paintDots = ()=>{
+        const r = d.rounds[Math.min(round, d.rounds.length - 1)];
+        dots.innerHTML = r.targets.map((_, i) =>
+          '<span class="ps-dot' + (i < found ? " on" : "") + '"></span>').join("");
+      };
+
+      const lens = document.createElement("div");
+      lens.className = "ps-lens";
+      lens.innerHTML = '<svg viewBox="0 0 90 90" width="90" height="90" aria-hidden="true">' +
+        '<circle cx="36" cy="36" r="27" fill="rgba(191,227,255,.42)" stroke="#0B3D8C" stroke-width="6"/>' +
+        '<rect x="56" y="56" width="28" height="11" rx="5" transform="rotate(45 56 56)" fill="#0B3D8C"/></svg>';
+      wrap.appendChild(lens);
+
+      /* ---- SME-GHOST: the character itself ---- */
+      const ghost = document.createElement("div");
+      ghost.className = "ps-ghost";
+      ghost.innerHTML =
+        '<svg viewBox="0 0 74 74" width="74" height="74" aria-hidden="true">' +
+          '<path d="M10 40a27 27 0 0 1 54 0v24c0 3-3 4-5 2l-5-5-6 5c-2 2-4 2-6 0l-5-5-6 5c-2 2-4 2-6 0l-5-5-5 5c-2 2-5 1-5-2z" ' +
+                'fill="#F3F8FF" stroke="#7FA8E8" stroke-width="3.5" stroke-linejoin="round"/>' +
+          '<circle class="gh-eye" cx="28" cy="36" r="5" fill="#0B3D8C"/>' +
+          '<circle class="gh-eye" cx="47" cy="36" r="5" fill="#0B3D8C"/>' +
+          '<ellipse class="gh-mouth" cx="37" cy="49" rx="6" ry="4.5" fill="#0B3D8C"/>' +
+        "</svg>";
+      wrap.appendChild(ghost);
+      host.appendChild(wrap);
+
+      state.ownsAudio = true;
+      setNavActive(false);
+      let round = 0, found = 0;
+      const words = [...card.querySelectorAll(".ps-w")];
+
+      /* Move the ghost to a point in stage coordinates. The stage is the offset parent, so a
+         plain translate is enough and the CSS transition does the flight. */
+      const stageBox = ()=> wrap.getBoundingClientRect();
+      function ghostTo(clientX, clientY, opts){
+        const s = stageBox();
+        const x = clientX - s.left - 37, y = clientY - s.top - 37;
+        ghost.style.transform = "translate(" + x + "px," + y + "px)";
+        ghost.classList.add("gh-on");
+        if(opts && opts.dim) ghost.classList.add("gh-dim"); else ghost.classList.remove("gh-dim");
+      }
+      function ghostToEl(el, dy){
+        const b = el.getBoundingClientRect();
+        ghostTo(b.left + b.width / 2, b.top + (dy == null ? -14 : dy));
+      }
+      const ghostFace = (mood)=>{
+        ghost.classList.toggle("gh-think", mood === "think");
+        const mouth = ghost.querySelector(".gh-mouth");
+        if(!mouth) return;
+        if(mood === "happy"){ mouth.setAttribute("ry", "6"); mouth.setAttribute("rx", "7"); }
+        else if(mood === "think"){ mouth.setAttribute("ry", "2"); mouth.setAttribute("rx", "4"); }
+        else { mouth.setAttribute("ry", "4.5"); mouth.setAttribute("rx", "6"); }
+      };
+      function sparkleAt(el){
+        const s = stageBox(), b = el.getBoundingClientRect();
+        const sp = document.createElement("span");
+        sp.className = "ps-spark"; sp.textContent = "✨";
+        sp.style.left = (b.left - s.left + b.width / 2 - 8) + "px";
+        sp.style.top  = (b.top  - s.top  - 14) + "px";
+        wrap.appendChild(sp);
+        setTimeout(()=> sp.remove(), 1400);
+      }
+
+      /* ---- SME-GHOST 1: entry. "a small ghost floats in from one side, briefly circles the
+         magnifying glass, then fades slightly or moves to a corner." ---- */
+      let idleTimer = null, lastAct = Date.now();
+      function ghostEntry(){
+        const lb = lens.getBoundingClientRect();
+        ghostTo(lb.left - 130, lb.top + 10);
+        setTimeout(()=> ghostTo(lb.left + lb.width / 2, lb.top - 44), 420);   // circle the lens
+        setTimeout(()=> ghostTo(lb.left + lb.width + 6, lb.top + 30), 1180);
+        setTimeout(()=>{ ghost.classList.add("gh-dim", "gh-float"); }, 1900);
+      }
+      /* ---- SME-GHOST 2: idle cue. "If the child is idle for a few seconds, the ghost appears
+         near the magnifying glass and gently moves toward the poem." ---- */
+      function bumpIdle(){ lastAct = Date.now(); }
+      idleTimer = setInterval(()=>{
+        if(state.locked) return;
+        if(Date.now() - lastAct < 7000) return;
+        const tgt = words.find(x => d.rounds[round].targets.indexOf(x.dataset.w) >= 0 &&
+                                    !x.classList.contains("ps-hit"));
+        ghost.classList.remove("gh-dim");
+        if(tgt) ghostToEl(tgt, -40); else ghostToEl(card, -30);
+        setTimeout(()=> ghost.classList.add("gh-dim"), 2200);
+        bumpIdle();
+      }, 2500);
+
+      /* the word under the lens grows — this is HOW the child scans, not decoration */
+      const magnify = ()=>{
+        const r = lens.getBoundingClientRect();
+        const cx = r.left + r.width * 0.40, cy = r.top + r.height * 0.40;
+        words.forEach(w => {
+          const b = w.getBoundingClientRect();
+          const near = Math.hypot(b.left + b.width / 2 - cx, b.top + b.height / 2 - cy) < 78;
+          w.classList.toggle("ps-mag", near && !w.classList.contains("ps-hit"));
+        });
+      };
+      let lx = 0, ly = 0, drag = false, sx = 0, sy = 0;
+      const sc = ()=> parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--scale")) || 1;
+      const down = e => { drag = true; const p = e.touches ? e.touches[0] : e; sx = p.clientX; sy = p.clientY; bumpIdle(); e.preventDefault(); };
+      const move = e => { if(!drag) return; const p = e.touches ? e.touches[0] : e;
+        lx += (p.clientX - sx) / sc(); ly += (p.clientY - sy) / sc(); sx = p.clientX; sy = p.clientY;
+        lens.style.transform = "translate(" + lx + "px," + ly + "px)"; magnify(); bumpIdle(); e.preventDefault(); };
+      const up = ()=> { drag = false; };
+      lens.addEventListener("mousedown", down); lens.addEventListener("touchstart", down, {passive:false});
+      document.addEventListener("mousemove", move); document.addEventListener("touchmove", move, {passive:false});
+      document.addEventListener("mouseup", up); document.addEventListener("touchend", up);
+
+      const startRound = ()=>{
+        found = 0;
+        paintDots();
+        say(A(slide, "round" + (round + 1)), ()=>{});
+      };
+      const wrongCount = new Map();
+
+      words.forEach(w => {
+        w.onclick = ()=>{
+          if(state.locked) return;
+          bumpIdle();
+          const r = d.rounds[round];
+          if(w.classList.contains("ps-hit")) return;
+          if(r.targets.indexOf(w.dataset.w) >= 0){
+            w.classList.remove("ps-mag"); w.classList.add("ps-hit");
+            /* the found word keeps its matra marked, so the poem becomes a record of the hunt */
+            matraHLSoon(w, r.matra, { glow:true });
+            if(typeof sfxTap === "function") sfxTap();
+            found++;
+            paintDots();
+            /* ---- SME-GHOST 3: "Ghost pops up happily near the correct word. Small sparkle
+               appears. Ghost can do a short happy bounce and disappear." ---- */
+            ghost.classList.remove("gh-dim", "gh-float");
+            ghostFace("happy"); ghostToEl(w, -46);
+            sparkleAt(w); sfxSparkle();
+            ghost.classList.remove("gh-bounce"); void ghost.offsetWidth;
+            ghost.classList.add("gh-bounce");
+            setTimeout(()=>{ ghostFace("idle"); ghost.classList.add("gh-dim", "gh-float"); }, 1300);
+            SwiftPAL.emit("poem_word_found", { slide_id: slide.id, word: w.dataset.w, matra: r.matra });
+            if(found >= r.targets.length){
+              fbCorrect();
+              if(typeof confettiCannon === "function") confettiCannon();
+              card.classList.add("ps-round-done");
+              setTimeout(()=> card.classList.remove("ps-round-done"), 900);
+              /* ---- SME-GHOST 4: round completion. "Ghost flies across the selected words
+                 with a sparkle trail." ---- */
+              const hits = words.filter(x => r.targets.indexOf(x.dataset.w) >= 0);
+              ghost.classList.remove("gh-dim");
+              hits.forEach((h, k) => setTimeout(()=>{ ghostToEl(h, -44); sparkleAt(h); }, 260 + k * 420));
+              round++;
+              if(round >= d.rounds.length){
+                state.locked = true;
+                clearInterval(idleTimer);
+                if(typeof setSwMood === "function") setSwMood("celebrate");
+                /* ---- SME-GHOST 5: final. "Ghost appears once in the centre, celebrates with
+                   a small spin/sparkle. Magnifying glass gives a final glow." ---- */
+                setTimeout(()=>{
+                  const cb = card.getBoundingClientRect();
+                  ghostFace("happy");
+                  ghostTo(cb.left + cb.width / 2, cb.top + cb.height / 2);
+                  ghost.classList.remove("gh-float"); void ghost.offsetWidth;
+                  ghost.classList.add("gh-spin");
+                  lens.classList.add("ps-lens-done");
+                  sfxSparkle();
+                }, 260 + hits.length * 420);
+                SwiftPAL.emit("poem_search_complete", { slide_id: slide.id, attempts: state.attempts });
+                say(A(slide, "correct"), ()=>{ setNavActive(true);
+                  $("navBtn").onclick = ()=> completeSlide(state.attempts === 0); });
+              } else {
+                setTimeout(startRound, 260 + hits.length * 420 + 400);
+              }
+            }
+          } else {
+            const n = (wrongCount.get(w) || 0) + 1; wrongCount.set(w, n);
+            state.attempts++;
+            fbWrong();
+            w.classList.remove("ps-mag"); w.classList.add("ps-miss");
+            setTimeout(()=> w.classList.remove("ps-miss"), 520);
+            SwiftPAL.emit("answer_wrong", { slide_id: slide.id, word: w.dataset.w });
+            if(state.attempts === 1){
+              /* ---- SME-GHOST 6: 1st wrong. "Ghost briefly appears with a thinking
+                 expression. No hand nudge." ---- */
+              ghost.classList.remove("gh-dim");
+              ghostFace("think"); ghostToEl(w, -44);
+              setTimeout(()=>{ ghostFace("idle"); ghost.classList.add("gh-dim"); }, 1600);
+              say(A(slide, "hint1"), ()=>{});
+            } else {
+              state.hintUsed = true;
+              say(A(slide, "hint2") || A(slide, "hint"), ()=>{
+                const r2 = d.rounds[round];
+                const tgt = words.find(x => r2.targets.indexOf(x.dataset.w) >= 0 && !x.classList.contains("ps-hit"));
+                /* ---- SME-GHOST 7: 2nd wrong. "Ghost floats toward one correct target word.
+                   It gently points/pulses near that word. This acts as the hint instead of
+                   adding extra text." The ghost is OURS and is not phase-gated, so it still
+                   guides on this practice screen; the engine's HAND stays withheld here under
+                   the [28f] ruling, and handOnAnswer() is what enforces that. ---- */
+                if(tgt){
+                  ghost.classList.remove("gh-dim");
+                  ghostFace("idle"); ghostToEl(tgt, -46);
+                  ghost.classList.remove("gh-bounce"); void ghost.offsetWidth;
+                  ghost.classList.add("gh-bounce");
+                  sparkleAt(tgt);
+                  if(typeof handOnAnswer === "function") handOnAnswer(tgt, slide);
+                }
+              });
+            }
+          }
+        };
+      });
+
+      paintDots();
+      say(A(slide, "prompt"), startRound);
+      requestAnimationFrame(()=>{ magnify(); ghostEntry(); });
+    }
+  };
+
+  /* ================================================================ 9 · WORD_BUILD */
+  /* ROUND 3 — this REPLACES the round-2 MATRA_FILL screen, and it is a different task, not a
+     re-skin. MATRA_FILL dragged a bare matra (`ु`) into `प_ल`: the child supplied a mark. The
+     SME's round-3 note asks for a word-completion train instead —
+
+        "Each coach will contain an incomplete word with the first and last letters visible and a
+         blank space in between … The child will look at the picture above the coach, understand
+         the word, and drag the correct अक्षर option to complete the word."
+        "Keep only the last letter visible inside each coach: _ल · _ल · _ई"
+
+     — so the child now supplies a whole अक्षर (consonant + matra as one cluster), and the blank
+     sits FIRST, ahead of the tail. That is a harder and more useful task: it makes them choose
+     between पु and फू, which is exactly the ह्रस्व/दीर्घ confusion this skill exists to fix.
+
+     MATRA_FILL is left registered and untouched — nothing else in this bundle mounts it, and the
+     sibling lessons on this engine line must keep rendering byte-identically.
+
+     data: { slots:[{word, tail, matra, img, emoji, correct_audio}],
+             options:[{akshar, audio}] }
+     A drop is judged by RECONSTRUCTING the word — `akshar + slot.tail === slot.word` — rather
+     than by an index, so a distractor matches nothing by construction and the two ...ल coaches
+     can never both accept the same tile. */
+  SlideModules.WORD_BUILD = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      const train = buildTrain(host, {
+        coaches: d.slots.length,
+        /* SME: "Show related pictures above each coach" — the picture IS the question here, so
+           it takes the label slot the other screens use for a matra name. */
+        labels: d.slots.map(s => imgOrEmoji(s.img, s.emoji, "tr-slotpic", "tr-emoji")),
+        bodies: d.slots.map((s, i) =>
+          '<span class="tr-fill wb-fill" data-i="' + i + '">' +
+            '<span class="tr-blank wb-blank dd-zone" data-idx="' + i + '"></span>' +
+            '<span class="ink-glyph wb-tail">' + s.tail + "</span>" +
+          "</span>"),
+        dropZone: false
+      });
+
+      const tray = document.createElement("div");
+      tray.className = "tr-tray wb-tray";
+      /* SME: "Below the train, show draggable options: पु · फू · सु" plus 1–2 distractors.
+         Shuffled, so the answer is never the n-th card two runs running. */
+      shuffled(d.options).forEach(o => {      /* [r29] see the note on the sort tray */
+        const t = document.createElement("div");
+        t.className = "tr-card k-akshar";
+        t.dataset.akshar = o.akshar;
+        if(o.audio) t.dataset.audio = o.audio;
+        t.innerHTML = '<span class="wb-akshar ink-glyph">' + o.akshar + "</span>";
+        tray.appendChild(t);
+      });
+      host.appendChild(tray);
+
+      state.ownsAudio = true;
+      state.replayAudio = ()=> say(A(slide, "prompt"), ()=>{});
+      setNavActive(false);
+      let done = 0;
+      const perCard = new Map();
+
+      /* RUNG 2, screen 6: "तीनों चित्रों के नाम एक-एक करके read out करें ... नाम बोलते समय वह
+         चित्र glow करे और उसके डिब्बे की खाली जगह blink करे।" A coach whose blank is already
+         filled is skipped - its name is no longer a question. */
+      const wbDemo = (after)=> hintHold((fin)=> hintSeq(d.slots.map((sl, i)=> (next)=>{
+        const c = train.coaches[i];
+        const bl = c && c.body.querySelector(".wb-blank");
+        if(!c || !bl || bl.classList.contains("filled")) return next();
+        c.label.classList.add("wb-read");
+        bl.classList.add("wb-blink");
+        say(clip(sl.name_audio), ()=> setTimeout(()=>{
+          c.label.classList.remove("wb-read");
+          bl.classList.remove("wb-blink");
+          next();
+        }, 240));
+      }), fin), after);
+
+      /* Which coach is still waiting. Used for the पा case below - a blank that has been filled
+         has had its whole holder replaced by the finished word, so "still has an empty .wb-blank"
+         is the same question as "is still a question". */
+      const firstEmpty = ()=> d.slots.findIndex((sl, k)=>{
+        const c = train.coaches[k];
+        const b = c && c.body.querySelector(".wb-blank");
+        return !!b && !b.classList.contains("filled");
+      });
+
+      [...tray.children].forEach(tile => {
+        /* SME: "Optional word support VO when a card is tapped: पु / फू / सु — This will help the
+           child connect the picture, sound, and correct word formation." */
+        tile.onclick = ()=>{ if(tile.dataset.audio && !isPlaying && !hintBusy
+                              && !tile.classList.contains("snapped"))
+          say(clip(tile.dataset.audio), ()=>{}); };
+
+        makeDraggable(tile, (zone)=>{
+          if(hintBusy) return;                      /* a demonstration is speaking */
+          const blank = zone.closest(".wb-blank"); if(!blank) return;
+          if(blank.classList.contains("filled")) return;
+          const i = parseInt(blank.dataset.idx, 10);
+          /* rung 3 has already named this letter's coach - see lockToBin's twin in TRAIN_SORT */
+          if(tile.dataset.only != null && String(i) !== tile.dataset.only){
+            tile.style.transform = "";
+            tile.classList.remove("tr-cshake"); void tile.offsetWidth;
+            tile.classList.add("tr-cshake");
+            setTimeout(()=> tile.classList.remove("tr-cshake"), 560);
+            return;
+          }
+          const slot = d.slots[i];
+          tile.style.transform = "";
+          if(tile.dataset.akshar + slot.tail === slot.word){
+            const quiet = (perCard.get(tile) || 0) >= maxTries() - 1;
+            blank.classList.add("filled");
+            blank.innerHTML = '<span class="ink-glyph wb-inakshar">' + tile.dataset.akshar + "</span>";
+            /* the option is consumed — it belongs to exactly one coach */
+            tile.classList.add("snapped", "wb-used");
+            /* SME: "Option snaps into the blank space. The complete word appears." The split form
+               is replaced by the whole word a beat later so the child reads it as one word, with
+               the matra they just supplied still marked. */
+            const holder = blank.closest(".wb-fill");
+            setTimeout(()=>{
+              if(!holder || !holder.isConnected) return;
+              holder.innerHTML = '<span class="ink-glyph tr-doneword">' + slot.word + "</span>";
+              matraHLSoon(holder.querySelector(".tr-doneword"), slot.matra, { glow:true });
+            }, 450);
+            done++;
+            train.correct(i);
+            fbCorrect();
+            SwiftPAL.emit("word_build_item", { slide_id: slide.id, word: slot.word });
+            /* «शाबाश! पुल बन गया।» / «शाबाश! सुई बन गई।» — per slot, and SILENT if the child
+               needed the whole ladder ("Correct Answer on 3rd Attempt … No VO required"). */
+            const okvo = quiet ? null : slot.correct_audio;
+            if(done >= d.slots.length){
+              /* "No extra completion VO required." */
+              sayOpt(clip(okvo), ()=> finishSlide(slide, train, true, "word_build_first_try"));
+            } else {
+              sayOpt(clip(okvo), ()=>{});
+            }
+          } else {
+            const n = (perCard.get(tile) || 0) + 1; perCard.set(tile, n);
+            state.attempts++;
+            fbWrong();
+            if(typeof setSwMood === "function") setSwMood("tryagain");
+            train.shake(i);
+            /* "गलत डिब्बे में डाला गया अक्षर soft shake करके अपनी जगह वापस आ जाएगा।" */
+            tile.style.transform = "";
+            tile.classList.remove("tr-cshake"); void tile.offsetWidth;
+            tile.classList.add("tr-cshake");
+            setTimeout(()=> tile.classList.remove("tr-cshake"), 560);
+            SwiftPAL.emit("answer_wrong", { slide_id: slide.id, attempts: state.attempts });
+            if(n === 1){
+              /* RUNG 1: "No hand nudge. Only VO." */
+              say(A(slide, "hint1") || A(slide, "try_again"), ()=>{});
+            } else if(n === 2 && hintLevels() >= 3){
+              state.hintUsed = true;
+              SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 2 });
+              wbDemo(()=> say(A(slide, "hint2") || A(slide, "hint") || A(slide, "try_again"),
+                              ()=>{}));
+            } else {
+              state.hintUsed = true;
+              SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 3 });
+              /* THE HAND CARRIES A LETTER TO THE BLANK IT FILLS. Normally that is the tile the
+                 child is holding. For पा there is no such blank - it completes nothing - and
+                 Review-1 says what to do instead: "अगर बच्चा 'पा' डालता है, तो Hint 3 में अगले
+                 खाली डिब्बे का सही अक्षर nudge होगा।" So the hand leaves the distractor alone and
+                 travels from the letter that DOES fill the next empty coach, to that coach.
+                 (r63 and earlier withheld the hand here, which left the one child who most needed
+                 rung 3 with nothing but a glow.) */
+              let want = d.slots.findIndex(s => tile.dataset.akshar + s.tail === s.word);
+              let from = tile;
+              if(want < 0){
+                want = firstEmpty();
+                const sl = want >= 0 ? d.slots[want] : null;
+                from = sl ? [...tray.children].find(t => !t.classList.contains("snapped")
+                              && t.dataset.akshar + sl.tail === sl.word) : null;
+              }
+              const at = want >= 0 ? want : i;
+              const bl = train.coaches[at].body.querySelector(".wb-blank");
+              /* the letter now goes to that blank and nowhere else */
+              if(from && want >= 0) from.dataset.only = String(want);
+              withHand3(()=> train.nudgeTo(at, (want >= 0 ? from : null), slide,
+                                           (want >= 0 ? bl : null)));
+              if(bl && want >= 0) bl.classList.add("wb-pulse");
+              if(from && from !== tile) from.classList.add("wb-callout");
+              const sl3 = want >= 0 ? d.slots[want] : null;
+              say(clip(sl3 && sl3.hint3_audio) || A(slide, "hint3") || A(slide, "hint2")
+                  || A(slide, "hint") || A(slide, "try_again"), ()=>{});
+            }
+          }
+        }, { onPick: ()=>{ if(typeof sfxTap === "function") sfxTap(); } });
+      });
+
+      /* SME's entry order: "Train enters from right to left and stops at the centre. Picture cards
+         appear first. Incomplete words appear inside the coaches. Options slide up from the
+         bottom." Settled by default (engine fact 1) — these classes only drive the stagger, so a
+         frozen capture shows the finished screen. */
+      requestAnimationFrame(()=>{
+        train.coaches.forEach((c, i) => {
+          c.label.style.setProperty("--tr-lbl-delay", (260 + i * 220) + "ms");
+          c.label.classList.add("tr-lblseq");
+          c.body.style.setProperty("--tr-lbl-delay", (900 + i * 200) + "ms");
+          c.body.classList.add("tr-bodyseq");
+        });
+        tray.classList.add("wb-trayin");
+      });
+      train.whenParked(()=> say(A(slide, "prompt"), ()=>{}));
+    }
+  };
+
+  /* ================================================================ 10 · SENTENCE_COMPLETE */
+  /* ROUND 3 — a new module, four instances. It REPLACES the round-2 POEM_SEARCH screen (the poem
+     was ours, not the SME's) and adds three more beside it. Laid out from the SME's own mockup,
+     `2_MOCKUPS/slide15_sentence_complete_ALL_FOUR.png`: heading band, a large scene illustration
+     on one side, the sentence with a dashed blank on the other, three picture option cards under
+     the sentence, आगे below.
+
+     WHY THIS IS THE RIGHT LAST BEAT. Every other screen in the lesson asks "which matra is in
+     this word". This one asks the child to USE such a word in a meaning — the SME's words, "how
+     मात्रा वाले शब्द are used in meaningful sentences". It is the only screen where the matra is
+     not the visible question, which is what makes it a test of reading rather than of spotting.
+
+     A TAP IS THE ANSWER, and it is also how the child READS the option: the note says "When an
+     option is tapped, play the word VO", so the word is spoken first and the judgement follows on
+     that clip ending. A pre-reader who cannot decode खुश can still hear it and decide.
+
+     data: { scene_img, scene_emoji, sentence_pre, sentence_post, answer,
+             options:[{word, img, emoji, audio}] } */
+  /* ================================================================ · MINI_GAME */
+  /* [r36] A whole second game, dropped into the lesson as one more screen.
+     मात्रा रनर is a complete 16:9 canvas app with its own dark theme, its own HUD, its own
+     start and end cards and its own key and pointer handling. It is mounted in an IFRAME rather
+     than inlined, and that is a deliberate choice, not the lazy one:
+
+       · its stylesheet opens with `html,body{height:100%;overflow:hidden}` and a [data-theme]
+         block. Poured into a document that already carries 2000 lines of lesson CSS, those would
+         fight - and the failure would be cosmetic, intermittent and awful to chase.
+       · it runs its own requestAnimationFrame loop and binds keydown on the document. An
+         iframe is torn down with the slide; inlined, both would have to be unwound by hand on
+         every navigation, and anything missed would keep running under the next screen.
+       · the lesson stage is 1333x750, which IS 16:9 - so the game fills the slide exactly and
+         needs no letterboxing.
+
+     The two talk through postMessage and nothing else. The game keeps working when opened on its
+     own, which is what makes it safe to embed: nothing here reaches into it. */
+/* ==== MATRA-RUNNER EMBED BEGIN ==== */
+  /* GENERATED by 1_SPEC/embed_matra_runner.py - do not hand-edit.
+     The whole of मात्रा रनर, folded into the engine: its markup, and its script
+     wrapped so the lesson can start and stop it. Re-run that script to refresh. */
+  const MATRA_RUNNER_HTML = "<div class=\"rotate\">फ़ोन को घुमाएँ</div>\n<div id=\"mrStage\">\n  <canvas id=\"game\"></canvas>\n\n  <div class=\"pads\">\n    <div class=\"pad\" data-dir=\"-1\"></div>\n    <div class=\"pad\" data-dir=\"1\"></div>\n  </div>\n\n  <div class=\"hud\">\n    <div class=\"hud-top\">\n      <div class=\"pill\" id=\"lvlNum\">1</div>\n      <div class=\"pips\" id=\"pips\"></div>\n      <div class=\"matra u\" id=\"matraChip\"><em>उ</em><span>ु</span></div>\n      <div class=\"hearts\" id=\"hearts\">❤❤❤</div>\n    </div>\n    <div class=\"hud-bottom\">\n      <div class=\"pill\" id=\"score\">0</div>\n    </div>\n  </div>\n\n  <div class=\"arrows\">\n    <button class=\"arrow\" data-dir=\"-1\" aria-label=\"बाएँ जाएँ\">◀</button>\n    <button class=\"arrow\" data-dir=\"1\" aria-label=\"दाएँ जाएँ\">▶</button>\n  </div>\n\n  <!-- no start card: the game begins as the screen arrives -->\n\n  <!-- level done -->\n  <div class=\"screen\" id=\"scLevel\">\n    <div class=\"card\">\n      <h2 id=\"lvlTitle\">स्तर पूरा</h2>\n      <div class=\"stars\" id=\"lvlStars\">★★★</div>\n      <p class=\"nextup\" id=\"lvlNext\"></p>\n    </div>\n  </div>\n\n  <!-- game over -->\n  <div class=\"screen\" id=\"scOver\">\n    <div class=\"card\">\n      <h2>फिर से कोशिश करो</h2>\n      <p id=\"overTip\"></p>\n\n    </div>\n  </div>\n\n  <!-- win -->\n  <div class=\"screen\" id=\"scWin\">\n    <div class=\"card\">\n      <h1>शाबाश!</h1>\n      <p>सारे द्वार पार हो गए।</p>\n    </div>\n  </div>\n</div>\n\n\n\n<!-- ============================ lesson bridge ============================\n     [r36] This file is still a complete, standalone game: open index.html on its own and\n     NOTHING below runs, because it all sits behind `window.parent === window`. It only wakes up\n     when the lesson embeds it, and then it does two things and no more:\n       · gives the child a way onward that is always on screen, so a mini-game with no natural\n         end can never become a dead end inside a lesson that has no आगे button\n       · tells the lesson when the game was won or lost, so the lesson can react\n     Nothing in the game's own code is touched - the bridge only listens to it.\n     ===================================================================== -->";
+  function bootMatraRunner(){
+    var _dead = false, _ls = [], _raf = 0;
+    function MR_ON(t, e, f, o){ t.addEventListener(e, f, o); _ls.push([t, e, f, o]); }
+    function MR_RAF(fn){ if(_dead) return 0; _raf = requestAnimationFrame(fn); return _raf; }
+    try {
+
+(function(){
+"use strict";
+
+/* ======================= शब्द भंडार (word bank) ======================= */
+const U  = "\u0941";            // ु  chhoti u
+const UU = "\u0942";            // ू  badi uu
+
+const POOL_U = [["पुल","pul"],["गुड़","gud"],["सुख","sukh"],["चुप","chup"],["तुम","tum"],
+  ["मधु","madhu"],["सुई","sui"],["कुत्ता","kutta"],["गुलाब","gulab"],["सुबह","subah"],
+  ["दुकान","dukan"],["मुकुट","mukut"],["गुड़िया","gudiya"],["जामुन","jamun"],["बुलबुल","bulbul"],
+  ["कुर्सी","kursi"],["पुस्तक","pustak"],["चुहिया","chuhiya"],["मुरली","murli"],["बुढ़िया","budhiya"],
+  ["सुराही","surahi"],["कुल्हाड़ी","kulhadi"]];
+
+const POOL_UU = [["फूल","phool"],["झूला","jhoola"],["दूध","doodh"],["सूरज","sooraj"],["मूली","mooli"],
+  ["चूहा","chooha"],["जूता","joota"],["भालू","bhaloo"],["कबूतर","kabootar"],["आलू","aaloo"],
+  ["चाकू","chaakoo"],["धूप","dhoop"],["चूड़ी","choodi"],["झूठ","jhooth"],["पूजा","pooja"],
+  ["कूड़ा","kooda"],["भूख","bhookh"],["अंगूर","angoor"],["तरबूज","tarbooj"],["नींबू","neemboo"],
+  ["काजू","kaaju"],["तराजू","taraaju"],["लट्टू","lattoo"],["बंदूक","bandook"]];
+
+const hasU  = w => w.indexOf(U)  >= 0;
+const hasUU = w => w.indexOf(UU) >= 0;
+const ONLY_U  = POOL_U.filter(w=>hasU(w[0])  && !hasUU(w[0]));
+const ONLY_UU = POOL_UU.filter(w=>hasUU(w[0]) && !hasU(w[0]));
+
+/* बोली जाने वाली पंक्तियाँ — assets/audio/<id>.mp3 */
+const LINES = {
+  goal_u   : "छोटी उ की मात्रा वाले शब्द चुनो",
+  goal_uu  : "बड़ी ऊ की मात्रा वाले शब्द चुनो",
+  right    : "शाबाश",
+  wrong    : "फिर से देखो",
+  correct_is:"सही शब्द है",
+  level_up : "बहुत बढ़िया",
+  retry    : "कोई बात नहीं, फिर से कोशिश करो",
+  win      : "शाबाश, सारे द्वार पार हो गए"
+};
+
+/* ======================= स्तर (levels) ======================= */
+const LEVELS = [
+  {name:"बड़ी ऊ",  target:UU, gates:6, speed:0.155, easy:true },
+  {name:"छोटी उ",  target:U,  gates:6, speed:0.170, easy:true }
+];
+
+/* ======================= canvas setup ======================= */
+const cvs = document.getElementById("game");
+const ctx = cvs.getContext("2d");
+let W=0,H=0,S=1,DPR=1;
+function resize(){
+  const r = cvs.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = Math.max(280, r.width); H = Math.max(320, r.height);
+  cvs.width = Math.round(W*DPR); cvs.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  S = Math.min(H/700, W/520);              // art unit
+  buildBackdrop();
+}
+MR_ON(window, "resize", resize);
+
+/* perspective */
+const K = 3.15;
+const horizonY = () => H*0.355;
+const groundY  = () => H*0.905;
+function proj(z){
+  const p = 1/(1+z*K);
+  return {p, y: horizonY() + (groundY()-horizonY())*p};
+}
+const LANES = 2;
+const LANE_W = () => W*0.30;                 // gap between the two gates
+/* [r68] THE BRIDGE is on when its three parts have loaded. The deck is a little broader than the
+   old road (1.22 against 1.08 lane-widths either side of centre) - Yasir asked for a broader path,
+   and a parapet needs a hand's width of stone between it and the portals or they look jammed in. */
+const bridgeOn = () => !!(window.MR_ART && MR_ART.has("deck") && MR_ART.has("post") && MR_ART.has("wall"));
+const roadHalf = () => bridgeOn() ? 1.22 : 1.08;
+
+/* [r47] THE CAMERA. It trails the runner sideways by a third of her lane offset, which is what
+   stops a lane change from looking like a sprite sliding across a still picture: the whole
+   world swings the other way, and because a world offset is scaled by depth on its way to the
+   screen, near things swing a long way and far things hardly move. She still visibly crosses
+   the track, because the camera only takes a third of it. */
+const CAM_FOLLOW = 0.34;
+const camLane = () => (G.laneF - 0.5) * CAM_FOLLOW;
+/* laneOff is in LANES from the centre of the track; p is the depth foreshortening. Everything
+   that stands in the world goes through here, so the camera exists in exactly one place. */
+const worldX = (laneOff, p) => W/2 + (laneOff - camLane())*LANE_W()*p;
+const laneX = (lane,p) => worldX(lane-0.5, p);
+
+/* ======================= state ======================= */
+const G = {
+  mode:"menu", level:0, score:0, hearts:3, hold:false, ramp:1, holdT:0, nextT:0, deadT:0,
+  lane:0, laneF:0, targetLane:0,        // 0 = बायाँ द्वार, 1 = दायाँ द्वार
+  gates:[], coins:[], decor:[], rails:[], parts:[], pops:[], pips:[], ground:0,
+  cleared:0, right:0, wrong:0, missedWords:[], usedWords:[],
+  speed:0.3, target:U, shake:0, flash:0, flashCol:"#fff",
+  t:0, dashT:0, best:0, banner:null
+};
+
+/* storage */
+try{ const b = localStorage.getItem("matraRunnerBest"); if(b) G.best = parseInt(b,10)||0; }catch(e){}
+function saveBest(){ try{ localStorage.setItem("matraRunnerBest", String(G.best)); }catch(e){} }
+
+/* ======================= आवाज़ (sfx + voiceover) =======================
+   मोड: 2 = आवाज़ + शब्द बोलना, 1 = सिर्फ़ आवाज़, 0 = बंद
+   हर शब्द पहले assets/audio/<id>.mp3 से बजता है।
+   फ़ाइल न मिले तो डिवाइस की हिंदी आवाज़ (Web Speech) से बोला जाता है। */
+let AC=null, MASTER=null, MUSBUS=null, SFXBUS=null, NOISE=null;
+
+function audioReady(){
+  if(VOICE.mode < 1) return null;
+  try{
+    if(!AC){
+      AC = new (window.AudioContext||window.webkitAudioContext)();
+      MASTER = AC.createGain(); MASTER.gain.value = 0.9; MASTER.connect(AC.destination);
+      MUSBUS = AC.createGain(); MUSBUS.gain.value = 0.0; MUSBUS.connect(MASTER);
+      SFXBUS = AC.createGain(); SFXBUS.gain.value = 1.0; SFXBUS.connect(MASTER);
+      /* one second of noise, made once and re-used: the attack transient of every note */
+      const n = AC.sampleRate|0;
+      NOISE = AC.createBuffer(1, n, AC.sampleRate);
+      const d = NOISE.getChannelData(0);
+      for(let i=0;i<n;i++) d[i] = Math.random()*2-1;
+    }
+    if(AC.state === "suspended") AC.resume();
+    loadFb();
+    return AC;
+  }catch(e){ return null; }
+}
+
+/* ONE NOTE. Two detuned oscillators through a filter that opens on the attack and closes as it
+   decays, with a noise transient on the front. The filter sweep is what separates a plucked
+   note from a held tone, and the transient is what makes it sound struck. */
+function note(o){
+  const ac = audioReady(); if(!ac) return;
+  const t0 = ac.currentTime + (o.at||0);
+  const dur = o.dur||0.4, f = o.f, bus = o.bus || SFXBUS;
+  const g = ac.createGain();
+  const lp = ac.createBiquadFilter(); lp.type="lowpass";
+  lp.frequency.setValueAtTime(Math.min(12000, f*(o.open||7)), t0);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(180, f*1.2), t0+dur*0.9);
+  lp.Q.value = o.q || 1;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(o.vol||0.18, t0 + (o.atk||0.008));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  lp.connect(g).connect(bus);
+  [0, o.detune||6].forEach(function(dt, k){
+    const osc = ac.createOscillator();
+    osc.type = o.type || "triangle";
+    osc.frequency.setValueAtTime(f, t0);
+    if(o.glide) osc.frequency.exponentialRampToValueAtTime(o.glide, t0+dur*0.8);
+    osc.detune.value = dt;
+    const og = ac.createGain(); og.gain.value = k ? 0.5 : 1;
+    osc.connect(og).connect(lp);
+    osc.start(t0); osc.stop(t0+dur+0.03);
+  });
+  if(o.tick){
+    const src = ac.createBufferSource(); src.buffer = NOISE; src.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value = f*3; bp.Q.value=1.2;
+    const ng = ac.createGain();
+    ng.gain.setValueAtTime((o.vol||0.18)*o.tick, t0);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t0+0.05);
+    src.connect(bp).connect(ng).connect(bus);
+    src.start(t0); src.stop(t0+0.08);
+  }
+}
+
+/* a swept band of noise - wind, shimmer, a thing breaking open */
+function whoosh(o){
+  const ac = audioReady(); if(!ac) return;
+  const t0 = ac.currentTime + (o.at||0), dur = o.dur||0.5;
+  const src = ac.createBufferSource(); src.buffer = NOISE; src.loop = true;
+  const bp = ac.createBiquadFilter(); bp.type="bandpass"; bp.Q.value = o.q||2.5;
+  bp.frequency.setValueAtTime(o.from||400, t0);
+  bp.frequency.exponentialRampToValueAtTime(o.to||3000, t0+dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(o.vol||0.12, t0+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  src.connect(bp).connect(g).connect(o.bus||SFXBUS);
+  src.start(t0); src.stop(t0+dur+0.05);
+}
+
+/* ---------- the cues ---------- */
+const A4=440, sc = n => A4*Math.pow(2,(n-9)/12);       /* semitones from C */
+/* [r73] Yasir's feedback sounds, decoded once into buffers and played through the effects bus,
+   so they duck the music like every other effect. The synthesised cues stay as the fallback. */
+const FB = { correct:null, incorrect:null, asked:false };
+function loadFb(){
+  if(FB.asked || !AC) return; FB.asked = true;
+  [["correct", "assets/Audio/sfx_fb_correct.ogg"], ["incorrect", "assets/Audio/sfx_fb_incorrect.ogg"]]
+    .forEach(([k, u]) => fetch(u).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(ab => new Promise((res, rej) => AC.decodeAudioData(ab, res, rej)))
+      .then(b => { FB[k] = b; }).catch(()=>{}));
+}
+function playFb(k, vol){
+  const ac = audioReady(); if(!ac) return false;
+  loadFb();
+  const b = FB[k]; if(!b) return false;
+  const src = ac.createBufferSource(), g = ac.createGain();
+  g.gain.value = vol; src.buffer = b; src.connect(g); g.connect(SFXBUS); src.start();
+  MUSIC.sfxDuck(b.duration);
+  return true;
+}
+const sfxRight = ()=>{ if(playFb("correct", 0.85)) return; MUSIC.sfxDuck(0.55);                                  /* up the pentatonic, and a shimmer */
+  [0,4,7,12].forEach((n,i)=> note({f:sc(n+12), at:i*0.055, dur:.42, vol:.17, tick:.5, open:9}));
+  whoosh({from:1800, to:6500, dur:.5, vol:.055, q:1.4});
+};
+const sfxWrong = ()=>{ if(playFb("incorrect", 0.85)) return; MUSIC.sfxDuck(0.45);                                  /* a soft thud that falls, not a buzzer */
+  note({f:196, glide:132, dur:.34, vol:.16, type:"sine", open:3, tick:.35});
+  note({f:98,  glide:66,  dur:.4,  vol:.12, type:"sine", open:2, at:.02});
+};
+const sfxCoin  = ()=>{ MUSIC.sfxDuck(0.22); note({f:sc(24), dur:.18, vol:.10, tick:.6, open:12});
+                       note({f:sc(31), at:.05, dur:.22, vol:.07, open:12}); };
+const sfxLevel = ()=>{ MUSIC.sfxDuck(1.00); [0,4,7,12,16].forEach((n,i)=>
+                         note({f:sc(n+12), at:i*0.1, dur:.55, vol:.16, tick:.4, open:9}));
+                       whoosh({from:900, to:7000, dur:.9, vol:.05, q:1.2}); };
+/* the gate coming apart: a bright shatter over a low body hit */
+const sfxGate  = (ok)=>{ MUSIC.sfxDuck(0.5);
+  if(ok){
+    whoosh({from:2600, to:9000, dur:.42, vol:.10, q:1.1});
+    [0,7,12,19].forEach((n,i)=> note({f:sc(n+24), at:i*0.03, dur:.3, vol:.09, open:14}));
+  }else{
+    whoosh({from:900, to:260, dur:.34, vol:.09, q:1.8});
+    note({f:110, glide:78, dur:.3, vol:.13, type:"sine", open:2});
+  }
+};
+
+/* [r71] THE CARTOON PRATFALL. Three sounds every child knows from cartoons, built from raw
+   oscillators so they cost no files:
+     bonk   - a hollow wooden knock: two partials that drop in pitch as they die, and a click
+     whistle- a slide whistle falling two and a half octaves, with a wobble on it
+     boing  - a spring: a low tone whose pitch is shaken by a fast wobble that dies away */
+function _osc(type, f, t0, dur, vol, bus){
+  const ac = AC, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.connect(bus || SFXBUS); o.connect(g);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+  return { o, g };
+}
+const sfxBonk = ()=>{
+  const ac = audioReady(); if(!ac) return; MUSIC.sfxDuck(0.35);
+  const t = ac.currentTime + 0.005;
+  [[330, 170, 0.20, 0.34], [820, 520, 0.07, 0.16]].forEach(([f0, f1, d, v])=>{
+    const n = _osc("sine", f0, t, d + 0.05, v);
+    n.o.frequency.exponentialRampToValueAtTime(f1, t + d);
+    n.g.gain.exponentialRampToValueAtTime(v, t + 0.003);
+    n.g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.04);
+  });
+  whoosh({ from:2500, to:4200, dur:.03, vol:.12, q:1.2 });          /* the click of the knock */
+};
+const sfxSlideWhistle = (at)=>{
+  const ac = audioReady(); if(!ac) return;
+  const t = ac.currentTime + (at || 0), dur = 0.85; MUSIC.sfxDuck((at || 0) + dur + 0.1);
+  const n = _osc("sine", 1650, t, dur, 0.16);
+  n.o.frequency.exponentialRampToValueAtTime(260, t + dur);
+  const lfo = ac.createOscillator(), lg = ac.createGain();         /* the player's wobbly breath */
+  lfo.frequency.value = 7; lg.gain.value = 28; lfo.connect(lg); lg.connect(n.o.detune);
+  lfo.start(t); lfo.stop(t + dur + 0.05);
+  n.g.gain.exponentialRampToValueAtTime(0.16, t + 0.03);
+  n.g.gain.setValueAtTime(0.16, t + dur - 0.12);
+  n.g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  const h = _osc("triangle", 3300, t, dur, 0.03);                   /* a breath of edge on top */
+  h.o.frequency.exponentialRampToValueAtTime(520, t + dur);
+  h.g.gain.exponentialRampToValueAtTime(0.03, t + 0.03);
+  h.g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+};
+const sfxBoing = (at)=>{
+  const ac = audioReady(); if(!ac) return;
+  const t = ac.currentTime + (at || 0), dur = 0.6; MUSIC.sfxDuck((at || 0) + dur);
+  const n = _osc("triangle", 150, t, dur, 0.3);
+  n.o.frequency.linearRampToValueAtTime(240, t + dur * 0.5);
+  const lfo = ac.createOscillator(), lg = ac.createGain();         /* the spring's shake, dying */
+  lfo.frequency.value = 17; lfo.connect(lg); lg.connect(n.o.frequency);
+  lg.gain.setValueAtTime(70, t); lg.gain.exponentialRampToValueAtTime(2, t + dur);
+  lfo.start(t); lfo.stop(t + dur + 0.05);
+  n.g.gain.exponentialRampToValueAtTime(0.3, t + 0.01);
+  n.g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+};
+
+/* ---------- the bed ---------- *
+   Four bars, C major pentatonic. Scheduled a bar ahead against the audio clock: setTimeout
+   drifts with the frame rate and a bed that stutters is worse than no bed at all. */
+/* [r70] the rendered track: see the header of this change in CHANGES_HINTS.md (r70) */
+const BGM = { url:"assets/MatraRunner/bgm_game.ogg", buf:null, loading:false, failed:false,
+              src:null, gain:null };
+function loadBgm(){
+  if(BGM.buf || BGM.loading || BGM.failed || !AC) return;
+  BGM.loading = true;
+  fetch(BGM.url).then(r => { if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then(ab => new Promise((res, rej) => AC.decodeAudioData(ab, res, rej)))
+    .then(b => { BGM.buf = b; BGM.loading = false; if(MUSIC.on) MUSIC.playFile(); })
+    .catch(() => { BGM.loading = false; BGM.failed = true; });
+}
+const MUSIC = {
+  on:false, next:0, bar:0, tmr:0, file:false,
+  BPM:96,
+  LEVEL:0.16, DUCK:0.045, SFXDUCK:0.08,   /* the synth bed's levels; the file sets its own */
+  _claims:{}, _sfxUntil:0, _sfxT:0,
+  /* [r71] ONE PLACE DECIDES THE LEVEL. Each voice source claims the duck under its own name, so
+     one finishing cannot lift the music while another is still speaking; effects claim it for
+     their length. */
+  target(){
+    if(!AC) return this.LEVEL;
+    for(const k in this._claims) if(this._claims[k]) return this.DUCK;
+    return AC.currentTime < this._sfxUntil ? this.SFXDUCK : this.LEVEL;
+  },
+  apply(tc){
+    if(!AC || !MUSBUS || !this.on) return;
+    const v = this.target(), now = AC.currentTime;
+    MUSBUS.gain.cancelScheduledValues(now);
+    MUSBUS.gain.setTargetAtTime(v, now, tc || (v < this.LEVEL ? 0.08 : 0.45));
+  },
+  setDuck(src, on){ this._claims[src] = !!on; this.apply(); },
+  sfxDuck(sec){
+    if(!AC) return;
+    this._sfxUntil = Math.max(this._sfxUntil, AC.currentTime + sec);
+    this.apply(0.04);
+    clearTimeout(this._sfxT);
+    this._sfxT = setTimeout(()=> this.apply(), sec * 1000 + 30);
+  },
+  pad: [[0,7,16],[ -3,4,12],[ -5,2,9],[ -1,4,11]],       /* one chord a bar */
+  fig: [0,7,12,7,4,12,16,12],                             /* eighths over it */
+  start(){
+    const ac = audioReady(); if(!ac || this.on) return;
+    this.on = true; this.bar = 0; this.next = ac.currentTime + 0.12;
+    MUSBUS.gain.cancelScheduledValues(ac.currentTime);
+    MUSBUS.gain.setValueAtTime(0.0001, ac.currentTime);
+    if(BGM.buf){ this.playFile(); return; }
+    MUSBUS.gain.exponentialRampToValueAtTime(Math.max(0.001, this.target()), ac.currentTime + 2.2);
+    loadBgm();                                    /* the bed covers the wait */
+    this.tick();
+    this.tmr = setInterval(()=>this.tick(), 220);
+  },
+  /* the track, looped on the audio clock through its own gain into the music bus */
+  playFile(){
+    const ac = AC; if(!ac || !BGM.buf || this.file) return;
+    /* Yasir: "60% isn't enough make it 80%"; still a quarter under speech, half under an effect */
+    this.file = true; this.LEVEL = 0.80; this.DUCK = 0.20; this.SFXDUCK = 0.40;
+    clearInterval(this.tmr); this.tmr = 0;         /* the bed schedules no new bars */
+    const t = ac.currentTime;
+    BGM.gain = ac.createGain(); BGM.gain.gain.setValueAtTime(0.0001, t);
+    BGM.gain.gain.exponentialRampToValueAtTime(1.0, t + 1.2);
+    BGM.gain.connect(MUSBUS);
+    const src = ac.createBufferSource(); src.buffer = BGM.buf; src.loop = true;
+    src.connect(BGM.gain); src.start(t + 0.02); BGM.src = src;
+    this.apply(0.4);                               /* whatever is speaking right now still wins */
+  },
+  stop(){
+    this.on = false; clearInterval(this.tmr); this.tmr = 0;
+    if(AC && MUSBUS){
+      MUSBUS.gain.cancelScheduledValues(AC.currentTime);
+      MUSBUS.gain.setTargetAtTime(0.0001, AC.currentTime, 0.25);
+    }
+    /* the track stops after the fade, and a fresh one starts next time */
+    if(BGM.src){ const s0 = BGM.src, g0 = BGM.gain; BGM.src = null; BGM.gain = null;
+      try{ s0.stop((AC ? AC.currentTime : 0) + 1.2); }catch(e){}
+      setTimeout(()=>{ try{ g0.disconnect(); }catch(e){} }, 1500); }
+    this.file = false;
+  },
+  /* down while a word is being spoken, back up after - the lesson's voice comes first */
+  duck(on){ this.setDuck("voice", on); },       /* the game's own voice - see setDuck */
+  tick(){
+    const ac = AC; if(!ac || !this.on) return;
+    const beat = 60/this.BPM, barLen = beat*4;
+    while(this.next < ac.currentTime + 1.2){
+      const t = this.next - ac.currentTime, ch = this.pad[this.bar % this.pad.length];
+      ch.forEach(n => note({ f:sc(n), at:t, dur:barLen*1.05, vol:.035, type:"sine",
+                             open:3, detune:9, bus:MUSBUS }));
+      for(let i=0;i<8;i++){
+        const n = this.fig[(this.bar*3 + i) % this.fig.length];
+        note({ f:sc(n+12), at:t + i*beat/2, dur:.5, vol:(i%2?0.028:0.045),
+               tick:.4, open:8, bus:MUSBUS });
+      }
+      for(let i=0;i<4;i++)
+        whoosh({ at:t + i*beat + beat*0.5, from:5200, to:7200, dur:.07,
+                 vol:.014, q:3, bus:MUSBUS });
+      this.next += barLen; this.bar++;
+    }
+  }
+};
+window.MR_audioStop = function(){ try{ MUSIC.stop(); if(AC) AC.suspend(); }catch(e){} };
+/* [r71] the lesson around the game speaks too - its opening instruction plays while the music is
+   already running. It is ducked from the game loop, off the engine's own "a clip is playing"
+   flag (body.vo-lock), NOT off a timer: measured, the instruction can start seconds after the
+   game mounts, and a timer had already let the music back up by then. */
+let _lessonVO = false;
+function watchLessonVO(){
+  const on = !!(document.body && document.body.classList.contains("vo-lock"));
+  if(on !== _lessonVO){ _lessonVO = on; MUSIC.setDuck("lesson", on); }
+}
+
+const VOICE = {
+  mode: 2,
+  dir: "assets/MatraRunner/audio/",
+  noFile: {},          // जिन id की mp3 नहीं मिली
+  queue: [], busy:false, hindi:null,
+
+  init(){
+    try{ const m = localStorage.getItem("matraRunnerVoice"); if(m!==null) this.mode = parseInt(m,10); }catch(e){}
+    this.pickVoice();
+    if(window.speechSynthesis) speechSynthesis.onvoiceschanged = ()=>this.pickVoice();
+  },
+  pickVoice(){
+    if(!window.speechSynthesis) return;
+    const v = speechSynthesis.getVoices();
+    this.hindi = v.find(x=>x.lang==="hi-IN") || v.find(x=>/^hi/.test(x.lang)) || null;
+  },
+  say(id, text){                       // कतार में जोड़ो
+    if(this.mode < 2) return;
+    this.queue.push({id, text:text||LINES[id]||id});
+    this.pump();
+  },
+  clear(){
+    this.queue.length = 0; this.busy = false; MUSIC.duck(false);
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    if(this.el){ try{ this.el.pause(); }catch(e){} }
+  },
+  pump(){
+    if(this.busy || !this.queue.length || this.mode < 2) return;
+    const it = this.queue.shift(); this.busy = true;
+    MUSIC.duck(true);                       /* the spoken word comes first; the bed steps back */
+    const next = ()=>{
+      this.busy=false;
+      if(!this.queue.length) MUSIC.duck(false);
+      setTimeout(()=>this.pump(), 180);
+    };
+    if(this.noFile[it.id]) return this.tts(it.text, next);
+    const a = new Audio(this.dir + it.id + ".mp3");
+    this.el = a;
+    let done=false;
+    const fail = ()=>{ if(done) return; done=true; this.noFile[it.id]=true; this.tts(it.text, next); };
+    a.onended = ()=>{ if(!done){ done=true; next(); } };
+    a.onerror = fail;
+    const pr = a.play();
+    if(pr && pr.catch) pr.catch(fail);
+    setTimeout(()=>{ if(!done && a.paused) fail(); }, 700);
+  },
+  tts(text, cb){
+    if(!window.speechSynthesis){ cb(); return; }
+    try{
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "hi-IN"; u.rate = 0.85; u.pitch = 1.05;
+      if(this.hindi) u.voice = this.hindi;
+      u.onend = cb; u.onerror = cb;
+      speechSynthesis.speak(u);
+      setTimeout(()=>{ if(!speechSynthesis.speaking) cb(); }, 4000);
+    }catch(e){ cb(); }
+  },
+  cycle(){
+    this.mode = (this.mode + 2) % 3;   // 2 -> 1 -> 0 -> 2
+    if(this.mode < 2) this.clear();
+    try{ localStorage.setItem("matraRunnerVoice", String(this.mode)); }catch(e){}
+    return this.mode;
+  },
+  icon(){ return ["\uD83D\uDD07","\uD83D\uDD08","\uD83D\uDDE3\uFE0F"][this.mode]; }
+};
+VOICE.init();
+
+function pick(arr, avoid){
+  const free = arr.filter(w=>avoid.indexOf(w[1])<0);
+  const src = free.length ? free : arr;
+  return src[Math.floor(Math.random()*src.length)];
+}
+function makeGateWords(target){
+  const r = pick(target===U ? ONLY_U : ONLY_UU, G.usedWords);
+  const w = pick(target===U ? ONLY_UU : ONLY_U, G.usedWords);
+  G.usedWords.push(r[1], w[1]); while(G.usedWords.length>14) G.usedWords.shift();
+  const set = [{t:r[0], id:r[1], ok:true},{t:w[0], id:w[1], ok:false}];
+  if(Math.random()<0.5) set.reverse();
+  return set;
+}
+
+/* ======================= decor / backdrop ======================= */
+let backdrop = null;
+function buildBackdrop(){
+  backdrop = document.createElement("canvas");
+  backdrop.width = Math.round(W*DPR); backdrop.height = Math.round(horizonY()*DPR+2*DPR);
+  const b = backdrop.getContext("2d");
+  b.setTransform(DPR,0,0,DPR,0,0);
+  const hy = horizonY();
+  const sky = b.createLinearGradient(0,0,0,hy);
+  sky.addColorStop(0,"#1b1740"); sky.addColorStop(.42,"#5a2f74");
+  sky.addColorStop(.72,"#c9552f"); sky.addColorStop(1,"#ffb45c");
+  b.fillStyle=sky; b.fillRect(0,0,W,hy+2);
+  // sun
+  const sx=W*0.5, sy=hy*0.93, sr=Math.min(W,H)*0.11;
+  const gl=b.createRadialGradient(sx,sy,sr*0.2,sx,sy,sr*3);
+  gl.addColorStop(0,"rgba(255,220,140,.95)"); gl.addColorStop(.35,"rgba(255,160,70,.45)");
+  gl.addColorStop(1,"rgba(255,120,40,0)");
+  b.fillStyle=gl; b.fillRect(0,0,W,hy+2);
+  b.fillStyle="#ffe6a8"; b.beginPath(); b.arc(sx,sy,sr,0,7); b.fill();
+  // stars
+  b.fillStyle="rgba(255,255,255,.7)";
+  for(let i=0;i<40;i++){ const x=(i*97.3)%W, y=(i*53.7)%(hy*0.4);
+    b.globalAlpha=0.25+((i*17)%10)/22; b.beginPath(); b.arc(x,y,1.1,0,7); b.fill(); }
+  b.globalAlpha=1;
+  // temple silhouette
+  function temple(cx,w,h,col){
+    b.fillStyle=col; b.beginPath();
+    b.moveTo(cx-w/2, hy); b.lineTo(cx-w*0.34, hy-h*0.62);
+    b.lineTo(cx-w*0.17, hy-h*0.62); b.lineTo(cx, hy-h);
+    b.lineTo(cx+w*0.17, hy-h*0.62); b.lineTo(cx+w*0.34, hy-h*0.62);
+    b.lineTo(cx+w/2, hy); b.closePath(); b.fill();
+    b.fillRect(cx-w*0.09, hy-h*0.30, w*0.18, h*0.30);
+  }
+  temple(W*0.5, W*0.36, hy*0.55, "#2a1b46");
+  temple(W*0.16, W*0.22, hy*0.34, "#20143a");
+  temple(W*0.86, W*0.24, hy*0.38, "#20143a");
+  // jungle canopy
+  b.fillStyle="#150f2e"; b.beginPath(); b.moveTo(0,hy+2);
+  for(let x=0;x<=W;x+=W/26){
+    const h = hy*0.10 + Math.abs(Math.sin(x*0.021))*hy*0.13;
+    b.lineTo(x, hy-h);
+  }
+  b.lineTo(W,hy+2); b.closePath(); b.fill();
+}
+/* [r40] THE ROADSIDE RAILING.
+   The reference's path is bounded by a low stone railing on both sides, and that one element is
+   what makes the road read as a road rather than as a lighter stripe on the grass. It is not
+   decor: decor is scattered at random depths and offsets, while a railing has to be a REGULAR
+   run at a FIXED offset, or it reads as a line of loose stones. So it gets its own list, evenly
+   spaced in z and recycled the same way, drawn at the edge of the path trapezoid. */
+/* 0.06, not 0.135: at the wider spacing the segments stood apart with grass showing between
+   them and read as scattered stone benches. Closer together they overlap in screen space near
+   the camera, which is what makes a railing look continuous. */
+const RAIL_STEP = 0.04;
+function seedRails(){
+  G.rails = [];
+  /* k is the segment's own number and never changes, so "a hedge every third post" keeps
+     selecting the same evenly-spaced subset however the array is later reordered */
+  let k = 0;
+  /* [r68] out to 2.05, not 1.25: the old railing faded out behind the treeline's skirt, but
+     the bridge's posts must keep coming out of the distance or the far half of the bridge is a
+     bare wall. The old railing still stops at HEDGE_FAR, so this changes nothing without it. */
+  for(let z = -0.05; z < 2.05; z += RAIL_STEP) G.rails.push({ z: z, k: k++ });
+}
+/* The hedge rides the railing's own z list, so the two can never drift apart, and is drawn
+   first - the kerb stands in front of the planting, not behind it. Copies overlap by a tenth
+   of their width, because the generated section has a faint edge at each end and butting them
+   exactly leaves a visible stitch every segment. */
+/* one segment every third post, and nothing behind the treeline's skirt */
+const HEDGE_EVERY = 3, HEDGE_FAR = 1.05;
+function drawHedge(r, i){
+  const art = window.MR_hedgeArt && MR_hedgeArt();
+  if(!art || r.z <= 0.002 || r.z > HEDGE_FAR || (i % HEDGE_EVERY)) return;
+  const {p, y} = proj(r.z);
+  const h = 96*S*p, w = h*((art.width/art.height) || 2.4) * 1.65;
+  const edge = LANE_W()*p*1.08 + w*0.24;
+  for(const sgn of [-1, 1]){
+    const x = worldX(0, p) + sgn*edge;
+    if(x < -w || x > W+w) continue;
+    ctx.drawImage(art, x-w/2, y-h, w, h);
+  }
+}
+function drawRail(r){
+  const art = window.MR_railArt && MR_railArt();
+  if(!art || r.z <= 0.002 || r.z > HEDGE_FAR) return;   /* past the skirt it is not visible */
+  const {p, y} = proj(r.z);
+  const h = 52*S*p, w = h*((art.width/art.height) || 2.1);
+  /* the same 1.08 half-width the path trapezoid is drawn with, pushed out by half a post so
+     the railing sits BESIDE the paving and not on top of it */
+  const edge = LANE_W()*p*1.08 + w*0.16;   /* just off the paving, not out in the undergrowth */
+  for(const sgn of [-1, 1]){
+    const x = worldX(0, p) + sgn*edge;
+    if(x < -w || x > W+w) continue;
+    ctx.save();
+    if(sgn > 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
+    ctx.drawImage(art, x-w/2, y-h, w, h);
+    ctx.restore();
+  }
+}
+/* Trees carry the skyline at the edge of frame, so they get the majority; pillars punctuate
+   it and bushes fill between. One place, so seeding and recycling cannot disagree - they did
+   before, and a recycled verge slowly drifted to a different mix from the one it started with. */
+function decorKind(){
+  /* weighted harder to trees: they are the only thing tall enough to actually cover the
+     ground behind them, which is what "so that the grass is not visible" asks for */
+  const r = Math.random();
+  return r < 0.72 ? "tree" : r < 0.88 ? "bush" : "pillar";
+}
+function seedDecor(){
+  G.decor = [];
+  for(let i=0;i<54;i++){
+    G.decor.push({ z: Math.random(), side: Math.random()<0.5?-1:1,
+      kind: decorKind(),
+      off: 1.30 + Math.random()*2.10, hh: 0.85+Math.random()*0.5, hue: Math.random() });
+  }
+  G.decor.sort((a,b)=>b.z-a.z);
+}
+
+/* ======================= level control ======================= */
+function startLevel(i){
+  const L = LEVELS[i];
+  G.level=i; G.speed=L.speed; G.target = L.target || U;
+  G.gates=[]; G.coins=[]; G.parts=[]; G.pops=[];
+  G.cleared=0; G.right=0; G.wrong=0; G.missedWords=[]; G.usedWords=[]; G.pips=[];
+  G.lane=0; G.laneF=0; G.targetLane=0; G.shake=0; G.flash=0;
+  G.banner={text:"स्तर "+(i+1), sub:L.name, life:2.9};
+  /* Held while the level's card is read, then eased up to speed. It counts ITSELF down: the
+     first version was lowered only by the lesson's voice-over callback, which fires once, so
+     every level after the first stayed at a fifth speed for ever. Nothing outside this can
+     leave it raised now - MR_begin() can only cut it short. */
+  G.hold = true; G.ramp = 0; G.holdT = (i === 0 ? 7.0 : 2.4);
+  VOICE.clear(); VOICE.say(G.target===U ? "goal_u" : "goal_uu");
+  seedDecor(); seedRails();
+  /* further out than they were: the first choice must not arrive while the instruction is
+     still being spoken, or the child is answering a question they have not heard yet */
+  spawnGate(1.75); spawnGate(2.30);
+  document.getElementById("lvlNum").textContent = i+1;
+  setGoal();
+  hud();
+  hideScreens(); G.mode="play";
+  MUSIC.start();
+}
+function setGoal(){
+  const chip = document.getElementById("matraChip");
+  const isU = G.target===U;
+  chip.className = "matra " + (isU?"u":"uu");
+  chip.innerHTML = "<em>"+(isU?"उ":"ऊ")+"</em><span>"+(isU?U:UU)+"</span>";
+}
+
+function spawnGate(z){
+  const L = LEVELS[G.level];
+  /* the colour pair is shuffled every time, so green never means "this one" */
+  const hue = Math.random() < 0.5 ? [0, 1] : [1, 0];
+  if(L.target===null){ G.target = Math.random()<0.5?U:UU; setGoal(); }
+  G.gates.push({ z: z, words: makeGateWords(G.target), target:G.target, done:false, reveal:0,
+                 okLane:-1, hue: hue });
+  const g = G.gates[G.gates.length-1];
+  g.okLane = g.words.findIndex(w=>w.ok);
+  // coins in the gap ahead of this gate
+  const n = 2 + Math.floor(Math.random()*2);
+  for(let i=0;i<n;i++){
+    G.coins.push({ z: z + 0.16 + i*0.09, lane: Math.floor(Math.random()*LANES), got:false, spin: Math.random()*6 });
+  }
+}
+
+/* ======================= input ======================= */
+function move(dir){
+  if(G.mode!=="play") return;
+  const n = Math.max(0, Math.min(LANES-1, G.targetLane + dir));
+  if(n!==G.targetLane){ G.targetLane=n; whoosh({from:700,to:2200,dur:.13,vol:.05,q:2}); }
+}
+MR_ON(window, "keydown", e=>{
+  if(e.key==="ArrowLeft"||e.key==="a"||e.key==="A"){ move(-1); e.preventDefault(); }
+  else if(e.key==="ArrowRight"||e.key==="d"||e.key==="D"){ move(1); e.preventDefault(); }
+  else if(e.key===" "||e.key==="Enter"){
+    const vis = document.querySelector(".screen.on .btn");
+    if(vis){ vis.click(); e.preventDefault(); }
+  }
+});
+document.querySelectorAll(".pad,.arrow").forEach(el=>{
+  const dir = parseInt(el.dataset.dir,10);
+  const fire = e=>{ e.preventDefault(); move(dir); };
+  el.addEventListener("pointerdown", fire);
+});
+// swipe
+let sx0=null;
+cvs.addEventListener("pointerdown", e=>{ sx0=e.clientX; });
+cvs.addEventListener("pointerup", e=>{
+  if(sx0===null) return;
+  const dx = e.clientX - sx0; sx0=null;
+  if(Math.abs(dx)>40) move(dx>0?1:-1);
+});
+
+/* ======================= gameplay update ======================= */
+function resolveGate(g){
+  g.done = true; g.reveal = 1;
+  /* PINNED. Left to carry on it would keep approaching, and the projection turns the last
+     tenth of z into several screens' worth of arch sliding at the camera. Stopped here, the
+     reaction plays at the place she actually passed through. */
+  g.pin = true; g.fx = 0; g.chosenLane = G.lane;
+  G.cleared++;
+  const chosen = g.words[G.lane];
+  G.pips.push(!!(chosen && chosen.ok));
+  if(chosen && chosen.ok){
+    G.right++; G.score += 100 + G.right*10;
+    G.flashCol="rgba(120,255,190,.22)"; G.flash=0.35;
+    sparkle(laneX(G.lane,1), groundY()-235*S, 44);
+    G.pops.push({text:"शाबाश!", sub:chosen.t, col:"#8ff0c6", life:1.25});
+    sfxGate(true); sfxRight(); VOICE.clear(); VOICE.say("right");
+  }else{
+    G.wrong++; G.hearts--;
+    const rightWord = g.words[g.okLane].t;
+    G.missedWords.push(rightWord);
+    G.shake = 0.30; G.flashCol="rgba(150,130,110,.18)"; G.flash=0.3;
+    dust(laneX(G.lane,1), groundY()-95*S, 26);
+    G.pops.push({text:"सही शब्द: "+rightWord, sub:(g.target===U?"छोटी उ ( ु )":"बड़ी ऊ ( ू )"), col:"#ffb0a0", life:1.7});
+    sfxGate(false); sfxWrong(); sfxBonk(); VOICE.clear(); VOICE.say("wrong");
+    VOICE.say("correct_is"); VOICE.say(g.words[g.okLane].id, rightWord);
+    if(G.hearts<=0){ gameOver(); return; }
+  }
+  hud();
+  const L = LEVELS[G.level];
+  if(G.cleared >= L.gates){ setTimeout(levelDone, 1100); }
+  else spawnGate(Math.max(1.0, (G.gates.length?Math.max.apply(null,G.gates.map(x=>x.z)):0) + 0.52));
+}
+
+/* gold, rising, slow to fade - the reward for getting through */
+function sparkle(x,y,n){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp=(40+Math.random()*190)*S;
+    G.parts.push({x:x+(Math.random()-0.5)*90*S, y:y+(Math.random()-0.5)*70*S,
+      vx:Math.cos(a)*sp*0.7, vy:Math.sin(a)*sp*0.5 - (70+Math.random()*90)*S,
+      life:.7+Math.random()*.6, grav:-40*S, twinkle:true,
+      col: Math.random()<0.5 ? "#ffe07a" : "#fff6d0", r:(2+Math.random()*4.5)*S});
+  }
+}
+/* grey, heavy, gone quickly - a scuff, not a punishment */
+function dust(x,y,n){
+  for(let i=0;i<n;i++){
+    const a = -Math.PI*0.5 + (Math.random()-0.5)*2.2, sp=(40+Math.random()*130)*S;
+    G.parts.push({x:x+(Math.random()-0.5)*70*S, y,
+      vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.6, life:.35+Math.random()*.3, grav:260*S,
+      col: Math.random()<0.5 ? "rgba(178,166,150,.75)" : "rgba(146,134,118,.65)",
+      r:(4+Math.random()*7)*S});
+  }
+}
+function burst(x,y,col,n){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s=(60+Math.random()*220)*S;
+    G.parts.push({x,y, vx:Math.cos(a)*s, vy:Math.sin(a)*s-120*S, life:.5+Math.random()*.5,
+      col, r:(2+Math.random()*4)*S});
+  }
+}
+
+function update(dt){
+  if(G.frozen) return;
+  G.t += dt;
+  if(G.mode!=="play"){ G.dashT += dt*0.3; return; }
+  G.dashT += dt*G.speed;
+
+  // lane easing
+  /* exponential, so a slow frame moves her the same distance a fast one does - the old
+     linear factor made the glide speed depend on how long the last frame happened to take */
+  G.laneF += (G.targetLane - G.laneF) * (1 - Math.exp(-dt*9));
+  if(Math.abs(G.laneF-G.targetLane)<0.06) G.lane = G.targetLane;
+  else G.lane = Math.round(G.laneF);
+
+  /* [r50] THE INTRO. Held, the world drifts at a fifth of speed - she is still running and
+     the road is still moving, because a frozen frame under a voice-over reads as a game that
+     failed to load. Released, the speed eases in over about a second instead of snapping on. */
+  if(G.hold && (G.holdT -= dt) <= 0) G.hold = false;
+  if(!G.hold) G.ramp = Math.min(1, G.ramp + dt*0.95);
+  const v = G.speed * (G.hold ? 0.20 : 0.20 + 0.80*G.ramp) * dt;
+  // gates
+  for(const g of G.gates){
+    if(g.pin) g.fx += dt; else g.z -= v;
+    if(!g.spoken && g.z<=0.78){                 // द्वार पढ़ने लायक दूरी पर शब्द बोलो
+      g.spoken = true;
+      VOICE.say(g.words[0].id, g.words[0].t);
+      VOICE.say(g.words[1].id, g.words[1].t);
+    }
+    if(!g.done && g.z<=0.035) resolveGate(g);
+  }
+  G.gates = G.gates.filter(g => g.pin ? g.fx < 0.36 : g.z > -0.18);
+  // coins
+  for(const c of G.coins){
+    c.z -= v; c.spin += dt*5;
+    if(!c.got && c.z<=0.02 && c.lane===G.lane){
+      c.got=true; G.score+=25; sfxCoin(); hud();
+      burst(laneX(c.lane,1), groundY()-90*S, "#ffcb45", 8);
+    }
+  }
+  G.coins = G.coins.filter(c=>c.z>-0.1 && !c.got);
+  /* the ground texture travels with everything else, in z. Kept bounded because it is
+     multiplied up into texture pixels every frame and a session should not drift into the
+     range where a float stops being able to tell two rows apart. */
+  G.ground = (G.ground + v) % 4096;
+  // railing recycle - evenly spaced, so a segment is put back exactly one run behind the last
+  for(const r of G.rails){ r.z -= v; if(r.z < -0.05) r.z += RAIL_STEP*G.rails.length; }
+  /* SORTED BY DEPTH, every frame. A segment that wraps to the back keeps its slot in the
+     array, so array order stops meaning depth order within a second of starting - and the
+     painter's algorithm then draws far posts over near ones, popping on every wrap. */
+  G.rails.sort((a,b)=>b.z-a.z);
+  // decor recycle
+  for(const d of G.decor){
+    d.z -= v;
+    if(d.z<-0.06){ d.z += 1.06 + Math.random()*0.2; d.side = Math.random()<0.5?-1:1;
+      d.kind = decorKind();
+      d.off = 1.30+Math.random()*2.10; d.hh=0.85+Math.random()*0.5; }
+  }
+  G.decor.sort((a,b)=>b.z-a.z);
+  // fx
+  for(const p of G.parts){ p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
+    p.vy += (p.grav === undefined ? 900*S : p.grav)*dt; }
+  G.parts = G.parts.filter(p=>p.life>0);
+  for(const p of G.pops) p.life -= dt;
+  G.pops = G.pops.filter(p=>p.life>0);
+  if(G.banner){ G.banner.life-=dt; if(G.banner.life<=0) G.banner=null; }
+  G.shake = Math.max(0, G.shake-dt*1.3);
+  G.flash = Math.max(0, G.flash-dt*1.6);
+
+
+}
+
+/* ======================= drawing ======================= */
+function drawGround(){
+  /* [r38] tiled art floor when tex_grass/tex_path are present */
+  if(window.MR_drawGroundArt && MR_drawGroundArt()) return;
+  const hy=horizonY(), gy=groundY();
+  // ground base
+  const gr = ctx.createLinearGradient(0,hy,0,H);
+  gr.addColorStop(0,"#1d3d2e"); gr.addColorStop(.5,"#16482f"); gr.addColorStop(1,"#0f2f21");
+  ctx.fillStyle=gr; ctx.fillRect(0,hy,W,H-hy);
+
+  // path trapezoid
+  const pFar = proj(26), pNear = proj(0);
+  const wFar = LANE_W()*pFar.p*roadHalf(), wNear = LANE_W()*pNear.p*roadHalf();
+  ctx.beginPath();
+  const cFar = worldX(0, pFar.p), cNear = worldX(0, pNear.p);
+  ctx.moveTo(cFar-wFar, pFar.y); ctx.lineTo(cFar+wFar, pFar.y);
+  ctx.lineTo(cNear+wNear, H); ctx.lineTo(cNear-wNear, H); ctx.closePath();
+  const pg = ctx.createLinearGradient(0,hy,0,H);
+  pg.addColorStop(0,"#8a5f34"); pg.addColorStop(1,"#c98f52");
+  ctx.fillStyle=pg; ctx.fill();
+
+  // moving bands
+  ctx.save(); ctx.clip();
+  const sp=0.075, frac=(G.dashT/sp)%1;
+  for(let k=0;k<26;k++){
+    const z0=(k-frac)*sp, z1=z0+sp*0.5;
+    if(z1<0) continue;
+    const a=proj(Math.max(0,z0)), b2=proj(Math.max(0,z1));
+    const wa=LANE_W()*a.p*1.08, wb=LANE_W()*b2.p*1.08;
+    ctx.fillStyle = k%2 ? "rgba(255,255,255,.055)" : "rgba(60,30,10,.075)";
+    const ca = worldX(0, a.p), cb = worldX(0, b2.p);
+    ctx.beginPath(); ctx.moveTo(cb-wb,b2.y); ctx.lineTo(cb+wb,b2.y);
+    ctx.lineTo(ca+wa,a.y); ctx.lineTo(ca-wa,a.y); ctx.closePath(); ctx.fill();
+  }
+  // lane grooves
+  ctx.beginPath();
+  ctx.moveTo(cFar, pFar.y); ctx.lineTo(cNear, H);
+  ctx.strokeStyle="rgba(90,55,20,.4)"; ctx.lineWidth=2*S; ctx.stroke();
+  ctx.restore();
+
+  // path glow edges - only while there is no railing to mark the edge for real
+  if(!(window.MR_railArt && MR_railArt())){
+    ctx.strokeStyle="rgba(255,203,69,.22)"; ctx.lineWidth=3*S;
+    ctx.beginPath(); ctx.moveTo(cFar-wFar,pFar.y); ctx.lineTo(cNear-wNear,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cFar+wFar,pFar.y); ctx.lineTo(cNear+wNear,H); ctx.stroke();
+  }
+}
+
+function drawDecor(d){
+  if(d.z<=0.001) return;
+  const {p,y} = proj(d.z);
+  const x = worldX(d.side*d.off, p);
+  const h = 150*S*p*d.hh, w = 46*S*p*d.hh;
+  ctx.save();
+  /* [r38] painted tree/bush/pillar when one is present; the drawn shapes remain */
+  const _da = window.MR_decorArt && MR_decorArt(d.kind, (d.off*977)|0);
+  if(_da){
+    /* [r39] Each kind gets its own scale. h is the height of the SHAPE this function draws
+       when there is no art, and the drawn bush is a flat ellipse about a third of it while
+       the drawn tree fills it - so one blanket multiplier (it was 1.5) made every bush as
+       tall as a tree and every tree half again too big for the path it stands beside. */
+    /* [r50] Roughly twice what it was. The old sizes were set against a drawn silhouette
+       and left the verge reading as open ground with ornaments on it; the mockup has trees
+       taller than the gates crowding both edges of the frame. */
+    /* Trees and pillars raised on request. K multiplies the height of the silhouette this
+       function would draw without art, and the width follows from each picture's own ratio -
+       so these grow taller and proportionally wider, they do not stretch. */
+    const K = d.kind==="bush" ? 1.05 : d.kind==="pillar" ? 3.10 : 3.45;
+    let dh = h*K, dw = dh*(_da.width/_da.height||0.7);
+    /* the clamp has to rise with them: it shrinks BOTH dimensions to fit, so leaving it where
+       it was would have quietly cancelled most of the extra height on the widest trees */
+    const wmax = LANE_W()*p*2.85;
+    if(dw > wmax){ dh *= wmax/dw; dw = wmax; }
+    /* [r51] CULLED ON ITS DRAWN WIDTH, which it never was: the old test dropped anything whose
+       CENTRE lay more than 120px outside the canvas, and now that a near tree can be two thirds
+       of the screen across, that threw away trees the child could still half see - they popped
+       out of existence at the edge of frame. It also kept drawing ones entirely off it. */
+    if(x + dw/2 < 0 || x - dw/2 > W){ ctx.restore(); return; }
+    ctx.drawImage(_da, x-dw/2, y-dh, dw, dh);
+    ctx.restore(); return;
+  }
+  if(d.kind==="pillar"){
+    ctx.fillStyle="#6b5b7d"; ctx.fillRect(x-w*0.32,y-h,w*0.64,h);
+    ctx.fillStyle="#544567"; ctx.fillRect(x-w*0.46,y-h-h*0.07,w*0.92,h*0.09);
+    ctx.fillStyle="rgba(120,255,200,.45)";
+    ctx.beginPath(); ctx.arc(x, y-h*0.55, 3.2*S*p, 0, 7); ctx.fill();
+  }else if(d.kind==="tree"){
+    ctx.fillStyle="#3b2a22"; ctx.fillRect(x-w*0.11,y-h*0.9,w*0.22,h*0.9);
+    ctx.fillStyle= d.hue>0.5 ? "#1f6b46":"#175439";
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.ellipse(x, y-h*(0.72+i*0.14), w*(0.85-i*0.16), h*0.19, 0,0,7); ctx.fill();
+    }
+  }else{
+    ctx.fillStyle="#17563a";
+    ctx.beginPath(); ctx.ellipse(x,y-h*0.13,w*0.72,h*0.16,0,0,7); ctx.fill();
+    ctx.fillStyle="rgba(120,255,210,"+(0.35+0.3*Math.sin(G.t*2+d.off*4))+")";
+    ctx.beginPath(); ctx.arc(x-w*0.2,y-h*0.2,2.6*S*p,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*0.25,y-h*0.26,2.2*S*p,0,7); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCoin(c){
+  if(c.z<=0.005) return;
+  const {p,y} = proj(c.z);
+  const x = laneX(c.lane,p);
+  const r = 15*S*p, bob = Math.sin(G.t*4+c.spin)*5*S*p;
+  const cy = y - 58*S*p + bob;
+  ctx.save();
+  ctx.shadowColor="rgba(255,203,69,.8)"; ctx.shadowBlur=16*p;
+  const _cf = window.MR_coinFrame && MR_coinFrame();
+  if(_cf){
+    const s2=r*2;
+    ctx.drawImage(_cf.img, _cf.r[0],_cf.r[1],_cf.r[2],_cf.r[3], x-s2/2, cy-r, s2, r*2);
+  } else if(IMG.coin){
+    const s2 = r*2*Math.max(0.3, Math.abs(Math.cos(c.spin)));
+    ctx.drawImage(IMG.coin, x-s2/2, cy-r, s2, r*2);
+    ctx.restore(); return;
+  }
+  const wobble = Math.abs(Math.cos(c.spin));
+  ctx.fillStyle="#ffcb45";
+  ctx.beginPath(); ctx.ellipse(x,cy, r*Math.max(0.22,wobble), r, 0,0,7); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle="rgba(255,255,255,.55)";
+  ctx.beginPath(); ctx.ellipse(x-r*0.25*wobble, cy-r*0.3, r*0.18*wobble, r*0.3,0,0,7); ctx.fill();
+  ctx.restore();
+}
+
+var MR_gateWordOnly = false, MR_wordFade = 1;
+
+/* [r59] THE PORTAL'S LIGHT, drawn rather than painted.
+   `hue` is 0 for the green portal and 1 for the golden one; `t` is 0..1 through the burst when
+   one has been entered. The swirl counter-rotates against the outer glow so the disc reads as
+   moving without anything actually travelling - a rotating sprite would need a sheet. */
+const PORTAL_HUE = [[120,255,190], [255,214,96]];
+
+/* The golden portal is the SAME ring washed warm. source-atop is bounded by whatever is
+   already on the canvas, so doing it on an offscreen that holds only the ring keeps the wash
+   inside the leaves instead of painting a square over the scene. Built once, not per frame. */
+var _goldRing = null;
+function goldRing(img){
+  if(_goldRing) return _goldRing;
+  var c = document.createElement("canvas");
+  c.width = img.width; c.height = img.height;
+  var g = c.getContext("2d");
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = "source-atop";
+  g.fillStyle = "rgba(255,196,64,0.46)";
+  g.fillRect(0, 0, c.width, c.height);
+  _goldRing = c;
+  return c;
+}
+function portalGlow(cx, cy, r, hue, lit, t){
+  const c = PORTAL_HUE[hue] || PORTAL_HUE[0];
+  const col = (a) => "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")";
+  const pulse = 1 + 0.035*Math.sin(G.t*2.2 + hue*2);
+  const rr = r * pulse * (1 + 0.55*t);
+  const fade = 1 - t*t;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  /* the body of the light */
+  const g1 = ctx.createRadialGradient(cx, cy, rr*0.05, cx, cy, rr);
+  g1.addColorStop(0,    col(0.95*fade));
+  g1.addColorStop(0.55, col(0.55*fade));
+  g1.addColorStop(0.85, col(0.22*fade));
+  g1.addColorStop(1,    col(0));
+  ctx.fillStyle = g1;
+  ctx.beginPath(); ctx.ellipse(cx, cy, rr, rr*1.02, 0, 0, 7); ctx.fill();
+  /* two slow arcs, turning opposite ways */
+  ctx.lineCap = "round";
+  for(let k=0;k<2;k++){
+    const dir = k ? -1 : 1, a0 = G.t*dir*(0.5+0.22*k) + hue*1.7 + k*2.1;
+    ctx.strokeStyle = col((0.30 - 0.08*k) * fade);
+    ctx.lineWidth = rr*(0.12 - 0.04*k);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rr*(0.62 - 0.17*k), rr*(0.60 - 0.17*k), a0, 0.4, 4.2);
+    ctx.stroke();
+  }
+  if(lit){                       /* the flare when this is the one she went through */
+    ctx.fillStyle = "rgba(255,255,245," + (0.75*(1-t)) + ")";
+    ctx.beginPath(); ctx.ellipse(cx, cy, rr*0.52*(1-t*0.4), rr*0.52*(1-t*0.4), 0, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* the pool of light the portal casts on the path */
+function portalPool(cx, y, w, hue, t){
+  const c = PORTAL_HUE[hue] || PORTAL_HUE[0];
+  const a = (1 - t) * 0.5;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  const g = ctx.createRadialGradient(cx, y, 1, cx, y, w*0.62);
+  g.addColorStop(0, "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")");
+  g.addColorStop(1, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0)");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(cx, y, w*0.62, w*0.17, 0, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+/* leaves drifting off the ring - a path, not a sprite, so they take the portal's colour */
+function portalLeaves(cx, cy, r, hue, alpha){
+  const c = PORTAL_HUE[hue] || PORTAL_HUE[0];
+  ctx.save();
+  for(let i=0;i<7;i++){
+    const ph = G.t*0.55 + i*0.92 + hue*1.3;
+    const a  = ph % 6.283;
+    const rad = r*(1.02 + 0.22*((ph*0.31) % 1));
+    const x = cx + Math.cos(a)*rad, y = cy + Math.sin(a)*rad*0.98 - ((ph*9) % (r*0.5));
+    const sz = r*0.085, rot = ph*1.4;
+    ctx.globalAlpha = alpha * (0.35 + 0.45*Math.abs(Math.sin(ph)));
+    ctx.fillStyle = "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")";
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.moveTo(0, -sz);
+    ctx.quadraticCurveTo(sz*0.8, -sz*0.15, 0, sz);
+    ctx.quadraticCurveTo(-sz*0.8, -sz*0.15, 0, -sz);
+    ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+}
+
+
+/* [r56] THE BURST ITSELF. Drawn over the gate as it goes: a ring of light expanding from the
+   opening and a flash on the arch. Without it the gate simply vanishes, and vanishing is what
+   a bug looks like - the ring is what tells the child something was DONE, not undone. */
+function drawGateBurst(g, cx, y, gw, gh, ok){
+  const t = Math.min(1, g.fx/0.36);
+  if(t >= 1) return;
+  const e = 1 - Math.pow(1-t, 3);                  /* fast out, easing off */
+  const r = gw*(0.20 + 0.95*e), a = (1-t)*(1-t);
+  const col = ok ? "255,225,140" : "190,175,155";
+  ctx.save();
+  ctx.globalCompositeOperation = ok ? "lighter" : "source-over";
+  ctx.strokeStyle = "rgba("+col+","+(a*0.85)+")";
+  ctx.lineWidth = Math.max(1, gw*0.055*(1-t));
+  ctx.beginPath(); ctx.ellipse(cx, y-gh*0.46, r, r*0.62, 0, 0, 7); ctx.stroke();
+  if(ok){
+    const gl = ctx.createRadialGradient(cx, y-gh*0.46, 1, cx, y-gh*0.46, r*1.1);
+    gl.addColorStop(0, "rgba(255,240,190,"+(a*0.5)+")");
+    gl.addColorStop(1, "rgba(255,220,130,0)");
+    ctx.fillStyle = gl;
+    ctx.beginPath(); ctx.ellipse(cx, y-gh*0.46, r*1.1, r*0.7, 0, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawGate(g){
+  if(g.z<=-0.05) return;
+  const {p,y} = proj(Math.max(0.002,g.z));
+  const aw = LANE_W()*p*0.84, ah = 210*S*p, top = y-ah;
+  const fade = Math.min(1, (1.25-g.z)*2.6);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, fade));
+
+  for(let i=0;i<LANES;i++){
+    const cx = laneX(i,p);
+    const w = g.words[i];
+    let col = "#9a7bff", glow="rgba(154,123,255,.55)";
+    if(g.done && g.reveal>0){
+      if(w.ok){ col="#4bf0a5"; glow="rgba(75,240,165,.85)"; }
+      else    { col="#ff6a4a"; glow="rgba(255,106,74,.8)"; }
+    }
+    /* [r38] THE PAINTED ARCH, when gate_neutral/correct/wrong are present. The word is still
+       drawn by the game below - the art's plaque is deliberately blank - so only the frame and
+       the curtain are replaced here. */
+    var _ring = window.MR_ringArt && MR_ringArt();
+    var _box = null;
+    if(_ring){
+      /* [r60] THE PORTAL.
+         One ring, an empty hole, and everything that varies painted into it: the light, the
+         colour, the word. The hole is where the glow and the word go, and its radius is a
+         fraction of the ring's own width, so the two stay locked together at any depth. */
+      /* 0.78 of the lane spacing, not 0.94: portal centres are LANE_W*p apart, so at 0.94 the
+         two rings overlapped and their glows ran into one another - one wide smear of light
+         with two words in it rather than a choice between two doors.
+         The opening's centre and radius are MEASURED off portal_ring.webp (hole centred at
+         0.508 / 0.496 of the image, radius 0.311 of its width) rather than guessed, so the
+         light sits in the hole at every depth. */
+      var rw = LANE_W()*p*0.78, rh = rw*((_ring.height/_ring.width) || 1);
+      var cyR = y - rh*0.504;
+      var hole = rw*0.311;
+      var t = g.done ? Math.min(1, g.fx/0.36) : 0;
+      var gfade = 1 - t*t;
+      var hue = (g.hue && g.hue[i]) || 0;
+      var chosen = g.done && i === g.chosenLane;
+
+      /* the pool it throws on the path, then the light inside it, then the ring over both */
+      portalPool(cx, y - rh*0.02, rw*0.42, hue, t);
+      portalGlow(cx, cyR, hole, hue, g.done && w.ok, t);
+
+      var pop = g.done ? (w.ok ? 1 + 0.48*t : 1 + 0.10*t) : 1;
+      var jig = (g.done && !w.ok && chosen) ? Math.sin(g.fx*58) * 13*S*p * (1-t) : 0;
+      var dw2 = rw*pop, dh2 = rh*pop, cxj = cx + jig;
+
+      ctx.save();
+      ctx.globalAlpha *= gfade;
+      ctx.drawImage(hue === 1 ? goldRing(_ring) : _ring, cxj-dw2/2, y-dh2, dw2, dh2);
+      if(g.done && !w.ok && chosen){
+        /* the one she chose wrongly goes dull - multiply is bounded by the art's own alpha,
+           so only the ring darkens and not a rectangle of the scene behind it */
+        ctx.save();
+        ctx.globalCompositeOperation = "multiply";
+        ctx.globalAlpha = 0.5 * Math.min(1, g.fx/0.06) * (1-t);
+        ctx.drawImage(_ring, cxj-dw2/2, y-dh2, dw2, dh2);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      portalLeaves(cxj, cyR, hole, hue, gfade * (g.done ? 1-t : 0.85));
+
+      _box = { cx: cxj, cy: cyR, w: hole*1.72, h: hole*0.86 };
+      MR_gateWordOnly = true;
+      MR_wordFade = gfade;
+    } else {
+      MR_wordFade = 1;
+      MR_gateWordOnly = false;
+    }
+    // arch
+    if(!MR_gateWordOnly){
+    ctx.lineWidth = Math.max(1.5, 9*S*p);
+    ctx.strokeStyle = col;
+    ctx.shadowColor = glow; ctx.shadowBlur = (g.done? 30:18)*p;
+    ctx.beginPath();
+    ctx.moveTo(cx-aw/2, y);
+    ctx.lineTo(cx-aw/2, top+ah*0.30);
+    ctx.quadraticCurveTo(cx-aw/2, top, cx, top);
+    ctx.quadraticCurveTo(cx+aw/2, top, cx+aw/2, top+ah*0.30);
+    ctx.lineTo(cx+aw/2, y);
+    ctx.stroke();
+    // curtain
+    ctx.shadowBlur=0;
+    ctx.fillStyle = g.done && g.reveal>0
+      ? (w.ok?"rgba(75,240,165,.16)":"rgba(255,106,74,.16)")
+      : "rgba(90,60,170,.14)";
+    ctx.beginPath();
+    ctx.moveTo(cx-aw/2, y); ctx.lineTo(cx-aw/2, top+ah*0.30);
+    ctx.quadraticCurveTo(cx-aw/2, top, cx, top);
+    ctx.quadraticCurveTo(cx+aw/2, top, cx+aw/2, top+ah*0.30);
+    ctx.lineTo(cx+aw/2, y); ctx.closePath(); ctx.fill();
+    }   /* end !MR_gateWordOnly */
+
+    // word plate
+    let fs, py;
+    if(_box){
+      /* [r40] SHRINK TO FIT THE PLANK. A fixed 42*S*p was set when the game drew its own
+         plaque and sized the plaque to the text; the painted plank is a fixed shape, so the
+         text has to give way instead. Start at a size proportional to the plank and step down
+         until the word sits inside the cream face with a margin on both sides - a five-letter
+         word and a two-letter word then both read, and neither runs over the wooden frame. */
+      fs = Math.max(8, _box.h*0.46);
+      ctx.font = "700 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      for(let k=0; k<12 && ctx.measureText(w.t).width > _box.w*0.74; k++){
+        fs *= 0.92;
+        ctx.font = "700 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      }
+      py = _box.cy;
+    } else {
+      fs = Math.max(8, 42*S*p);
+      ctx.font = "700 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      const tw = ctx.measureText(w.t).width;
+      const pw = Math.max(tw+26*S*p, aw*0.55), ph = fs*1.62;
+      py = top + ah*0.42;
+      ctx.fillStyle="rgba(14,10,32,.82)";
+      roundRect(cx-pw/2, py-ph/2, pw, ph, 12*S*p); ctx.fill();
+      ctx.strokeStyle= col; ctx.lineWidth=Math.max(1,2.5*S*p); roundRect(cx-pw/2,py-ph/2,pw,ph,12*S*p); ctx.stroke();
+    }
+    /* Dark ink on the cream plank; the pale ink below is for the dark plaque the game draws
+       for itself when there is no art. */
+    ctx.fillStyle = _box ? (g.done ? (w.ok ? "#14532b"
+                                    : (i === g.chosenLane ? "#7a2411" : "#4a3f2c")) : "#2e2410")
+                         : (g.done&&g.reveal>0 ? (w.ok?"#d8ffee":"#ffd9d0") : "#fff4de");
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.save(); ctx.globalAlpha *= MR_wordFade;
+    ctx.fillText(w.t, cx, py+fs*0.06);
+    ctx.restore();
+
+    /* [r53] No verdict mark. A gold star and a red cross were stamped over the two signs at
+       the exact moment the child should be reading the words on them - the feedback covered
+       the thing it was feedback about. The gate's own pop, glow, shake and grey say the same
+       and leave the words legible. */
+  }
+  ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+/* ---- अपनी कला (assets/img) — मिले तो वही, वरना बना हुआ शेर ---- */
+/* ======================= ART LAYER =======================
+   [r38] Painted assets instead of code-drawn ones - and only where a file is actually there.
+
+   Every slot below falls back to the drawing the game already does. That is not timidity: the
+   brief says "most of the images" are made, so a half-filled folder is the NORMAL state here,
+   not an error case. A missing file must look like today's game, never like a hole.
+
+   Filenames and sizes are exactly the ones in the art spec, so the files can be dropped into
+   assets/MatraRunner/ with no renaming:
+
+     swifty_run.webp     1076x420   4 frames of 269x420, back view run cycle
+     swifty_lean_left.webp         swifty_lean_right.webp
+     swifty_stumble.webp           swifty_cheer.webp
+     bg_sky.webp          1920x720   bg_temples.png 1920x500   bg_canopy.png 1920x300
+     tex_grass.webp        512x512   tex_path.webp  512x512    (both tile)
+     tree_1..3.png         400x600   bush_1..2.png 400x250     pillar_1..2.png 250x600
+     gate_neutral.png      600x800   gate_correct.png  gate_wrong.png   plate.png 600x220
+     coin_spin.png         768x128   6 frames of 128x128       coin.png
+     ui_*.png / heart_*.png / star_*.png / ico_*.png           (the HUD is DOM, see below)
+
+   The HUD is HTML, not canvas, so its art is handed to CSS as custom properties on .mr-root.
+   Each rule reads `var(--mr-x, <what it does now>)`, so an absent file leaves today's styling
+   untouched - no class toggling, no flash while loading. */
+(function(){
+  "use strict";
+  var DIR = "assets/MatraRunner/";
+  var A = {};                       // name -> HTMLImageElement, only once it has really loaded
+
+  /* name: [file, framesAcross] */
+  var SHEET = {
+    /* [r39] The hero is SWIFTY - the same bird the child has followed for seventeen screens.
+       A tiger was specified, but a second mascot appearing once, in the last activity, reads
+       as a different game; the run cycle is four frames on a common baseline. */
+    run:      ["swifty_run.webp", 16],
+    leanL:    ["swifty_lean_left.webp", 1],
+    leanR:    ["swifty_lean_right.webp", 1],
+    stumble:  ["swifty_stumble.webp", 1],
+    cheer:    ["swifty_cheer.webp", 1],
+    /* the reference sheet's two end-of-run poses, seen from the FRONT - the run poses are all
+       back views, and at the moment the run stops the child should finally see her face */
+    fall:     ["swifty_fall.webp", 16],
+    hit:      ["swifty_hit.webp", 1],
+    happy:    ["swifty_happy.webp", 1],
+    sky:      ["bg_sky.webp", 1],
+    /* [r68] the valley: its poster frame (shown until the video can play), and the bridge */
+    valley:   ["bg_valley.webp", 1],
+    deck:     ["bridge_deck.webp", 1],
+    post:     ["bridge_post.webp", 1],
+    wall:     ["bridge_wall.webp", 1],
+    ring:     ["portal_ring.webp", 1],
+    mountains:["bg_mountains.webp", 1],
+    hills:    ["bg_hills.webp", 1],
+    grass:    ["tex_grass.webp", 1],
+    path:     ["tex_path.webp", 1],
+    tree1:    ["tree_1.webp", 1], tree2: ["tree_2.webp", 1], tree3: ["tree_3.webp", 1],
+    bush1:    ["bush_1.webp", 1], bush2: ["bush_2.webp", 1],
+    pillar1:  ["pillar_1.webp", 1], pillar2: ["pillar_2.webp", 1],
+    gateN:    ["gate_neutral.webp", 1],
+    gateC:    ["gate_correct.webp", 1],
+    gateW:    ["gate_wrong.webp", 1],
+    plate:    ["plate.webp", 1],
+    rail:     ["rail.webp", 1],
+    hedge:    ["hedge.webp", 1],
+    lantern:  ["lantern.webp", 1],
+    coinSpin: ["coin.webp", 1],
+    heart:    ["heart_full.webp", 1], heartOff: ["heart_empty.webp", 1],
+    star:     ["star_full.webp", 1],  starOff:  ["star_empty.webp", 1],
+  };
+  /* The panel/button/chip art was never drawn, so the HUD keeps its own styling for those.
+     Hearts and stars ARE drawn, but they are swapped in from hud() rather than through a CSS
+     variable: an <img> only appears once the file has really loaded, so a missing or slow
+     file leaves the glyph that is there today instead of an empty box. */
+  var UI = {
+    "--mr-ui-panel": "ui_banner.webp",   /* the long wooden banner behind the prompt */
+    "--mr-ui-badge": "ui_badge.webp",    /* the round wooden medallion the matra sits in */
+    "--mr-ui-btn":   "ui_btn.webp"       /* the little wooden key */
+    /* --mr-ui-board is gone: it asked for panel.webp, which has never existed in the repo.
+       The level cards draw their board through --mr-card-bg, which points at panel2.webp. */
+  };
+
+
+  window.MR_ART = {
+    has: function(n){ return !!A[n]; },
+    img: function(n){ return A[n] || null; },
+    frames: function(n){ return (SHEET[n] && SHEET[n][1]) || 1; },
+    /* one frame of a horizontal strip, as source-rect numbers for drawImage */
+    rect: function(n, i){
+      var im = A[n]; if(!im) return null;
+      var f = this.frames(n), w = im.width / f;
+      return [Math.floor((i % f) * w), 0, w, im.height];
+    },
+    /* the src the DOM can use, only for a slot whose file has loaded */
+    src: function(n){ return A[n] ? A[n].src : null; }
+  };
+
+  Object.keys(SHEET).forEach(function(name){
+    var im = new Image();
+    im.onload = function(){
+      if(im.naturalWidth > 0) A[name] = im;
+      /* [r50] REPAINT THE HUD WHEN ITS ART LANDS. hud() writes <img> hearts only if the files
+         have already loaded, and it runs once at boot. That was safe while the game booted in
+         the voice-over's callback, six seconds in; booting on arrival, hud() now runs BEFORE
+         the hearts exist and the child gets the fallback glyph - which renders white, so the
+         row looked like three lives already spent. */
+      if((name === "heart" || name === "heartOff") && typeof hud === "function") hud();
+    };
+    im.src = DIR + SHEET[name][0];
+  });
+
+  /* the DOM-side art: each property is only set once its file has loaded */
+  var root = document.querySelector(".mr-root") || document.documentElement;
+  var uiLeft = Object.keys(UI).length;
+  Object.keys(UI).forEach(function(prop){
+    var im = new Image();
+    im.onload = im.onerror = function(){
+      if(im.naturalWidth > 0) root.style.setProperty(prop, 'url("' + DIR + UI[prop] + '")');
+      /* the wooden look goes on only when EVERY piece of it is there - half a wooden HUD
+         beside half a dark one looks like a bug, and a slow file would show it happening */
+      if(--uiLeft === 0 && root.style.getPropertyValue("--mr-ui-panel")){
+        var WOOD = {
+          "--mr-wood-line":   "transparent",      /* the dark ring around each pill */
+          "--mr-wood-ink":    "#fff3dc",          /* cream, for the banner's brown grain */
+          "--mr-wood-shadow": "0 2px 0 rgba(58,34,12,.8)",
+          "--mr-wood-ink2":   "#4a3520",          /* dark, for the badge's cream face */
+          "--mr-wood-op":     "1",
+          "--mr-badge-sz":    "3.3em",            /* the badge art is round: square its box */
+          "--mr-badge-em":    "1.32em",           /* and the glyph has to sit inside it */
+          "--mr-badge-sp":    "0.92em",
+          "--mr-badge-pad":   "0",
+          "--mr-badge-align": "center",
+          "--mr-bar-bg":      "rgba(74,53,32,.45)",
+          "--mr-bar-line":    "rgba(94,62,30,.85)",
+          /* Slices are in the SHIPPED image's own pixels. Measured 225/163/88/155 on the
+             949x893 source, scaled by the 760px encode: 180/131/70/124. Using the numbers from
+             the source would have cut the frame in the wrong places. */
+          /* Measured on the SHIPPED panel.webp (760x715) by taking the widest unbroken run of
+             cream on any row, then the longest unbroken run down that row's centre. The first
+             attempt used one scan line through the middle, which ran off the bottom of the
+             board and onto the tan stone base below it - that passes for cream, so the face
+             came out 24% too tall and every line of text landed on the posts.
+             Face: 16.3%/17.1% in from the sides, 25.2% down, 34.0% up. Padding resolves
+             against WIDTH, so the vertical pair is divided by the board's aspect. */
+          "--mr-card-bg":     'url("' + DIR + 'panel3.webp") center/100% 100% no-repeat',
+          "--mr-card-ar":     "840 / 565",
+          /* measured off the shipped panel3.webp: the cream face sits 18.2% down, 14.5%
+             up and 14.2%/10.2% in, as fractions of the card's WIDTH (which is what CSS
+             padding resolves against). A little extra all round keeps the text off the frame. */
+          "--mr-card-pad":    "20% 12% 16.5% 16%",
+          "--mr-card-bw":     "0",
+          "--mr-card-bc":     "transparent",
+          "--mr-card-r":      "0",
+          "--mr-card-ink":    "#4a3520",
+          "--mr-card-head":   "#a85d12",
+          "--mr-card-sh":     "0 1px 0 rgba(255,255,255,.55)",
+          "--mr-tally-bg":    "rgba(74,53,32,.10)",
+          "--mr-tally-line":  "rgba(74,53,32,.18)"
+        };
+        Object.keys(WOOD).forEach(function(k){ root.style.setProperty(k, WOOD[k]); });
+      }
+    };
+    im.src = DIR + UI[prop];
+  });
+})();
+
+const IMG = {};
+["character.svg"].forEach(f=>{
+  const i = new Image();
+  i.onload = ()=>{ if(!IMG.char || f.endsWith(".png")) IMG.char = i; };
+  i.src = "assets/MatraRunner/" + f;
+});
+(function(){ const i=new Image(); i.onload=()=>IMG.coin=i; i.src="assets/MatraRunner/coin.svg"; })();
+
+/* ---- शेर का बच्चा (tiger cub, seen from behind) ---- */
+function drawTiger(){
+  /* [r38] the painted hero, with a real run cycle, when tiger_run.png is present */
+  if(window.MR_drawTigerArt && MR_drawTigerArt()) return;
+  if(IMG.char) return drawTigerImage();
+  const x = laneX(G.laneF, 1), y = groundY();
+  const run = G.mode==="play" ? G.t*13 : G.t*5;
+  const bob = Math.abs(Math.sin(run))*6*S;
+  const lean = (G.targetLane - G.laneF)*0.55;
+  const u = S*1.05;
+
+  // shadow
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.34)";
+  ctx.beginPath(); ctx.ellipse(x, y+4*u, 46*u, 13*u, 0,0,7); ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(x, y-bob);
+  ctx.rotate(-lean*0.16);
+
+  // tail
+  const tw = Math.sin(run*0.7)*0.5;
+  ctx.strokeStyle="#f0913c"; ctx.lineWidth=9*u; ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(0,-52*u);
+  ctx.quadraticCurveTo(26*u*tw, -92*u, 40*u*tw, -118*u);
+  ctx.stroke();
+  ctx.strokeStyle="#2a1a12"; ctx.lineWidth=9*u;
+  ctx.beginPath(); ctx.moveTo(34*u*tw,-108*u); ctx.lineTo(40*u*tw,-118*u); ctx.stroke();
+
+  // back legs
+  for(const side of [-1,1]){
+    const ph = Math.sin(run + (side<0?0:Math.PI));
+    ctx.fillStyle="#e07f2c";
+    ctx.save();
+    ctx.translate(side*17*u, -20*u);
+    ctx.rotate(ph*0.32);
+    roundRect(-9*u, 0, 18*u, 26*u, 8*u); ctx.fill();
+    ctx.fillStyle="#3b2418";
+    roundRect(-9*u, 18*u, 18*u, 9*u, 5*u); ctx.fill();
+    ctx.restore();
+  }
+
+  // cape
+  const flap = Math.sin(run*0.9)*0.24;
+  ctx.fillStyle="rgba(200,44,62,.92)";
+  ctx.beginPath();
+  ctx.moveTo(-26*u,-74*u);
+  ctx.quadraticCurveTo(-46*u+flap*22*u, -42*u, -20*u+flap*18*u, -12*u);
+  ctx.quadraticCurveTo(0,-24*u, 20*u+flap*18*u, -12*u);
+  ctx.quadraticCurveTo(46*u+flap*22*u, -42*u, 26*u, -74*u);
+  ctx.closePath(); ctx.fill();
+
+  // body
+  const bg = ctx.createLinearGradient(0,-78*u,0,-16*u);
+  bg.addColorStop(0,"#ffa94d"); bg.addColorStop(1,"#e07f2c");
+  ctx.fillStyle=bg;
+  ctx.beginPath(); ctx.ellipse(0,-46*u, 30*u, 34*u, 0,0,7); ctx.fill();
+  // stripes
+  ctx.strokeStyle="#33200f"; ctx.lineWidth=5*u; ctx.lineCap="round";
+  for(let i=0;i<3;i++){
+    const yy = -64*u + i*17*u;
+    ctx.beginPath();
+    ctx.moveTo(-24*u, yy); ctx.quadraticCurveTo(-12*u, yy+6*u, -6*u, yy+2*u); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(24*u, yy); ctx.quadraticCurveTo(12*u, yy+6*u, 6*u, yy+2*u); ctx.stroke();
+  }
+  // armour
+  ctx.fillStyle="#f3c33f";
+  roundRect(-24*u,-62*u,48*u,17*u,7*u); ctx.fill();
+  ctx.fillStyle="#c9971d"; roundRect(-24*u,-49*u,48*u,5*u,3*u); ctx.fill();
+  ctx.fillStyle="#43b8ff";
+  ctx.beginPath(); ctx.arc(0,-54*u, 7*u, 0,7); ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.75)";
+  ctx.beginPath(); ctx.arc(-2*u,-56*u, 2.4*u, 0,7); ctx.fill();
+  // shoulder pads
+  for(const side of [-1,1]){
+    ctx.fillStyle="#f3c33f";
+    ctx.beginPath(); ctx.ellipse(side*29*u,-64*u, 12*u, 10*u, side*0.3,0,7); ctx.fill();
+    ctx.fillStyle="#c9971d";
+    ctx.beginPath(); ctx.ellipse(side*29*u,-61*u, 12*u, 4*u, side*0.3,0,7); ctx.fill();
+  }
+
+  // head
+  const hy2 = -96*u + Math.sin(run*2)*2*u;
+  ctx.fillStyle="#ffb055";
+  ctx.beginPath(); ctx.ellipse(0,hy2, 25*u, 23*u, 0,0,7); ctx.fill();
+  // ears
+  for(const side of [-1,1]){
+    ctx.fillStyle="#e78a34";
+    ctx.beginPath(); ctx.ellipse(side*18*u, hy2-17*u, 9*u, 10*u, side*0.35,0,7); ctx.fill();
+    ctx.fillStyle="#f8b8c0";
+    ctx.beginPath(); ctx.ellipse(side*18*u, hy2-16*u, 4.6*u, 5.4*u, side*0.35,0,7); ctx.fill();
+  }
+  // head stripes
+  ctx.strokeStyle="#33200f"; ctx.lineWidth=4.2*u;
+  ctx.beginPath(); ctx.moveTo(-6*u,hy2-20*u); ctx.lineTo(-8*u,hy2-11*u); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(6*u,hy2-20*u);  ctx.lineTo(8*u,hy2-11*u);  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-20*u,hy2-2*u); ctx.lineTo(-12*u,hy2-1*u); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(20*u,hy2-2*u);  ctx.lineTo(12*u,hy2-1*u);  ctx.stroke();
+  // cheek fluff peeking
+  ctx.fillStyle="#fff1dc";
+  ctx.beginPath(); ctx.ellipse(-21*u,hy2+9*u, 8*u,6*u, .5,0,7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(21*u,hy2+9*u, 8*u,6*u, -.5,0,7); ctx.fill();
+  // helmet band
+  ctx.fillStyle="#f3c33f";
+  ctx.beginPath(); ctx.ellipse(0,hy2-9*u, 25*u, 9*u, 0, Math.PI*1.04, Math.PI*1.96); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawTigerImage(){
+  const x = laneX(G.laneF, 1), y = groundY();
+  const run = G.mode==="play" ? G.t*13 : G.t*5;
+  const bob = Math.abs(Math.sin(run))*6*S;
+  const lean = (G.targetLane - G.laneF)*0.55;
+  const h = 150*S, w = h * (IMG.char.width/IMG.char.height || 0.8);
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.34)";
+  ctx.beginPath(); ctx.ellipse(x, y+4*S, w*0.42, 13*S, 0,0,7); ctx.fill();
+  ctx.translate(x, y-bob); ctx.rotate(-lean*0.16);
+  ctx.drawImage(IMG.char, -w/2, -h, w, h);
+  ctx.restore();
+}
+
+/* ---- the painted versions of each draw, used only when their file is present ----
+   Each one WRAPS the existing function rather than replacing it, so the code-drawn game is
+   still there underneath and a missing file costs nothing. */
+(function(){
+  "use strict";
+  var ART = window.MR_ART;
+
+  /* --- sky, ridge, treeline: three layers, each shifted by its own share of the pan ---
+     The depths are small and they differ by about a factor of two each, which is what reads
+     as distance. Every layer is drawn WIDER than the canvas by the most it can ever move, so
+     panning can never expose the edge of a backdrop - the alternative, letting it move within
+     its own width, means the sky ends somewhere on screen. */
+  /* [r58] COVER, NOT STRETCH. The sky band is about 265px tall on a 1382px screen - roughly
+     5:1 - and the painting is 2.4:1, so drawing it to fit squashed it to less than half its
+     height: the mountains came out squat and the clouds smeared. This takes the slice of the
+     picture that has the destination's shape and crops the rest, anchored so the part that
+     matters stays (the horizon for the sky, the base for the treeline).
+     `squash` allows a little distortion before cropping - at zero the treeline band would keep
+     a sliver of its own height and lose the crowns entirely. */
+  function layer(img, top, h, depth, anchor, squash){
+    var pad = LANE_W() * depth * 0.6;
+    var dx  = -camLane() * LANE_W() * depth;
+    var dw = W + pad*2, dh = h;
+    var ia = img.width/img.height, da = dw/dh;
+    var want = Math.min(da, ia*(squash||1));        /* how wide a slice to take */
+    var sw = img.width, sh = img.height, sx = 0, sy = 0;
+    if(ia > want){ sw = img.height*want; sx = (img.width-sw)*0.5; }
+    else          { sh = img.width/want; sy = (img.height-sh)*(anchor===undefined?0.5:anchor); }
+    ctx.drawImage(img, sx, sy, sw, sh, dx - pad, top, dw, dh);
+  }
+
+  /* [r58] THE CUT-OUT LAYERS CANNOT BE CROPPED. The ridge and the treeline are keyed shapes
+     trimmed tight to their own ink, so taking a slice of them to fit a shallow band cuts
+     straight through the silhouette and leaves a ruled line across the sky - which is exactly
+     what appeared where the mountains met the treeline.
+     Scaled to the band's height they come out narrower than the screen, so they are repeated
+     across it, every other copy mirrored. A mirrored repeat of a mountain range or a canopy
+     reads as more of the same range; a butted repeat reads as a seam. The mirrored pair is
+     composed once per size and re-used, not flipped per frame. */
+  var tiles = {};
+  function mirrorPair(img, h){
+    var key = img.src + "|" + Math.round(h);
+    if(tiles[key]) return tiles[key];
+    var tw = Math.max(2, Math.round(h * (img.width/img.height)));
+    var c = document.createElement("canvas");
+    c.width = tw*2; c.height = Math.round(h);
+    var g = c.getContext("2d");
+    g.drawImage(img, 0, 0, tw, c.height);
+    g.save(); g.translate(tw*2, 0); g.scale(-1, 1);
+    g.drawImage(img, 0, 0, tw, c.height); g.restore();
+    tiles = {}; tiles[key] = c;             /* one size is live at a time; drop the rest */
+    return c;
+  }
+  function band(img, top, h, depth){
+    var pad = LANE_W() * depth * 0.6;
+    var dx  = -camLane() * LANE_W() * depth;
+    var pair = mirrorPair(img, h), pw = pair.width;
+    var x0 = dx - pad, x1 = W + pad;
+    var start = x0 - ((x0 % pw) + pw) % pw;
+    for(var x = start; x < x1; x += pw) ctx.drawImage(pair, x, top, pw, h);
+  }
+  /* [r68] YASIR'S VALLEY. A muted, looping, inline video, drawn into the canvas every frame.
+     Only the waterfalls move in it; the loop is 9 s and seamless (prepare_bridge.py cross-fades
+     its last second into its first). It is drawn through the canvas rather than laid behind it
+     as a DOM element so the screen shake, the vignette and everything else keep working the way
+     they always have, with no second layer to keep in step.
+     THE ANCHOR: the sun's centre is at 0.525 of the frame's width and its lower edge - the
+     horizon - at 0.40 of its height, measured off the first frame. That point is pinned to the
+     game's vanishing point, so the bridge runs into the sun. */
+  var VALLEY_CX = 0.525, VALLEY_HY = 0.40;
+  var vid = document.createElement("video");
+  vid.muted = true; vid.defaultMuted = true; vid.loop = true; vid.playsInline = true;
+  vid.preload = "auto";
+  vid.setAttribute("muted", ""); vid.setAttribute("playsinline", ""); vid.setAttribute("webkit-playsinline", "");
+  vid.src = "assets/MatraRunner/bg_valley.mp4";   /* this closure has no DIR; same folder as the art */
+  var vidAsked = 0;
+  function valleyFrame(){
+    /* ask to play at most once a second while paused: play() returns a promise that rejects if
+       the browser wants a gesture, and asking every frame would only flood the console */
+    if(vid.paused && G.mode !== "over"){
+      var now = Date.now();
+      if(now - vidAsked > 1000){ vidAsked = now; var pr = vid.play(); if(pr && pr.catch) pr.catch(function(){}); }
+    }
+    if(vid.readyState >= 2 && vid.videoWidth) return vid;
+    return ART.has("valley") ? ART.img("valley") : null;
+  }
+  /* stop it with the music when the lesson leaves this screen - a looping video in memory keeps
+     decoding, and on a tablet that is battery the child is not getting anything for */
+  var _audioStop = window.MR_audioStop;
+  window.MR_audioStop = function(){ try{ vid.pause(); }catch(e){} if(_audioStop) _audioStop(); };
+
+  window.MR_drawSky = function(){
+    var hy = horizonY();
+    var vf = bridgeOn() ? valleyFrame() : null;
+    if(vf){
+      var vw = vf.videoWidth || vf.width, vh = vf.videoHeight || vf.height;
+      /* cover the screen with the sun pinned to (W/2, horizon) */
+      var sc = Math.max(W / (2 * Math.min(VALLEY_CX, 1 - VALLEY_CX) * vw),
+                        hy / (VALLEY_HY * vh), (H - hy) / ((1 - VALLEY_HY) * vh));
+      ctx.drawImage(vf, W/2 - VALLEY_CX*vw*sc, hy - VALLEY_HY*vh*sc, vw*sc, vh*sc);
+      return true;
+    }
+    if(!ART.has("sky")) return false;
+    layer(ART.img("sky"), 0, hy + 2, 0.045, 0.62, 2.4);
+    /* the ridge and the treeline keep their own proportions and repeat across */
+    if(ART.has("mountains")) band(ART.img("mountains"), hy - hy*0.52, hy*0.52, 0.10);
+    if(ART.has("hills"))     band(ART.img("hills"),     hy - hy*0.30, hy*0.34, 0.20);
+    return true;
+  };
+
+  /* --- ground: drawn in depth bands, so the floor has perspective ---------------------
+     For each band of screen rows we invert the projection to get the world depth z that band
+     shows, then set a transform that places texture row V exactly at that screen row and
+     scales texels by the depth foreshortening p. A fixed point on the ground therefore keeps
+     the same texture coordinate as it approaches, which is what makes it rush past the
+     runner's feet and crawl at the horizon.
+
+     No clip per band, and no offscreen strip: each band's fillRect is bounded to that band in
+     TEXTURE space, and the pattern is transformed by the CTM, so one fill paints one band
+     correctly tiled. That keeps the whole floor at about 160 fills a frame. */
+  var grassPat = null, pathPat = null, grassFor = null, pathFor = null;
+  var BAND = 4;                       // screen rows per band; below ~5 the stepping is invisible
+  var gcv = null, gcx = null;         // the floor's own canvas, at CSS resolution
+
+  /* screen pixels of depth, at the runner's feet, per unit of z. Everything about the floor's
+     scale follows from this one number, so the texture cannot drift out of step with the
+     projection the gates and the railing are drawn with. */
+  function isoZ(){ return (groundY() - horizonY()) * K; }
+  function depthAt(y){                       // invert proj(): screen row -> world depth
+    var p = (y - horizonY()) / (groundY() - horizonY());
+    return { p: p, z: (1/p - 1) / K };
+  }
+
+  /* [r69] k = the offscreen's pixel ratio (1 = CSS pixels, as the old road always used), and
+     bandH = CSS rows per band. The bridge deck passes DPR and 2: at CSS resolution on a 2x screen
+     the deck was painted at half the display's resolution and stretched, and 4-row bands drew each
+     diagonal slab joint as a staircase of 8-device-pixel steps. */
+  function bands(g2, pat, base, texH, halfLanes, kpx, bandH){
+    kpx = kpx || 1; var B = bandH || BAND;   /* kpx, NOT k: k is this function's own tile-wrap offset below */
+    var hy = horizonY(), gy = groundY();
+    var vz = isoZ() / base;                  // texture rows per unit z: isotropic at the feet
+    for(var y = hy; y < H; y += B){
+      var lo = depthAt(y + B), hi = depthAt(y);   // lo = nearer/lower, hi = farther/higher
+      if(hi.p < 0.012 || lo.p <= 0) continue;        // the last slice into the horizon
+      var vLo = (lo.z + G.ground) * vz, vHi = (hi.z + G.ground) * vz;
+      var span = vHi - vLo;                          // texture rows this band has to show
+      if(!(span > 0) || !isFinite(span)) continue;
+      var sx = ((lo.p + hi.p) * 0.5) * base;         // across the track: texels scale with p
+      if(sx < 0.04) continue;
+      var sy = B / span;                          // along it: with p squared, via the span
+      /* wrapped to whole tiles - the pattern is periodic, so this is invisible, and it keeps
+         the numbers small enough that a long session stays exact */
+      var k = Math.floor(vLo / texH) * texH;
+      vLo -= k;
+      /* v grows away from the camera while screen y grows toward it, hence the negative sy.
+         The offscreen holds only the ground, so hy comes off the vertical placement. */
+      g2.setTransform(sx*kpx, 0, 0, -sy*kpx, worldX(0, lo.p)*kpx, ((y + B - hy) + vLo*sy)*kpx);
+      g2.fillStyle = pat;
+      var half = halfLanes ? LANE_W() * lo.p * halfLanes : W;
+      g2.fillRect(-half/sx - 2, vLo, (half*2)/sx + 4, span + 1/sy);
+    }
+    g2.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  var deckPat = null, deckFor = null;
+  /* [r68] THE DECK. The same projection the road used, with the slab tile, and NOTHING outside
+     it: off the bridge the valley shows, so the offscreen is cleared, not filled. The deck's edges
+     run straight to the vanishing point all the way to the foot of the screen - the parapet does,
+     and a deck that went vertical under it (the old road stopped widening at the runner's line)
+     would leave a sliver of valley showing beneath the wall. */
+  function drawDeck(){
+    var hy = horizonY(), gy = groundY(), gh = Math.max(1, Math.round(H - hy + 2));
+    var gw = Math.max(1, Math.round(W));
+    if(!gcv){ gcv = document.createElement("canvas"); gcx = gcv.getContext("2d"); }
+    /* [r69] at the display's own resolution: see bands() */
+    var kd = Math.max(1, Math.min(3, DPR || 1));
+    var dw = Math.round(gw * kd), dh = Math.round(gh * kd);
+    if(gcv.width !== dw || gcv.height !== dh){
+      gcv.width = dw; gcv.height = dh;
+      grassPat = pathPat = grassFor = pathFor = null; deckPat = deckFor = null;
+    }
+    var di = ART.img("deck");
+    if(deckFor !== di){ deckPat = gcx.createPattern(di, "repeat"); deckFor = di; }
+    gcx.setTransform(1, 0, 0, 1, 0, 0);
+    gcx.clearRect(0, 0, dw, dh);
+    gcx.setTransform(kd, 0, 0, kd, 0, 0);        /* the clip path below is in CSS pixels */
+    /* [r69] 3% wider than the wall's foot line: the deck's clip and the wall's clip are both
+       antialiased, and where two soft edges share a line the lake shows through the seam as a
+       blue hairline. Tucked under the wall, the deck's edge is hidden and the wall's blends
+       onto stone. */
+    var RH = roadHalf() * 1.03, pFar = proj(26), pFoot = (H - hy) / (gy - hy);
+    var wFar = LANE_W()*pFar.p*RH, wFoot = LANE_W()*pFoot*RH;
+    var cFar = worldX(0, pFar.p), cFoot = worldX(0, pFoot);
+    gcx.save();
+    gcx.beginPath();
+    gcx.moveTo(cFar - wFar, pFar.y - hy); gcx.lineTo(cFar + wFar, pFar.y - hy);
+    gcx.lineTo(cFoot + wFoot, gh);        gcx.lineTo(cFoot - wFoot, gh);
+    gcx.closePath(); gcx.clip();
+    /* 0.6: about five slabs across the deck at the runner's line, as in his mockup */
+    /* 1-row bands: a band's single across-track scale is off by (offset x rows) / (p x ground
+       depth), about 1.2 px at the deck's edge per CSS row - at 2 rows the slab joints zig-zagged */
+    bands(gcx, deckPat, 0.6, di.height, RH + 0.1, kd, 1);
+    gcx.restore();
+    ctx.drawImage(gcv, 0, hy, W, gh);
+  }
+
+  /* [r68] THE PARAPET AND THE POSTS.
+     The wall's inner face is an upright plane running along the deck's edge. Canvas cannot map a
+     picture onto a perspective plane, so it is drawn in thin upright slices - each slice is one
+     depth, so its texture column is that depth's, and it is scaled to the wall's height THERE.
+     The whole face is clipped to its exact outline first (a straight line to the vanishing point
+     along the foot, another along the top), so the slices' square tops never show as steps.
+     The texture scrolls with the deck: its column comes from the same travelled distance. */
+  var WALL_H = 0.44, POST_H = 0.74, POST_EVERY = 4, SLICE = 5;   /* chunky, as in his mockup;
+     [r69] 5px slices, each sheared to the face's mid-height slope: the leftover step at the top
+     and foot of the wall is SLICE x the slope difference / 2, under a pixel at 5 */
+  function edgeX(side, p){ return worldX(side * roadHalf(), p); }
+  /* [r69] pre-shrunk copies of the wall texture: canvas has no mipmaps, so a slice squeezed to a
+     few pixels samples the full-size art sparsely and shimmers as it scrolls */
+  var wallMips = null, wallMipsFor = null;
+  function wallMip(scale){
+    var w = ART.img("wall");
+    if(wallMipsFor !== w){
+      wallMips = [w]; wallMipsFor = w;
+      var src = w;
+      for(var i = 0; i < 2; i++){
+        var c = document.createElement("canvas");
+        c.width = Math.max(2, Math.round(src.width / 2)); c.height = Math.max(2, Math.round(src.height / 2));
+        var g = c.getContext("2d"); g.imageSmoothingQuality = "high";
+        g.drawImage(src, 0, 0, c.width, c.height);
+        wallMips.push(c); src = c;
+      }
+    }
+    /* scale = drawn height / full texture height */
+    var lvl = scale < 0.25 ? 2 : scale < 0.5 ? 1 : 0;
+    return wallMips[lvl];
+  }
+  var SHOW_POSTS = false;          /* [r69] Yasir: "remove the pillars" */
+  function drawParapets(){
+    var wall = ART.img("wall"), post = ART.img("post");
+    var hy = horizonY(), gy = groundY(), LW = LANE_W();
+    var wH = WALL_H * LW;
+    var texPerZ = ((gy - hy) * K) * (wall.height / wH);        // full-size texture px per unit depth
+    var p0 = 0.012;
+    var pTop = (H - hy) / Math.max(1, (gy - hy) - wH);
+    var pMax = Math.min(3.0, pTop);
+    var footY = function(p){ return hy + (gy - hy) * p; };
+    var topY  = function(p){ return footY(p) - wH * p; };
+    for(var si = 0; si < 2; si++){
+      var side = si ? 1 : -1;
+      var x0 = edgeX(side, p0), x1 = edgeX(side, pMax);
+      ctx.save();
+      /* compose with whatever is current - the DPR scale AND the screen shake - rather than
+         replacing it, or the walls would stand still while the rest of the frame shakes */
+      var base = ctx.getTransform();
+      ctx.beginPath();
+      ctx.moveTo(x0, footY(p0)); ctx.lineTo(x1, footY(pMax));
+      ctx.lineTo(x1, topY(pMax)); ctx.lineTo(x0, topY(p0));
+      ctx.closePath(); ctx.clip();
+      var span = Math.abs(roadHalf() * LW - side * camLane() * LW);
+      var dp = SLICE / Math.max(1, span);
+      for(var pa = p0; pa < pMax; pa += dp){
+        var pb = Math.min(pMax, pa + dp);
+        var xa = edgeX(side, pa), xb = edgeX(side, pb);
+        if(Math.max(xa, xb) < -2 || Math.min(xa, xb) > W + 2) continue;
+        var za = (1/pa - 1) / K, zb = (1/pb - 1) / K;
+        var hA = wH * pa, hB = wH * pb, hm = (hA + hB) * 0.5;
+        var tex = wallMip(hm / wall.height), k = tex.height / wall.height;
+        var tw = tex.width;
+        var u = ((zb + G.ground) * texPerZ * k) % tw; if(u < 0) u += tw;
+        var du = (za - zb) * texPerZ * k;
+        if(!(du > 0.01)) continue;
+        /* a slice may straddle the texture's wrap point: draw it in two pieces */
+        var pieces = u + du <= tw ? [[u, du, 0]] : [[u, tw - u, 0], [0, du - (tw - u), (tw - u) / du]];
+        for(var q = 0; q < pieces.length; q++){
+          var pu = pieces[q][0], pdu = pieces[q][1], f0 = pieces[q][2], f1 = f0 + pdu / du;
+          /* the slice runs from depth pb (texture column u, screen xb) towards pa (u+du, xa);
+             this piece covers the fraction f0..f1 of that run */
+          var sx0 = xb + (xa - xb) * f0, sx1 = xb + (xa - xb) * f1;
+          /* the face's MID-HEIGHT line, not its top: top and foot run to the vanishing point at
+             different slopes, and an affine slice can follow only one. Following the top left the
+             lowest courses stepping by the whole difference (3.6 px a slice); following the middle
+             splits it, half above and half below, and at 5 px slices that is under a pixel. */
+          var mB = (topY(pb) + footY(pb)) * 0.5, mA = (topY(pa) + footY(pa)) * 0.5;
+          var my0 = mB + (mA - mB) * f0, my1 = mB + (mA - mB) * f1;
+          var hh  = hB + (hA - hB) * ((f0 + f1) * 0.5);
+          var ax = (sx1 - sx0) / pdu, ay = (my1 - my0) / pdu, dy = hh / tex.height;
+          ctx.setTransform(base);
+          ctx.transform(ax, ay, 0, dy, sx0 - ax * pu, my0 - ay * pu - hh * 0.5);
+          /* half a texel of overlap each side hides the hairline seam between neighbours */
+          ctx.drawImage(tex, pu, 0, pdu, tex.height, pu - 0.5, -0.5, pdu + 1, tex.height + 1);
+        }
+      }
+      ctx.setTransform(base);
+      ctx.restore();
+    }
+    if(!SHOW_POSTS) return;
+    /* the posts, far to near, both sides - drawn over the walls they stand in */
+    var aspect = post.width / post.height;
+    for(var i = 0; i < G.rails.length; i++){
+      var r = G.rails[i];
+      if(r.k % POST_EVERY) continue;
+      if(r.z < -0.045) continue;
+      var pr = proj(r.z), p = pr.p;
+      if(p < 0.05) continue;
+      var ph = POST_H * LW * p, pw = ph * aspect;
+      for(var sj = 0; sj < 2; sj++){
+        var sd = sj ? 1 : -1;
+        var cx = edgeX(sd, p) + sd * pw * 0.12;
+        if(cx + pw < 0 || cx - pw > W) continue;
+        if(sd > 0){
+          ctx.save(); ctx.translate(cx, 0); ctx.scale(-1, 1);
+          ctx.drawImage(post, -pw/2, pr.y - ph + ph*0.02, pw, ph);
+          ctx.restore();
+        } else {
+          ctx.drawImage(post, cx - pw/2, pr.y - ph + ph*0.02, pw, ph);
+        }
+      }
+    }
+  }
+  window.MR_drawBridge = function(){
+    if(!bridgeOn()) return false;
+    drawDeck();
+    drawParapets();
+    return true;
+  };
+
+  window.MR_drawGroundArt = function(){
+    if(!ART.has("grass")) return false;
+    var hy = horizonY(), gh = Math.max(1, Math.round(H - hy + 2));
+    var gw = Math.max(1, Math.round(W));
+    if(!gcv){ gcv = document.createElement("canvas"); gcx = gcv.getContext("2d"); }
+    if(gcv.width !== gw || gcv.height !== gh){
+      gcv.width = gw; gcv.height = gh;
+      grassPat = pathPat = grassFor = pathFor = null;   // patterns belong to a context
+    }
+
+    var g = ART.img("grass");
+    if(grassFor !== g){ grassPat = gcx.createPattern(g, "repeat"); grassFor = g; }
+    /* A BACKSTOP under the bands. However far up the bands are taken, the last rows into the
+       horizon foreshorten past the point where a band can be drawn at all, and whatever is
+       left shows the canvas through - a dark strip along the skyline, exactly where the eye is
+       looking. One flat fill of the verge's own colour costs nothing and closes it. */
+    gcx.setTransform(1, 0, 0, 1, 0, 0);
+    gcx.fillStyle = "#3f6b2c";
+    gcx.fillRect(0, 0, gw, gh);
+    /* 0.60: at a larger scale one tile covered half the screen near the runner, so by
+       mid-distance foreshortening had squeezed its detail away and the verge read as a lawn. */
+    bands(gcx, grassPat, 0.60, g.height, null);
+
+    if(ART.has("path")){
+      var pi = ART.img("path");
+      if(pathFor !== pi){ pathPat = gcx.createPattern(pi, "repeat"); pathFor = pi; }
+      var pFar = proj(26), pNear = proj(0);
+      var wFar = LANE_W()*pFar.p*1.08, wNear = LANE_W()*pNear.p*1.08;
+      var cFar = worldX(0, pFar.p), cNear = worldX(0, pNear.p);
+      gcx.save();
+      /* ONE clip for the road, not one per band: the bands would otherwise stair-step its
+         edges by up to BAND pixels, and the eye reads a ragged kerb immediately. */
+      gcx.beginPath();
+      gcx.moveTo(cFar - wFar, pFar.y - hy); gcx.lineTo(cFar + wFar, pFar.y - hy);
+      gcx.lineTo(cNear + wNear, gh);        gcx.lineTo(cNear - wNear, gh);
+      gcx.closePath(); gcx.clip();
+      bands(gcx, pathPat, 1.55, pi.height, 1.16);
+      gcx.restore();
+    }
+
+    ctx.drawImage(gcv, 0, hy, W, gh);
+    return true;
+  };
+
+  /* --- the hero: a real run cycle when the strip is there --- */
+  window.MR_drawTigerArt = function(){
+    var name = null;
+    if(G.mode === "over"){
+      /* [r58] THE FALL, PLAYED ONCE AND THEN HELD CRYING. The sheet runs standing -> tumbling
+         -> sitting -> sobbing; the first six frames are the collision and must not repeat, so
+         it plays straight through and then loops only the tail, where she is already sitting
+         and her shoulders are shaking. Looping the whole thing would have her fall over again
+         every second, which is comic in the wrong direction. */
+      if(ART.has("fall")){
+        var ft = (G.t - (G.deadT||G.t)) * 13;
+        var last = ART.frames("fall") - 1;
+        var f2 = ft < last ? Math.floor(ft) : 9 + (Math.floor(ft - last) % (last - 9 + 1));
+        var im2 = ART.img("fall"), r2 = ART.rect("fall", f2);
+        var x2 = laneX(G.laneF, 1), y2 = groundY();
+        var h2 = 170*S, w2 = h2*(r2[2]/r2[3]);
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,.30)";
+        ctx.beginPath(); ctx.ellipse(x2, y2+4*S, w2*0.36, 12*S, 0, 0, 7); ctx.fill();
+        ctx.drawImage(im2, r2[0], r2[1], r2[2], r2[3], x2-w2/2, y2-h2, w2, h2);
+        ctx.restore();
+        return true;
+      }
+      name = ART.has("hit")   ? "hit"   : (ART.has("stumble") ? "stumble" : null);
+    }
+    else if(false) name = null;
+    else if(G.mode === "win")  name = ART.has("happy") ? "happy" : (ART.has("cheer")   ? "cheer"   : null);
+    if(!name){
+      var d = G.targetLane - G.laneF;
+      if(d < -0.18 && ART.has("leanL")) name = "leanL";
+      else if(d > 0.18 && ART.has("leanR")) name = "leanR";
+    }
+    var frame = 0;
+    if(!name){
+      if(!ART.has("run")) return false;
+      name = "run";
+      /* Timed by the CYCLE, not by a frame rate. 13 fps suited the four stills it replaced;
+         the delivered sheet has sixteen, and at 13 fps one stride would take a second and a
+         quarter - a stroll. A stride is about 0.62s however many frames describe it. */
+      /* 1.05s, not 0.62. The shorter stride was set against four stills; sixteen frames of
+         a real cycle at that rate is a sprint, and it reads as wrong against a world moving
+         at walking pace. */
+      var cyc = G.mode === "play" ? 1.05 : 2.2;
+      frame = Math.floor(G.t * (ART.frames("run") / cyc)) % ART.frames("run");
+    }
+    var im = ART.img(name), r = ART.rect(name, frame);
+    if(!im || !r) return false;
+    var x = laneX(G.laneF, 1), y = groundY();
+    /* No synthetic bob when the art is a real cycle: the animation already rises and falls,
+       and adding a sine on top of it gives two bounces at different rates. */
+    var bob = (name === "run" && ART.frames("run") > 4) ? 0
+            : Math.abs(Math.sin(G.t * 13)) * 5 * S;
+    var h = 170 * S, w = h * (r[2] / r[3]);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.34)";
+    ctx.beginPath(); ctx.ellipse(x, y + 4 * S, w * 0.40, 13 * S, 0, 0, 7); ctx.fill();
+    ctx.drawImage(im, r[0], r[1], r[2], r[3], x - w / 2, y - h - bob, w, h);
+    ctx.restore();
+    return true;
+  };
+
+  /* --- gates: the arch art, with the word still drawn by the game on the blank plate --- */
+  window.MR_gateArt = function(state){
+    var n = state === "right" ? "gateC" : state === "wrong" ? "gateW" : "gateN";
+    return ART.has(n) ? ART.img(n) : (ART.has("gateN") ? ART.img("gateN") : null);
+  };
+  window.MR_plateArt = function(){ return ART.has("plate") ? ART.img("plate") : null; };
+  window.MR_ringArt  = function(){ return ART.has("ring")  ? ART.img("ring")  : null; };
+  window.MR_railArt  = function(){ return ART.has("rail")  ? ART.img("rail")  : null; };
+  window.MR_hedgeArt = function(){ return ART.has("hedge") ? ART.img("hedge") : null; };
+
+
+  /* --- coin: the spin sheet --- */
+  window.MR_coinFrame = function(){
+    if(!ART.has("coinSpin")) return null;
+    var f = Math.floor(G.t * 9) % ART.frames("coinSpin");
+    return { img: ART.img("coinSpin"), r: ART.rect("coinSpin", f) };
+  };
+
+  /* --- roadside decor --- */
+  window.MR_decorArt = function(kind, seed){
+    var pick = function(list){
+      var have = list.filter(function(n){ return ART.has(n); });
+      return have.length ? ART.img(have[Math.abs(seed | 0) % have.length]) : null;
+    };
+    if(kind === "pillar") return pick(["pillar1", "pillar2"]);
+    if(kind === "bush")   return pick(["bush1", "bush2"]);
+    return pick(["tree1", "tree2", "tree3"]);
+  };
+})();
+
+function drawFX(){
+  for(const p of G.parts){
+    ctx.globalAlpha = Math.max(0, Math.min(1,p.life*1.6));
+    ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // popups
+  let i=0;
+  for(const p of G.pops){
+    const a = Math.min(1, p.life*2);
+    ctx.globalAlpha=a;
+    const fs = 30*S;
+    ctx.font = "800 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    /* H*0.30, not H*0.47: the gates resolve around H*0.45, so the toast was printing itself
+       across the two words at the exact moment the child looks at them. */
+    const yy = H*0.30 - i*46*S + (1-a)*14*S;
+    ctx.fillStyle="rgba(10,8,24,.72)";
+    const w = Math.max(ctx.measureText(p.text).width, ctx.measureText(p.sub||"").width)+40*S;
+    roundRect(W/2-w/2, yy-fs*0.9, w, p.sub? fs*2.3 : fs*1.5, 14*S); ctx.fill();
+    ctx.fillStyle=p.col; ctx.fillText(p.text, W/2, yy);
+    if(p.sub){
+      ctx.font = "600 "+(19*S)+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      ctx.fillStyle="rgba(255,244,222,.85)";
+      ctx.fillText(p.sub, W/2, yy+fs*0.95);
+    }
+    ctx.globalAlpha=1; i++;
+  }
+
+  // level banner
+  if(G.banner){
+    const a = Math.min(1, G.banner.life*1.4);
+    ctx.globalAlpha=a;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.font="800 "+(52*S)+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    /* [r40] A DARK PLATE BEHIND IT. Gold text with a blur shadow was legible over the old
+       night scene; over a sunlit jungle canopy it reads as a dark smudge - the level number
+       was the one thing on screen the child could not make out. */
+    (function(){
+      const tw = Math.max(ctx.measureText(G.banner.text).width,
+                          ctx.measureText(G.banner.sub||"").width*0.9) + 64*S;
+      ctx.fillStyle="rgba(22,14,8,.55)";
+      roundRect(W/2-tw/2, H*0.23-46*S, tw, 112*S, 26*S); ctx.fill();
+    })();
+    ctx.fillStyle="#ffcb45";
+    ctx.shadowColor="rgba(0,0,0,.6)"; ctx.shadowBlur=18;
+    ctx.fillText(G.banner.text, W/2, H*0.23);
+    ctx.font="700 "+(26*S)+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    ctx.fillStyle="#fff4de";
+    ctx.fillText(G.banner.sub, W/2, H*0.23+46*S);
+    ctx.shadowBlur=0; ctx.globalAlpha=1;
+  }
+
+  if(G.flash>0){
+    ctx.fillStyle=G.flashCol; ctx.globalAlpha=Math.min(.35,G.flash);
+    ctx.fillRect(0,0,W,H); ctx.globalAlpha=1;
+  }
+}
+
+function render(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  /* [r51] NOT turning smoothing off here, although the obvious reasoning says to: bilinear
+     filtering looks like the expensive part of a sprite, and leaves at close to their own size
+     have nothing to gain from it. Measured, switching it off took the trees from 11 ms to 74
+     and the rest of the frame from 32 to 73 - the filtered path is the one this rasteriser has
+     optimised, and the "cheap" one falls off it. Left on, deliberately. */
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(G.shake>0){
+    ctx.translate((Math.random()-0.5)*16*G.shake*S,(Math.random()-0.5)*12*G.shake*S);
+  }
+  // sky
+  /* [r38] painted sky if the files are there, else the generated backdrop */
+  if(!(window.MR_drawSky && MR_drawSky())){
+    if(backdrop) ctx.drawImage(backdrop, 0,0, W, horizonY()+2);
+  }
+  /* [r68] the bridge replaces the ground, the verge, its decor and its railing in one go */
+  const _bridge = !!(window.MR_drawBridge && MR_drawBridge());
+  if(!_bridge) drawGround();
+  /* [r50] THE TREELINE'S SKIRT. The backdrop's treeline stops exactly at the horizon and the
+     ground begins there, which leaves a band of open verge between the far hedge and the
+     trees - the same flat green, just narrower and higher up. Drawing the treeline again over
+     the top of the ground closes it, and it is what that distance looks like anyway: the road
+     runs out of the jungle rather than out of a lawn. */
+  if(window.MR_ART && MR_ART.has("canopy")){
+    const hy2 = horizonY(), sk = (groundY()-hy2)*0.17;
+    ctx.drawImage(MR_ART.img("canopy"), 0, hy2 - sk*0.55, W, sk*1.55);
+  }
+  // far to near
+  if(!_bridge) for(const d of G.decor) drawDecor(d);
+  /* after the scattered decor and before the gates: the railing is always nearer the camera
+     than anything growing out on the verge, and always further than a gate at the same depth */
+  if(!_bridge) for(const r of G.rails){ drawHedge(r, r.k); drawRail(r); }
+  const items = G.gates.map(g=>({z:g.z,k:"g",o:g}))
+             .concat(G.coins.map(c=>({z:c.z,k:"c",o:c})));
+  items.sort((a,b)=>b.z-a.z);
+  for(const it of items){ if(it.k==="g") drawGate(it.o); else drawCoin(it.o); }
+  /* [r41] HORIZON HAZE. The backdrop's treeline ends on a dark edge and the jungle floor
+     starts bright directly underneath it, so the join read as a ruled line across the screen.
+     A short warm band over the seam is what that distance actually looks like. */
+  (function(){
+    /* [r49] Reaching further down the verge than before. The ground plane loses its texture
+       to foreshortening long before the horizon, and without haze that stretch reads as a flat
+       green field rather than as distance - the depth the bands earn is thrown away in the
+       one place the eye checks for it. */
+    /* [r68] over the valley, not a band across the whole screen - the video has its own air -
+       but a glow where the bridge meets the sun, so its far end melts into the light instead
+       of stopping on a hard point */
+    if(_bridge){
+      const hy2 = horizonY(), R = W * 0.16, cx2 = worldX(0, 0);
+      const rg = ctx.createRadialGradient(cx2, hy2, 0, cx2, hy2, R);
+      rg.addColorStop(0, "rgba(255,214,140,.70)");
+      rg.addColorStop(0.45, "rgba(255,200,130,.28)");
+      rg.addColorStop(1, "rgba(255,196,130,0)");
+      ctx.fillStyle = rg; ctx.fillRect(cx2 - R, hy2 - R, R * 2, R * 2);
+      return;
+    }
+    const hy = horizonY(), band = (groundY()-hy)*0.38;
+    const hz = ctx.createLinearGradient(0, hy-band*0.22, 0, hy+band);
+    hz.addColorStop(0,    "rgba(255,196,130,0)");
+    hz.addColorStop(0.22, "rgba(255,190,125,.30)");
+    hz.addColorStop(0.55, "rgba(252,196,142,.15)");
+    hz.addColorStop(1,    "rgba(255,196,130,0)");
+    ctx.fillStyle = hz; ctx.fillRect(0, hy-band*0.22, W, band*1.22);
+  })();
+  drawTiger();
+  // vignette
+  const vg = ctx.createRadialGradient(W/2,H*0.55,H*0.3,W/2,H*0.55,H*0.85);
+  /* [r40] .26 and warm, not .55 and near-black: the old value was set for a night scene and
+     it drags the corners of a daylight jungle down into mud. */
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(40,22,10,.26)");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  drawFX();
+  ctx.restore();
+}
+
+/* ======================= screens / hud ======================= */
+const $ = id => document.getElementById(id);
+function hideScreens(){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on")); }
+function show(id){ hideScreens(); $(id).classList.add("on"); }
+function hud(){
+  $("score").textContent = G.score;
+  const _hOn  = window.MR_ART && MR_ART.src("heart");
+  const _hOff = window.MR_ART && MR_ART.src("heartOff");
+  let h="";
+  for(let i=0;i<3;i++){
+    const live = i<G.hearts;
+    h += (_hOn && _hOff) ? '<img alt="" src="'+(live?_hOn:_hOff)+'">'
+                         : (live ? "❤" : '<span class="off">❤</span>');
+  }
+  $("hearts").innerHTML = h;
+  const pw = $("pips"), n = (LEVELS[G.level]||{}).gates || 6;
+  if(pw){
+    if(pw.children.length !== n){
+      pw.innerHTML = "";
+      for(let i=0;i<n;i++) pw.appendChild(document.createElement("i"));
+    }
+    for(let i=0;i<n;i++){
+      const p = pw.children[i], got = G.pips[i];
+      p.classList.toggle("on", got === true);
+      p.classList.toggle("miss", got === false);
+    }
+  }
+  if(G.score>G.best){ G.best=G.score; saveBest(); }
+
+}
+function levelDone(){
+  G.mode="done"; sfxLevel(); VOICE.clear(); VOICE.say("level_up");
+  const L=LEVELS[G.level];
+  const stars = G.wrong===0 ? 3 : (G.wrong<=1 ? 2 : 1);
+  $("lvlTitle").textContent = "स्तर "+(G.level+1)+" पूरा!";
+  const _sOn  = window.MR_ART && MR_ART.src("star");
+  const _sOff = window.MR_ART && MR_ART.src("starOff");
+  $("lvlStars").innerHTML = [0,1,2].map(function(i){
+    const got = i<stars;
+    return (_sOn && _sOff) ? '<img alt="" src="'+(got?_sOn:_sOff)+'">'
+                           : (got ? "★" : '<span class="off">★</span>');
+  }).join("");
+  /* the card carries the NEXT level's instruction, because it is the only moment between the
+     two where the child is not also watching the road */
+/* ONE LINE. Stars, three counters, a list of missed words and an instruction was four
+     things to read in four seconds, and only the last one told the child what to do next. */
+  const N = LEVELS[G.level+1];
+  $("lvlNext").textContent = N ? "अब " + N.name + " वाले शब्द चुनो।" : "सारे स्तर पूरे!";
+  show("scLevel");
+  clearTimeout(G.nextT);
+  G.nextT = setTimeout(function(){
+    if(G.level+1 < LEVELS.length){
+      G.hearts = Math.min(3, G.hearts+1);
+      startLevel(G.level+1);
+    }else{
+      G.mode = "win";
+      if(G.score > G.best){ G.best = G.score; saveBest(); }
+      show("scWin");
+    }
+  }, 4200);
+}
+function gameOver(){
+  G.mode="over"; G.deadT = G.t; hud();     /* the heart she just lost has to leave the row */
+  /* [r71] the pratfall: the hit already bonked; a slide whistle while she tumbles, a boing as she
+     lands on her seat - and "try again" waits for them rather than being talked over */
+  sfxSlideWhistle(0.10);
+  sfxBoing(0.72);
+  VOICE.clear();
+  setTimeout(function(){ if(G.mode === "over") VOICE.say("retry"); }, 1350);
+  if(G.score>G.best){ G.best=G.score; saveBest(); }
+  const t = G.target===U ? "छोटी उ — नीचे छोटी रेखा ( ु )"
+                         : "बड़ी ऊ — नीचे लंबी रेखा ( ू )";
+  $("overTip").textContent = t;
+  /* THE CARD WAITS FOR THE FALL. Shown at once it covered the one moment the animation
+     exists for - she has not even hit the ground by the time a dialog is over the top of it. */
+  clearTimeout(G.nextT);
+  G.nextT = setTimeout(function(){ show("scOver"); }, 2300);
+  setTimeout(function(){ G.hearts = 3; hud(); startLevel(G.level); }, 6200);
+}
+function fullReset(){ G.score=0; G.hearts=3; clearTimeout(G.nextT); hud(); }
+
+/* [r54] No button handlers left to write: the cards advance themselves, and the only thing
+   the child controls is which lane she runs in - which is the keys and pads below. */
+
+/* ======================= boot ======================= */
+let last=0;
+function loop(ts){
+  const dt = Math.min(0.05, (ts-last)/1000 || 0.016); last=ts;
+  update(dt); render(); watchLessonVO();
+  MR_RAF(loop);
+}
+function boot(){
+  resize(); seedDecor(); seedRails(); hud();
+  /* [r50] STRAIGHT INTO THE GAME. There is no start card any more: the screen arrives, the
+     level card names the matra, and the world is already moving - slowly - under the
+     instruction. The card and its button stay in the markup because "शुरू से" on the end
+     screens still goes back to them. */
+  MR_RAF(loop);
+  fullReset(); startLevel(0);
+}
+/* the lesson releases the hold when its instruction clip ends; standalone, nothing calls this
+   and the ten-second backstop below lets the game go by itself */
+window.MR_begin = function(){ G.hold = false; G.holdT = 0; };
+/* A read-only window onto what is actually moving. G.ground accumulates the SAME v the gates,
+   the decor and the railing are advanced by, so sampling it over a known interval measures the
+   world's real speed - which pixel matching could not do here: the road repeats often enough
+   that a frame-to-frame match keeps locking onto the wrong stone. */
+window.MR_DEBUG = function(){
+  var sc = document.querySelector(".mr-root .screen.on");
+  /* the railing is drawn in array order, so "in depth order" is a property of the array -
+     checkable from outside rather than inferred from a screenshot */
+  var outOfOrder = 0;
+  for(var i=1;i<G.rails.length;i++) if(G.rails[i].z > G.rails[i-1].z) outOfOrder++;
+  var hz = G.rails.filter(function(r){ return r.k % HEDGE_EVERY === 0; })
+                  .map(function(r){ return r.z; }).sort(function(a,b){ return a-b; });
+  var gaps = [];
+  for(var j=1;j<hz.length;j++) gaps.push(+(hz[j]-hz[j-1]).toFixed(3));
+  return { hold: G.hold, holdT: +G.holdT.toFixed(2), ramp: G.ramp, ground: G.ground,
+           level: G.level, mode: G.mode, hearts: G.hearts, cleared: G.cleared,
+           levels: LEVELS.length, levelNames: LEVELS.map(function(l){ return l.name; }),
+           rails: G.rails.length, railsOutOfOrder: outOfOrder,
+           hedgeGaps: gaps.filter(function(v,k,a){ return a.indexOf(v)===k; }),
+           audio: AC ? { state: AC.state, music: MUSIC.on, bar: MUSIC.bar,
+                   bgm: BGM.buf ? +BGM.buf.duration.toFixed(3) : (BGM.failed ? "failed" : (BGM.loading ? "loading" : "idle")),
+                   bgmPlaying: !!BGM.src, bgmChannels: BGM.buf ? BGM.buf.numberOfChannels : 0,
+                   busGain: MUSBUS ? +MUSBUS.gain.value.toFixed(3) : null,
+                         gain: +MUSBUS.gain.value.toFixed(3) } : null,
+           screen: sc ? sc.id : "",
+           gates: G.gates.map(function(g){
+             return { z: +g.z.toFixed(3), ok: g.okLane, done: !!g.done, pin: !!g.pin }; }) };
+};
+/* one frame, on demand, so the cost of EVERYTHING can be timed - not just the floor, which is
+   the part that is easy to reach and the part least likely to be the problem */
+window.MR_DEBUG.render = function(){ render(); };
+/* Hold the world still so the SAME picture can be drawn repeatedly. Timing a moving scene
+   compares different pictures: the trees, the gates and the hedge are all somewhere else by
+   the next sample, and the per-layer differences come out noisy enough to go negative. */
+window.MR_DEBUG.freeze = function(on){ G.frozen = !!on; };
+
+if(document.fonts && document.fonts.load){
+  Promise.all([
+    document.fonts.load('700 40px "Baloo 2"', "पुल फूल"),
+    document.fonts.load('800 40px "Baloo 2"', "शाबाश")
+  ]).then(boot).catch(boot);
+  setTimeout(()=>{ if(!last) boot(); }, 2500);
+}else boot();
+})();
+
+    } catch(err){ try{ console.error('matra-runner:', err); }catch(e){} }
+    return function teardown(){
+      _dead = true;
+      if(_raf) { try{ cancelAnimationFrame(_raf); }catch(e){} }
+      _ls.forEach(function(l){ try{ l[0].removeEventListener(l[1], l[2], l[3]); }catch(e){} });
+      _ls.length = 0;
+    };
+  }
+/* ==== MATRA-RUNNER EMBED END ==== */
+
+  SlideModules.MINI_GAME = {
+    mount(host, slide){
+      const d = slide.data || {};
+      newVoEpoch();
+      state.ownsAudio = true;
+      setNavActive(false);
+
+      /* [r37] THE WHOLE SCREEN IS THE GAME.
+         Yasir: "I don't want any other thing on the screen, only game will be played on the
+         screen." So the header band goes for the length of this slide - the engine already has
+         `.stage.no-band` for screens that own their whole canvas - and the game is built
+         straight into the slide host. No frame, no second document: the markup below is the
+         game's own, the stylesheet is its own (confined to .mr-root by the embed step), and the
+         script is its own, running in this page. */
+      const stg = document.querySelector(".stage");
+      if(stg) stg.classList.add("no-band", "mg-full");
+
+      const root = document.createElement("div");
+      root.className = "mr-root mr-fullscreen";
+      root.innerHTML = MATRA_RUNNER_HTML;
+      /* [r54] PARENTED TO <body>, not to the slide.
+         Yasir: "we don't need any bar on the left, right, top, down ... it should play in the
+         entire screen". The lesson's stage is a fixed 1333x750 box scaled to fit, so anything
+         inside it is letterboxed by construction - and `position:fixed` cannot escape it
+         either, because a transformed ancestor becomes the containing block for fixed
+         descendants. Out here the game measures the viewport and fills it. It is removed by
+         hand on the way out, since clearHost() can no longer reach it. */
+      document.body.appendChild(root);
+
+      /* [r50] THE GAME IS ON SCREEN BEFORE THE INSTRUCTION, not after it.
+         Yasir: "we don't need play button, as soon as we enter the page the game starts with a
+         small intro." It used to boot in the voice-over's callback, which meant the child spent
+         the whole clip looking at an unpainted canvas and then had to find a button. Now it
+         boots on arrival and holds itself at a crawl - she runs, the road moves, the level card
+         names the matra - and the clip's callback releases it to full speed. */
+      let stop = null, done = false, watch = 0;
+
+      /* [r37] TEARDOWN ON THE WAY OUT, not on a timer. The poll below is a backstop for exits
+         this screen does not control; the ordinary exit runs it at the exact moment of leaving,
+         because a 400ms lag is 400ms of the lesson's header sitting on top of a still-running
+         game. */
+      const teardownNow = ()=>{
+        clearInterval(watch);
+        if(stg) stg.classList.remove("no-band", "mg-full");
+        /* the music lives in an AudioContext, which outlives the DOM and the rAF loop */
+        try{ if(window.MR_audioStop) window.MR_audioStop(); }catch(e){}
+        if(stop){ try{ stop(); }catch(e){} stop = null; }
+        if(root && root.parentNode) root.parentNode.removeChild(root);
+      };
+
+      const finish = (why)=>{
+        if(done) return;
+        done = true;
+        SwiftPAL.emit("mini_game_done", { slide_id: slide.id, phase: slide.phase, value: true,
+                                          reason: why, latency_ms: Date.now() - state.slideStart });
+        $("navBtn").onclick = ()=>{ teardownNow(); completeSlide(true); };
+        setNavActive(true);          /* from page 6 on, this is what carries the lesson onward */
+      };
+
+      /* [r37] THE WAY ONWARD, BUILT INTO THE GAME'S OWN HUD.
+         While this was an iframe the game posted a message and a little bridge script drew this
+         button. Merged, there is no frame and no message to post - and the bridge was gated on
+         being embedded, so it would never have run again. It is drawn here instead, styled with
+         the game's own `.mute` class so it belongs to the HUD rather than looking like the
+         lesson reaching in.
+         It is not decoration: a runner has no natural finishing moment, and from page 6 there is
+         no आगे button, so without this a child could not leave screen 18 at all. */
+      /* [r54] NO BUTTON. There was an आगे key in the game's own HUD, because a runner has no
+         natural finishing moment and from page 6 the lesson has no आगे of its own. Yasir wants
+         nothing to press, so the game now ends itself - the last level rolls into the win card -
+         and this listens for that instead of offering an escape.
+         The long timer is not a button in disguise: it is the guarantee that a game which
+         somehow never finishes cannot trap a child on the last-but-one screen of a lesson. */
+      const addWayOut = ()=>{
+        const win = root.querySelector("#scWin");
+        if(win) new MutationObserver(()=>{
+          if(win.classList.contains("on")) setTimeout(()=> finish("win"), 2600);
+        }).observe(win, { attributes:true, attributeFilter:["class"] });
+        setTimeout(()=> finish("timeout"), 6*60*1000);
+      };
+
+      stop = bootMatraRunner();
+      addWayOut();
+      const release = ()=>{
+        if(CARD.slides[state.idx] !== slide) return;
+        try{ if(window.MR_begin) window.MR_begin(); }catch(e){}
+      };
+      say(A(slide, "prompt"), release);
+      setTimeout(release, 7000);    /* a missing or refused clip must not hold the game back */
+
+      /* LEAVING HAS TO TAKE THE GAME WITH IT. Its loop and its window listeners outlive the DOM
+         that is thrown away on navigation, so they are handed back deliberately. */
+      watch = setInterval(()=>{
+        if(CARD.slides[state.idx] === slide) return;
+        teardownNow();
+      }, 150);
+    }
+  };
+
+  SlideModules.SENTENCE_COMPLETE = {
+    mount(host, slide){
+      const d = slide.data;
+      newVoEpoch();          /* any chain still running from a previous mount is now stale */
+      /* [r33] the pinned copy is parented to <body> so it can sit over the blank in screen
+         coordinates - which also puts it out of clearHost()'s reach, so it is swept here. A
+         slide left mid-drop (navigated away, or the train carrying the page off) would otherwise
+         leave a card floating over the next screen. */
+      document.querySelectorAll(".sc-pinned").forEach(e => e.remove());
+      const wrap = document.createElement("div");
+      wrap.className = "sc-stage";
+      wrap.innerHTML =
+        '<div class="sc-scene">' +
+          imgOrEmoji(d.scene_img, d.scene_emoji, "sc-sceneimg", "sc-sceneemoji") +
+        "</div>" +
+        '<div class="sc-right">' +
+          '<div class="sc-sentence">' +
+            '<span class="sc-txt">' + (d.sentence_pre || "") + "</span>" +
+            '<span class="sc-blank dd-zone"></span>' +
+            '<span class="sc-txt">' + (d.sentence_post || "") + "</span>" +
+          "</div>" +
+          '<div class="sc-opts"></div>' +
+        "</div>";
+      host.appendChild(wrap);
+
+      const blank = wrap.querySelector(".sc-blank");
+      const sent  = wrap.querySelector(".sc-sentence");
+      const optsW = wrap.querySelector(".sc-opts");
+      /* SME: "Keep the options visually supported with pictures so the child can independently
+         understand the word." Picture AND word on every card, exactly as the mockup draws them. */
+      /* [r29] the answer was authored first on all four sentence screens */
+      shuffled(d.options).forEach(o => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "sc-opt";
+        b.dataset.word = o.word;
+        if(o.audio) b.dataset.audio = o.audio;
+        /* the whole sentence with THIS word standing in the blank - rung 2 plays all three */
+        if(o.sentence_audio) b.dataset.sentence = o.sentence_audio;
+        b.innerHTML = imgOrEmoji(o.img, o.emoji, "sc-optimg", "sc-optemoji") +
+                      '<span class="ink-box"><span class="sc-optlbl ink-glyph">' + o.word + "</span></span>";
+        optsW.appendChild(b);
+      });
+      const opts = [...optsW.children];
+
+      state.ownsAudio = true;
+      state.replayAudio = ()=> say(A(slide, "prompt"), ()=>{});
+      setNavActive(false);
+      let tries = 0;
+
+      /* RUNG 2, screens 8-11: "खाली जगह में तीनों शब्द एक-एक करके रखकर पूरा वाक्य read out करें"
+         plus a soft glow on the part of the picture that answers the question. The two wrong
+         sentences are read as well, on purpose: «सीमा आज बहुत तरबूज है।» is only obviously wrong
+         once you have HEARD it, and hearing it is the whole lesson on these four screens.
+         The words are tried in the order they are on screen, left to right, because that order
+         is shuffled per run and it is the only one the child can follow. */
+      function sceneGlow(on){
+        const holder = wrap.querySelector(".sc-scene");
+        if(!holder) return;
+        holder.querySelectorAll(".sc-glow").forEach(e => e.remove());
+        const regions = d.scene_glow || [];
+        if(!on || !regions.length) return;
+        const img = holder.querySelector(".sc-sceneimg");
+        if(!img || !img.naturalWidth) return;
+        /* the regions are fractions of the ARTWORK and the artwork is drawn object-fit:cover, so
+           part of it is off the panel. Undo the cover here rather than baking the crop into the
+           numbers, and they stay right if the panel is ever resized. */
+        const cw = img.clientWidth, ch = img.clientHeight;
+        const sc = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+        const iw = img.naturalWidth * sc, ih = img.naturalHeight * sc;
+        const ox = (cw - iw) / 2, oy = (ch - ih) / 2;
+        regions.forEach(g => {
+          const e = document.createElement("span");
+          e.className = "sc-glow";
+          e.style.left   = (ox + (g[0] - g[2]) * iw) + "px";
+          e.style.top    = (oy + (g[1] - g[3]) * ih) + "px";
+          e.style.width  = (g[2] * 2 * iw) + "px";
+          e.style.height = (g[3] * 2 * ih) + "px";
+          holder.appendChild(e);
+        });
+      }
+
+      function scDemo(after){
+        hintHold(function(fin){
+        sceneGlow(true);
+        hintSeq(opts.map(b => (next)=>{
+          if(b.classList.contains("sc-gone")) return next();
+          blank.classList.add("sc-try");
+          blank.innerHTML = '<span class="ink-box"><span class="sc-word ink-glyph">'
+                          + b.dataset.word + "</span></span>";
+          b.classList.add("sc-trying");
+          say(clip(b.dataset.sentence) || clip(b.dataset.audio), ()=> setTimeout(()=>{
+            b.classList.remove("sc-trying");
+            next();
+          }, 300));
+        }), ()=>{
+          /* the blank goes back to being a blank - nothing has been answered yet */
+          blank.classList.remove("sc-try");
+          if(!blank.classList.contains("filled")) blank.innerHTML = "";
+          fin();
+        });
+        }, after);
+      }
+
+      function sparkAt(el){
+        const s = wrap.getBoundingClientRect(), b = el.getBoundingClientRect();
+        const sp = document.createElement("span");
+        sp.className = "sc-spark"; sp.textContent = "✨";
+        sp.style.left = (b.left - s.left + b.width / 2 - 9) + "px";
+        sp.style.top  = (b.top  - s.top  - 12) + "px";
+        wrap.appendChild(sp);
+        setTimeout(()=> sp.remove(), 1400);
+      }
+
+      function land(b){
+        /* "Correct Answer on 3rd Attempt … No additional VO required." */
+        const silent = tries >= maxTries() - 1;
+        state.locked = true;
+        if(typeof stopNudge === "function") stopNudge();
+        opts.forEach(x => { x.disabled = true; if(x !== b) x.classList.add("sc-fade"); });
+        b.classList.add("sc-won");
+        /* "The option card snaps into the blank space" · "When the correct option is selected,
+           the word smoothly moves into the blank space" (screens 15 and 16 say it in as many
+           words). So the word actually TRAVELS: a clone of the chosen label is placed over the
+           option at its real position, then transformed to the blank's position and size. FLIP,
+           because the two live in different stacking contexts and animating layout between them
+           would reflow the sentence mid-flight. */
+        const lbl = b.querySelector(".sc-optlbl");
+        const from = lbl && lbl.getBoundingClientRect();
+        const to = blank.getBoundingClientRect();
+        /* [r34] a DROP has already put the word in the blank and faded the card out - the swap
+           belongs to the gesture. Only a TAP arrives here with the blank still empty. */
+        const alreadySettled = blank.classList.contains("filled");
+        if(!alreadySettled){
+          blank.classList.add("filled");
+          blank.innerHTML = '<span class="ink-box"><span class="sc-word ink-glyph">' + d.answer + "</span></span>";
+          sent.classList.add("sc-done");
+        }
+        if(alreadySettled){
+          /* nothing to animate: it happened when the card landed */
+        } else if(pinned){
+          /* [r33] DROPPED: the card is already lying on the blank. It fades out there and the
+             word fades up underneath it, so the one turns into the other in place. No flight -
+             the card has already made the journey, in the child's own hand. */
+          const word = blank.querySelector(".sc-word");
+          if(word){ word.style.transition = "none"; word.style.opacity = "0"; }
+          const gone = pinned; pinned = null;
+          requestAnimationFrame(()=>{
+            gone.style.opacity = "0";
+            if(word){ word.style.transition = "opacity .30s ease"; word.style.opacity = "1"; }
+          });
+          setTimeout(()=>{ gone.remove(); if(word) word.style.transition = ""; }, 420);
+        } else if(from && to.width){
+          const fly = document.createElement("span");
+          fly.className = "sc-fly"; fly.textContent = d.answer;
+          fly.style.left = from.left + "px"; fly.style.top = from.top + "px";
+          fly.style.font = getComputedStyle(lbl).font;
+          document.body.appendChild(fly);
+          const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+          const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+          const word = blank.querySelector(".sc-word");
+          if(word) word.style.opacity = "0";
+          requestAnimationFrame(()=>{
+            fly.style.transform = "translate(" + dx + "px," + dy + "px)";
+            fly.style.opacity = "1";
+          });
+          setTimeout(()=>{
+            fly.remove();
+            if(word) word.style.opacity = "";
+            /* [r31] the card the word came from becomes an empty box, once the word has
+               actually landed - do it any earlier and the child watches the card empty out
+               before the thing that left it has arrived. */
+            b.classList.add("sc-ghost");                       /* [r32] starts the dissolve */
+            setTimeout(()=> b.classList.add("sc-gone"), 380);   /* hidden only once it has faded */
+          }, 460);
+        } else {
+          b.classList.add("sc-ghost", "sc-gone");   /* no flight (reduced motion): straight swap */
+        }
+        fbCorrect();
+        if(typeof confettiCannon === "function") confettiCannon();
+        if(typeof setSwMood === "function") setSwMood("celebrate");
+        sparkAt(b); sfxSparkle();
+        SwiftPAL.emit("sentence_complete_first_try", {
+          slide_id: slide.id, phase: slide.phase, value: true,
+          first_try: tries === 0, attempts: tries + 1,
+          latency_ms: Date.now() - state.slideStart
+        });
+        const unlock = ()=>{ setNavActive(true);
+          $("navBtn").onclick = ()=> completeSlide(tries === 0); };
+        if(silent) setTimeout(unlock, 900); else say(A(slide, "correct"), unlock);
+      }
+
+      /* [r32] BOUNCE THE CARD HOME FROM THE BLANK. makeDraggable clears the tile's transform
+         before it hands over, so by the time we get here the card has already snapped back in a
+         single frame - the child sees it vanish from under their finger. The offset is
+         reconstructed from the two rects, re-applied without a transition, and then animated
+         away, which is the return journey they actually asked to see.
+         Measured in CSS px (offsets divided by --scale): the stage is transformed, so a raw
+         client-rect delta would overshoot on any display that is not 1:1. */
+      function bounceHome(tile, zone){
+        if(!tile || !zone) return;
+        const sc = parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue("--scale")) || 1;
+        const t = tile.getBoundingClientRect(), z = zone.getBoundingClientRect();
+        const dx = ((z.left + z.width / 2) - (t.left + t.width / 2)) / sc;
+        const dy = ((z.top + z.height / 2) - (t.top + t.height / 2)) / sc;
+        tile.style.transition = "none";
+        tile.style.transform = "translate(" + dx + "px," + dy + "px) scale(1.08)";
+        requestAnimationFrame(()=>{
+          tile.style.transition = "transform 460ms cubic-bezier(.34,1.35,.6,1)";
+          tile.style.transform = "";
+          setTimeout(()=>{ tile.style.transition = ""; }, 500);
+        });
+      }
+
+      /* [r35] THE REFUSAL IS PART OF THE DROP TOO.
+         Yasir: "when we drop the incorrect element to the drop zone it should INSTANTLY wiggle
+         and move back to its original place."
+         Same shape as the fault [r34] fixed on the correct side: the wiggle and the return were
+         inside miss(), and miss() runs only after the word clip has finished - so a wrong card
+         sat on the blank for the length of that clip before anything said no. The answer to a
+         gesture has to arrive with the gesture; the spoken hint can follow at its own pace. */
+      function refuseAtZone(tile, zone){
+        if(!tile || !zone) return;
+        zone.classList.remove("sc-zshake"); void zone.offsetWidth;
+        zone.classList.add("sc-zshake");
+        setTimeout(()=> zone.classList.remove("sc-zshake"), 600);
+        bounceHome(tile, zone);
+        tile._refused = true;          /* so miss() does not play it a second time */
+      }
+
+      function miss(b, fromZone){
+        tries++;
+        state.attempts = tries;
+        fbWrong();
+        if(typeof setSwMood === "function") setSwMood("tryagain");
+        if(fromZone){
+          /* dropped in: the blank has already refused it on release - see refuseAtZone */
+          if(!b._refused){
+            fromZone.classList.remove("sc-zshake"); void fromZone.offsetWidth;
+            fromZone.classList.add("sc-zshake");
+            setTimeout(()=> fromZone.classList.remove("sc-zshake"), 600);
+            bounceHome(b, fromZone);
+          }
+          b._refused = false;
+        } else {
+          /* tapped: nothing moved, so the card itself is what shakes - the SME's original note */
+          b.classList.remove("sc-shake"); void b.offsetWidth; b.classList.add("sc-shake");
+          setTimeout(()=> b.classList.remove("sc-shake"), 560);
+        }
+        SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: tries });
+        if(tries === 1){
+          /* RUNG 1: shake, no highlight, one line */
+          say(A(slide, "hint1") || A(slide, "try_again"), ()=>{});
+        } else if(tries === 2 && hintLevels() >= 3){
+          /* RUNG 2: the three sentences, then the line that tells the child what to do with them */
+          state.scaffoldLevel = 2; state.hintUsed = true;
+          SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 2 });
+          scDemo(()=> say(A(slide, "hint2") || A(slide, "hint") || A(slide, "try_again"),
+                          ()=> sceneGlow(false)));
+        } else {
+          /* RUNG 3: "'खुश' वाले शब्द पर soft glow और hand nudge। 'फूल' और 'तरबूज' lock हो जाएँगे।"
+             `disabled` already stops the tap and the drop (chooseFrom and the drop handler both
+             test it); `sc-locked` takes the card out of pointer-events entirely, so it cannot
+             even be picked up - a card that lifts and then silently refuses to land reads as a
+             broken card rather than a locked one. */
+          state.scaffoldLevel = 3; state.hintUsed = true;
+          SwiftPAL.emit("hint_shown", { slide_id: slide.id, level: 3 });
+          sceneGlow(false);
+          const right = opts.find(x => x.dataset.word === d.answer);
+          opts.forEach(x => { if(x !== right){ x.disabled = true; x.classList.add("sc-locked"); } });
+          if(right){
+            right.classList.add("sc-nudge");
+            withHand3(()=>{ if(typeof handOnAnswer === "function") handOnAnswer(right, slide); });
+          }
+          say(A(slide, "hint3") || A(slide, "hint2") || A(slide, "hint") || A(slide, "try_again"),
+              ()=>{});
+        }
+      }
+
+      /* [r29] THE CARD CAN BE CARRIED TO THE BLANK, not only tapped.
+         The SME's note for this screen says "the option card snaps into the blank space", and
+         these are the only option cards in the lesson that could not be picked up at all - every
+         other screen from page 6 on is a drag. A child arriving here after six drag screens
+         tries to drag, and nothing happened.
+         TAP STILL WORKS, and is still what the note specifies first ("When an option is tapped,
+         play the word VO"). makeDraggable already separates the two: a press that travels less
+         than 6px and lands on no zone is delivered to `onTap`, so both gestures reach the same
+         decision and neither is a special case. */
+      /* [r33] THE CARD STAYS WHERE IT WAS DROPPED.
+         Yasir: "when we drop the correct element to the drop zone it should dissolve (or fade
+         away) there ... currently the element move back to its original place and then it
+         dissolve and text appears at the drop zone."
+         Exactly right, and the cause is makeDraggable: it clears the tile's transform before it
+         calls back, so the card is already home a frame later - and the word VO plays before
+         land() runs, so the child watches it sit in the tray for a second and dissolve THERE.
+         A copy of the card is pinned over the blank at the instant of the drop and the original
+         is emptied at once, so the tray shows the box it left behind while the card itself is
+         still on the blank, waiting to fade. The copy is what dissolves.
+         SIZED IN CSS px AND SCALED BACK UP: the stage carries --scale, so a body-level clone
+         given raw client-rect dimensions would render its picture and text at the wrong size on
+         any display that is not 1:1. */
+      let pinned = null;
+      /* [r34] THE DISSOLVE IS PART OF THE DROP, NOT OF THE FEEDBACK.
+         Yasir: "it should dissolve there INSTANTLY ... currently the element remain near the drop
+         zone for few seconds and then it dissolve."
+         r33 pinned the card on the blank but left the dissolve inside land(), and land() only
+         runs after the word clip has finished - so the card lay on the blank for the length of
+         that clip before anything happened to it. The child's action and the screen's answer to
+         it were a second and a half apart.
+         The exchange now happens in the same gesture: the copy starts fading and the word starts
+         appearing the moment the card is let go. The clip still plays and land() still does the
+         rest (locking, the celebration, the unlock) - it simply no longer owns the swap. */
+      function settleWord(){
+        if(blank.classList.contains("filled")) return;
+        blank.classList.add("filled");
+        blank.innerHTML = '<span class="ink-box"><span class="sc-word ink-glyph">'
+                        + d.answer + "</span></span>";
+        sent.classList.add("sc-done");
+        const word = blank.querySelector(".sc-word");
+        if(word){ word.style.transition = "none"; word.style.opacity = "0"; }
+        const gone = pinned; pinned = null;
+        requestAnimationFrame(()=>{
+          if(gone) gone.style.opacity = "0";
+          if(word){ word.style.transition = "opacity .26s ease"; word.style.opacity = "1"; }
+        });
+        if(gone) setTimeout(()=>{ gone.remove(); }, 340);
+        setTimeout(()=>{ if(word) word.style.transition = ""; }, 360);
+      }
+
+      function pinAtZone(tile, zone){
+        const sc = parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue("--scale")) || 1;
+        const r = tile.getBoundingClientRect(), z = zone.getBoundingClientRect();
+        const c = tile.cloneNode(true);
+        c.className = "sc-opt sc-pinned";
+        c.style.cssText =
+          "position:fixed;margin:0;z-index:60;pointer-events:none;transform-origin:top left;" +
+          "width:" + (r.width / sc) + "px;height:" + (r.height / sc) + "px;" +
+          "transform:scale(" + sc + ");" +
+          "left:" + (z.left + z.width / 2 - r.width / 2) + "px;" +
+          "top:"  + (z.top + z.height / 2 - r.height / 2) + "px;";
+        document.body.appendChild(c);
+        pinned = c;
+        tile.classList.add("sc-ghost", "sc-gone");   // its slot is an empty box immediately
+      }
+
+      const chooseFrom = (b, fromZone)=>{
+        if(hintBusy || state.locked || b.disabled) return;
+        sayOpt(clip(b.dataset.audio), ()=>{
+          if(state.locked) return;
+          if(b.dataset.word === d.answer) land(b); else miss(b, fromZone);
+        });
+      };
+      opts.forEach(b => {
+        /* [r65] Yasir: "from page 13 to 16 only dragging & dropping should work, currently even
+           if I tap the word goes to the drop zone which should not happen". So a tap reads the
+           word out - the SME's "when an option is tapped, play the word VO" - and that is all it
+           does. The judgement lives in the drop handler alone now. */
+        const tap = ()=>{
+          if(hintBusy || state.locked || isPlaying || b.disabled) return;
+          if(typeof sfxTap === "function") sfxTap();
+          sayOpt(clip(b.dataset.audio), ()=>{});
+        };
+        b.onclick = tap;
+        if(typeof makeDraggable === "function"){
+          makeDraggable(b, (zone, tile)=>{
+            /* dropped on the blank: the same judgement the tap makes. A wrong card is NOT left
+               sitting in the blank - miss() shakes it and it springs back, which is the note's
+               "option returns to its original position". */
+            if(hintBusy || state.locked || tile.disabled) return;
+            if(typeof sfxTap === "function") sfxTap();
+            /* [r33] decided here, not after the clip: the judgement is deterministic, and the
+               card has to be pinned in the SAME frame it is released or it snaps home first. */
+            if(tile.dataset.word === d.answer){
+              pinAtZone(tile, zone);
+              settleWord();                    /* [r34] straight away, in the same frame */
+            } else {
+              refuseAtZone(tile, zone);        /* [r35] ...and so does the refusal */
+            }
+            chooseFrom(tile, zone);            /* [r32] the zone it was dropped on */
+          }, { onTap: tap });
+        }
+      });
+
+      /* SME: "Picture appears first. Sentence box appears with the blank space. Options slide/fade
+         in one by one." Settled by default; `sc-enter` only drives the stagger. */
+      requestAnimationFrame(()=>{ wrap.classList.add("sc-enter"); sfxPopSoft(); });
+      /* [r30] THE ENTRY ANIMATION HAS TO LET GO, OR THE CARD CANNOT BE DRAGGED.
+         Yasir: "when we drag and drop it should be visible dragging ... we need to show how the
+         elments are going."
+         .sc-enter's stagger runs `animation:scIn ... both`, and `both` means the animation keeps
+         applying its final frame - `transform:none` - for as long as the class is there. An
+         animated property outranks an inline style, so makeDraggable's
+         `tile.style.transform = translate(dx,dy)` was being written and then ignored: the drop
+         still worked, but the card never moved under the finger. Measured: a sort card travels
+         210px while held, a sentence card travelled 0.
+         The keyframes end exactly where the settled card sits (opacity:1, transform:none), so
+         dropping the class changes nothing on screen - it only hands control back.
+         Removed when the last option lands, with a timer as backstop (a cancelled or skipped
+         animation may never fire animationend) and on first touch, so an impatient child is
+         never the one who finds the gap. */
+      const _settleIn = ()=> wrap.classList.remove("sc-enter");
+      wrap.addEventListener("animationend", (e)=>{
+        if(e.target === opts[opts.length - 1]) _settleIn();
+      });
+      setTimeout(_settleIn, 2400);
+      opts.forEach(b => b.addEventListener("pointerdown", _settleIn, { once:true }));
+      say(A(slide, "prompt"), ()=>{});
+    }
+  };
+
+  /* ================================================================ 11 · THE LANDING TRAIN */
+  /* THE SAME TRAIN AS EVERY OTHER SCREEN. Round 3b's whole point is that this lesson has one
+     train, not a painted cover and a drawn everything-else — so the landing mounts TrainChrome
+     exactly as the activity screens do, with the two matras painted onto the coaches' cream
+     panels. The earlier landing-only implementation (and the cropped two-coach sprite sheet it
+     needed) are gone: slicing gives a two-coach train from the three-coach artwork for free.
+
+     SME: "Show only two matra boxes/cards: 1st box ु, 2nd box ू … The matras can be shown inside
+     two train bogies/cards so that the lesson visually continues as a «मात्राओं की रेल» journey",
+     with a right-to-left arrival, a whistle on entry, the bogies appearing one by one and a
+     sparkle as each matra lands.
+
+     The shared engine's boot() does not know this hero kind, so it leaves #sgHero empty and this
+     fills it afterwards. Nothing in the shared engine is touched. */
+  function dressLandingTrain(){
+    const hero = (typeof CARD !== "undefined" && CARD.landing_hero) || null;
+    if(!hero || hero.kind !== "matra_train") return false;
+    const el = document.getElementById("sgHero");
+    if(!el) return false;
+    if(el.dataset.ltDone) return true;                    // idempotent
+    el.dataset.ltDone = "1";
+    const ms = hero.matras || [];
+
+    /* r7: THE GREETING WAITS FOR THE TRAIN. It used to start at boot, i.e. under a 3.4s arrival
+       with a whistle, a chug bed and two sparkles over it — the same clash this bundle fixed on
+       all seven activity screens, still live on the one screen every child sees first.
+       `ltReady()` is the single release point, and the backstop below fires it even if the
+       arrival never completes, because a cover that never speaks is worse than one that speaks
+       over itself. */
+    window.__ltReady = false;
+    window.__ltWaiters = [];
+    function ltReady(){
+      if(window.__ltReady) return;
+      window.__ltReady = true;
+      const q = window.__ltWaiters; window.__ltWaiters = [];
+      q.forEach(fn => { try{ fn(); }catch(e){} });
+    }
+    window.landingTrainReady = (fn)=>{ if(window.__ltReady) fn(); else window.__ltWaiters.push(fn); };
+    setTimeout(ltReady, 7000);        /* never leave the cover silent on a stalled arrival */
+
+    const tc = TrainChrome.mount(el, {
+      coaches: ms.length,
+      coach_label: ms.map(()=> null),
+      /* `lt-pending` holds each matra invisible until the train has parked — the SME asks for
+         them "one by one" AFTER the arrival, so they land on a coach that is standing still */
+      /* r7: «उ (ु)» — the letter with its matra in brackets, the same form the G4 bins use,
+         so the cover names the pair exactly as the sorting screens later will. */
+      coach_body: ms.map((m, i) => ({ html: '<span class="lt-matra lt-pending">' +
+        ((hero.letters && hero.letters[i]) ? hero.letters[i] + ' <span class="lt-br">(' +
+          matraGlyph(m) + ')</span>' : matraGlyph(m)) + "</span>" })),
+      drop_zone: false,
+      /* the sibling's landing train is 634px wide for a locomotive and THREE coaches, i.e. a
+         per-part scale of 634/2155 = 0.294. Matching that scale rather than a width budget is
+         what makes the two covers read as the same train: 0.294 * the 592px ink band = 174. */
+      maxH: 174,
+      on_enter: ()=>{
+        const last = ms.length - 1;
+        [...el.querySelectorAll(".lt-matra")].forEach((sp, i)=> setTimeout(()=>{
+          sp.classList.remove("lt-pending"); sp.classList.add("lt-pop");
+          sfxSparkle();                       // SME: "a light sparkle/pop SFX when each matra appears"
+          /* r7: the greeting waits for THIS — the last matra has popped and its sparkle has
+             sounded, so the arrival is genuinely over and nothing is left to talk over. The pop
+             animation is 420ms; the clip starts once it has landed rather than on top of it. */
+          if(i === last) setTimeout(ltReady, 460);
+        }, 220 + i * 520));
+      }
+    });
+    /* NEVER LEAVE THE COACHES EMPTY. The matras are revealed from on_enter, which fires when the
+       train parks 3.4s in — so anything that looks at this screen earlier (a review capture, a
+       slow first paint, a stalled arrival) sees two blank coaches, which is exactly what the
+       round-3b review deck shipped. This is the backstop: by 5s the matras are up regardless of
+       whether the arrival ever completed. */
+    setTimeout(()=> [...el.querySelectorAll(".lt-matra.lt-pending")].forEach(sp =>
+      sp.classList.remove("lt-pending")), 5000);
+    el.classList.add("show");          // boot() only adds this for hero kinds it knows
+    /* THE SIBLING'S COVER HAS NO RAIL. On the activity screens the track is the line the train
+       arrives along and it reads as railway; on the cover it cut the card in half under a train
+       that is really a title illustration. Marked here rather than hidden globally, because the
+       activity screens still want it. */
+    (tc.shell || el).classList.add("lt-cover");
+    /* [r73] the steam stays under the title. The plume rose 0.62 of the
+       train's height - on the cover, straight into the title - so here it rises a little over a
+       third of that, and the title is layered above the train so any wisp passes behind it. */
+    const st = el.querySelector(".train-steam");
+    if(st){
+      const r = parseFloat(st.style.getPropertyValue("--tc-rise")) || -96;
+      /* [r75] OUT OF THE CHIMNEY'S MOUTH. Measured: the puffs were born 6px down inside the yellow
+         cap and, with the short rise, sat on it like a blob. They now start at the rim, climb a
+         little higher, and lean back-left - away from the title, which starts just right of the
+         chimney - so they read as steam leaving the stack rather than something resting on it. */
+      const top0 = parseFloat(st.style.top) || 0;
+      st.style.top = (top0 - 7) + "px";
+      st.style.setProperty("--tc-rise", Math.round(r * 0.36) + "px");
+      st.style.setProperty("--tc-drift", "-14px");
+      const pf = parseFloat(st.style.getPropertyValue("--tc-puff")) || 26;
+      st.style.setProperty("--tc-puff", Math.round(pf * 0.8) + "px");
+    }
+    /* [r74] the title stays TEXT (Yasir asked for the original back); it is still layered
+       above the train, so the steam passes behind it */
+    const ttl = document.getElementById("sgTitle");
+    if(ttl) ttl.classList.add("lt-title-front");
+    void tc;
+    return true;
+  }
+  /* boot() runs after this script and the landing can be re-entered, so poll briefly rather than
+     racing a single frame — the same belt-and-braces matraHLSoon uses. */
+  (function watchLanding(){
+    let n = 0;
+    const tick = ()=>{ if(dressLandingTrain()) return; if(++n > 60) return; setTimeout(tick, 120); };
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", tick);
+    else tick();
+  })();
+
+
+})();
+
+
+/* ==========================================================================================
+   [r5] FLN ANIMATION KIT — ported from HI02H11_L02_S01's install
+   github.com/ananya-goswami/fln-animation-toolkit · Recipe 1 (start screen stars, drift) ·
+   Recipe 2 (tap to burst). Classic script only, per the kit's R3. Every entry point is wrapped
+   so a throw here can never strand the boot loader (R4), and every effect checks the
+   reduced-motion guard as well as the CSS kill-switch (R5).
+   This is the "animation in the stars and bubble" Yasir found missing on the cover.
+   ========================================================================================== */
+
+/* ===== FLN ANIMATION KIT: core BEGIN ===== */
+(function(){ "use strict";
+  var M = window.FLNMotion = window.FLNMotion || {};
+  M.still = function(){
+    try{ return document.documentElement.classList.contains("no-anim") ||
+      (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+    catch(_){ return false; }
+  };
+  M.scale = function(){
+    try{ return parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue("--scale")) || 1; }catch(_){ return 1; }
+  };
+  M.guard = function(fn){
+    try{ fn(); }catch(e){ try{ console.warn("[animation-kit]", e && e.message); }catch(_){} }
+  };
+  var _actx = null;
+  M.audio = function(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+      _actx = _actx || new AC();
+      if(_actx.state === "suspended") _actx.resume();
+      return _actx;
+    }catch(_){ return null; }
+  };
+  M.ready = function(fn){
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  };
+})();
+/* ===== FLN ANIMATION KIT: core END ===== */
+
+/* ===== FLN ANIMATION KIT: sky-drift BEGIN ===== */
+(function(){ "use strict";
+  var M = window.FLNMotion;
+
+  function build(o){
+    var sky = typeof o.container === "string" ? document.querySelector(o.container) : o.container;
+    if(!sky) return null;
+    sky.textContent = "";
+    var maxSize = 0, frag = document.createDocumentFragment();
+
+    o.layers.forEach(function(L, li){
+      for(var i = 0; i < o.lanes; i++){
+        var a = ((360 / o.lanes) * i + L.rot) * Math.PI / 180;
+        var cos = Math.cos(a), sin = Math.sin(a);
+        var size = +((o.size[0] + Math.random() * (o.size[1] - o.size[0])) * L.scale).toFixed(2);
+        if(size > maxSize) maxSize = size;
+        var dur = +(o.dur[0] + Math.random() * (o.dur[1] - o.dur[0])).toFixed(1);
+        var el = document.createElement("i");
+        el.className = o.shapes[(i + li) % o.shapes.length];
+        el.style.cssText =
+          "--s:"  + size + "vmax;" +
+          "--x1:" + (o.r0 * cos).toFixed(2) + "vmax;--y1:" + (o.r0 * sin).toFixed(2) + "vmax;" +
+          "--x2:" + (o.r1 * cos).toFixed(2) + "vmax;--y2:" + (o.r1 * sin).toFixed(2) + "vmax;" +
+          "--t:"  + dur + "s;" +
+          "--d:-" + (Math.random() * dur).toFixed(1) + "s;" +     // negative = de-sync
+          "--g:"  + (o.glow[0] + Math.random() * (o.glow[1] - o.glow[0])).toFixed(1) + "s;" +
+          "--gd:-" + (Math.random() * 4).toFixed(1) + "s;" +
+          "--o:"  + (o.opacity[0] + Math.random() * (o.opacity[1] - o.opacity[0])).toFixed(2) + ";";
+        frag.appendChild(el);
+      }
+    });
+    sky.appendChild(frag);
+
+    // collision proof: lane arc at the tightest radius must be >= 1.5x the largest element
+    var arc = (2 * Math.PI * o.r0) / o.lanes, ok = arc >= maxSize * 1.5;
+    if(!ok && o.warn !== false){
+      console.warn("[animation-kit] sky lanes too tight: arc " + arc.toFixed(2) +
+        "vmax vs element " + maxSize.toFixed(2) + "vmax. Reduce lanes or size.");
+    }
+    return { arc:arc, maxSize:maxSize, safe:ok, count:sky.children.length };
+  }
+
+  M.sky = {
+    defaults: {
+      container:".sg-sky", lanes:29,
+      layers:[{rot:0,scale:1},{rot:6.2,scale:0.62},{rot:-6.2,scale:0.55}],
+      r0:22, r1:72, size:[0.8,2.6], dur:[18,34], glow:[3.0,4.8],
+      opacity:[0.62,0.92], shapes:["s1","s2","s3","s4","s5"], warn:true
+    },
+    init: function(opts){
+      var o = Object.assign({}, this.defaults, opts || {}), res = null;
+      M.guard(function(){ res = build(o); });
+      return res;
+    }
+  };
+  M.ready(function(){ M.guard(function(){ if(!window.__skyManual) M.sky.init(); }); });
+})();
+/* ===== FLN ANIMATION KIT: sky-drift END ===== */
+
+/* ===== FLN ANIMATION KIT: sky-burst BEGIN ===== */
+(function(){ "use strict";
+  var M = window.FLNMotion;
+
+  function boom(o){                      // sine thud + noise tail + square crackles
+    var actx = M.audio(); if(!actx) return;
+    try{
+      var t = actx.currentTime, out = actx.createGain();
+      out.gain.value = o.volume; out.connect(actx.destination);
+
+      var tg = actx.createGain();
+      tg.gain.setValueAtTime(0.9, t);
+      tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      tg.connect(out);
+      var osc = actx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(420, t);
+      osc.frequency.exponentialRampToValueAtTime(90, t + 0.16);
+      osc.connect(tg); osc.start(t); osc.stop(t + 0.18);
+
+      var n = actx.sampleRate * 0.45;
+      var buf = actx.createBuffer(1, n, actx.sampleRate), d = buf.getChannelData(0);
+      for(var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6);
+      var src = actx.createBufferSource(); src.buffer = buf;
+
+      for(var c = 0; c < o.crackles; c++){
+        var cg = actx.createGain(), ct = t + 0.10 + Math.random() * 0.30;
+        cg.gain.setValueAtTime(0.0001, ct);
+        cg.gain.exponentialRampToValueAtTime(0.18, ct + 0.006);
+        cg.gain.exponentialRampToValueAtTime(0.0001, ct + 0.07);
+        cg.connect(out);
+        var co = actx.createOscillator();
+        co.type = "square";
+        co.frequency.setValueAtTime(1500 + Math.random() * 2200, ct);
+        co.connect(cg); co.start(ct); co.stop(ct + 0.08);
+      }
+      var bp = actx.createBiquadFilter();
+      bp.type = "bandpass"; bp.frequency.value = 3400; bp.Q.value = 0.8;
+      var ng = actx.createGain();
+      ng.gain.setValueAtTime(0.0001, t);
+      ng.gain.exponentialRampToValueAtTime(0.5, t + 0.03);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      src.connect(bp); bp.connect(ng); ng.connect(out); src.start(t + 0.02);
+    }catch(_){}
+  }
+
+  function pop(el, r, o){
+    el.classList.add("popped");
+    // respawn on the next FLIGHT lap — the glow cycle is much shorter, so filter by name
+    el.addEventListener("animationiteration", function back(e){
+      if(e.animationName !== "sgFly") return;
+      el.classList.remove("popped");
+      el.removeEventListener("animationiteration", back);
+    });
+
+    var kind = "k-dot", cls = el.classList;
+    for(var ci = 0; ci < cls.length; ci++){ if(o.kind[cls[ci]]) kind = o.kind[cls[ci]]; }
+
+    var bs = Math.max(11, r.width);
+    var b = document.createElement("div");
+    b.className = "sg-burst " + kind;
+    b.style.left = (r.left + r.width / 2) + "px";
+    b.style.top  = (r.top  + r.height / 2) + "px";
+    b.style.setProperty("--bs", bs + "px");
+    b.appendChild(document.createElement("div")).className = "fl";
+
+    var k = 0;
+    for(var g = 0; g < o.rings.length; g++){
+      var R = o.rings[g], off = Math.random() * Math.PI * 2;
+      for(var i = 0; i < R.n; i++, k++){
+        var a = off + i / R.n * Math.PI * 2;
+        var dist = bs * R.rad * (0.78 + Math.random() * 0.44);
+        var p = document.createElement("i");
+        p.style.cssText =
+          "--ps:"  + (bs * R.size * (0.8 + Math.random() * 0.5)).toFixed(1) + "px;" +
+          "--dx:"  + (Math.cos(a) * dist).toFixed(1) + "px;" +
+          "--dy:"  + (Math.sin(a) * dist).toFixed(1) + "px;" +
+          "--gy:"  + (dist * o.gravity).toFixed(1) + "px;" +
+          "--sd:"  + (R.dur + Math.random() * 0.22).toFixed(2) + "s;" +
+          "--sdl:" + (Math.random() * 0.06).toFixed(3) + "s;" +
+          "color:" + o.hues[k % o.hues.length];
+        b.appendChild(p);
+      }
+    }
+    document.body.appendChild(b);
+    if(o.sound) boom(o);
+    setTimeout(function(){ b.remove(); }, o.life);
+  }
+
+  M.skyBurst = {
+    defaults: {
+      container:".sg-sky", when:["is-start","is-end"],
+      rings:[{n:9,rad:3.1,size:.58,dur:.80},{n:7,rad:1.8,size:.78,dur:.62}],
+      hues:["#FCB717","#3B7DD8","#21A74A","#E5484D","#7048D6","#F1781D"],
+      kind:{s1:"k-star",s2:"k-star",s3:"k-spark",s4:"k-dot",s5:"k-dot"},
+      gravity:0.42, pad:12, padRatio:0.7, minAlpha:0.08, life:1200,
+      sound:true, volume:0.22, crackles:4
+    },
+    init: function(opts){
+      var o = Object.assign({}, this.defaults, opts || {});
+      M.guard(function(){
+        var sky = typeof o.container === "string"
+          ? document.querySelector(o.container) : o.container;
+        if(!sky) return;
+        // capture phase: .sg-sky is pointer-events:none, so hit-test by rect (R6)
+        document.addEventListener("pointerdown", function(e){
+          if(M.still()) return;
+          if(!o.when.some(function(c){ return document.body.classList.contains(c); })) return;
+          /* INTERACTIVE_TAPS_ARE_NOT_OURS. This handler claims the tap with preventDefault(),
+             which kills the CLICK that would have followed — so a star drifting over शुरू करें
+             made the button silently ignore the press. Worse, the mask that hides stars behind
+             the centre card is visual only: those stars still have a box and a non-zero computed
+             opacity, so the kit's minAlpha test cannot tell they are invisible, and the play
+             button sits right inside that masked area. A control's tap is never ours to take. */
+          if(e.target && e.target.closest &&
+             e.target.closest("button,a,input,select,textarea,[role=button],[onclick]")) return;
+          var els = sky.querySelectorAll("i:not(.popped)");
+          for(var i = 0; i < els.length; i++){
+            var el = els[i], r = el.getBoundingClientRect();
+            if(r.width < 2) continue;
+            var pad = Math.max(o.pad, r.width * o.padRatio);   // ~4px targets need slack
+            if(e.clientX < r.left - pad || e.clientX > r.right  + pad ||
+               e.clientY < r.top  - pad || e.clientY > r.bottom + pad) continue;
+            if(parseFloat(getComputedStyle(el).opacity) < o.minAlpha) continue;
+            // claim the tap, or it also fires the button under the star
+            e.stopPropagation(); e.preventDefault();
+            var op = Object.assign({}, o);
+            if(typeof isMuted !== "undefined" && isMuted) op.sound = false;   // honour the dev mute
+            pop(el, r, op);
+            return;
+          }
+        }, true);
+      });
+    }
+  };
+  M.ready(function(){ M.guard(function(){ M.skyBurst.init(); }); });
+})();
+/* ===== FLN ANIMATION KIT: sky-burst END ===== */
+
+/* == TRAIN MODULE SET :: END == */
 
 /* ======================================================================================
    [MTG2A04_L03_S01 · SME review_1] CAPACITY KIT — measuring मात्रा by pouring
@@ -5713,7 +11897,7 @@ function capJugScene(host, slide){
     ctx.after(500, ()=> capAskNumber(ctx, stage, d.ask, { row: true, x: 290, y: 392, countEls: emptied })); };
   const pourOne = (v, then)=>{ busy = true; v.used = true; poured++; emptied.push(v); v.el.classList.remove("tappable");
     SwiftPAL.emit("count_tap", { slide_id: slide.id, phase: slide.phase, n: poured });
-    capRealPour(ctx, v, jug, { dir: -1, high: true, arc: 40,   /* in front, held above the jug (no overlap) */ ceil: 22,   /* frame top (the hull includes the handle) */ srcTo: 0, dstFrom: (poured - 1) / N, dstTo: poured / N, ms: 1400, tilt: [72, 126],
+    capRealPour(ctx, v, jug, { dir: -1, high: true, arc: 40, dx: 30,   /* in front, held above the jug (no overlap) */ ceil: 22,   /* frame top (the hull includes the handle) */ srcTo: 0, dstFrom: (poured - 1) / N, dstTo: poured / N, ms: 1400, tilt: [72, 126],
       chime: poured === N, onDone: ()=>{ busy = false; then(); } }); };   // emptied mugs stay fully visible (no fade)
   const after = ()=>{ if(poured >= N){ capFlash(jug.el, "cap-hl", 1400); ask(); } else idle.arm(); };
   srcs.forEach(v => { v.el.onclick = ()=>{ if(!open || busy || v.used || poured >= N) return; stopNudge(); idle.stop(); sfxTap(); pourOne(v, after); }; });
@@ -5735,10 +11919,11 @@ Object.assign(SlideModules, {
       glass.el.classList.add("tappable"); mug.el.classList.add("tappable");
       const mid = capMarker(stage, 480, 330);
       let done = false, onlyMug = false, attempts = 0, idleN = 0, busy = false;
-      const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
-        capPoint(onlyMug ? mug.el : mid); ctx.say(A.idle, null, ()=> idle.arm()); });
+      // inactivity (8.5 s): the hand points at the RIGHT option (the mug) and the mug glows until it is tapped
+      const idle = capIdle(ctx, 8500, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
+        capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); ctx.say(A.idle, null, ()=> idle.arm()); });
       const hl = (v)=> capFlash(v.el, "cap-hl", 1500);
-      mug.el.onclick = ()=>{ if(done) return; done = true; idle.stop(); stopNudge();
+      mug.el.onclick = ()=>{ if(done) return; done = true; idle.stop(); stopNudge(); mug.el.classList.remove("cap-hl-loop");
         glass.el.classList.remove("cap-pulse-loop"); mug.el.classList.add("cap-ok");
         sfxCorrect(); confettiCannon(); setSwMood("happy");
         SwiftPAL.emit("capacity_compare_first_try", { slide_id: slide.id, phase: slide.phase, value: attempts === 0, attempts: attempts + 1 });
@@ -6277,6 +12462,682 @@ Object.assign(SlideModules, {
 
 });
 
+
+/* == REFERENCE UI SET :: BEGIN (from CodeWithPiyush0/MTG204_L01_S01 money_modules.js, rounds 2i-2m) ==
+   transition gate (peek -> talk while the VO sounds -> rest; title written in), celebration Swiftie
+   sprite lip-synced to the VO, team end mascot, and the ▶ / आगे button sounds. Generic: driven by
+   CARD.gate / CARD.end_anim / CARD.end_mascot; a card without them keeps the engine's own. */
+(function(){
+  "use strict";
+  /* the 2026.08.04b engine auto-presses आगे from slide 6 (HI02H11's train flow). This game has no
+     train: every screen controls its own आगे / auto-next, so that is switched off here. */
+  try { autoAdvances = function(){ return false; }; } catch(e){}
+  /* ============ TRANSITION GATE, round 2i (user, 2026-09-30) ============
+     "Swifty will peek once, then the text will be written and its VO will play, and the VO will sync
+     with her mouth." The stock gate played one 8.5 s animation (rise half-way, pause, rise again, talk)
+     and started the VO at a fixed 3.8 s, so the mouth and the voice only lined up by luck and the
+     screen felt long. CARD.gate now names three pieces (scripts/make_gate_bird.py):
+        peek  — one continuous rise, played once           (~1.5 s)
+        talk  — mouth open/close loop, shown ONLY while the gate VO is actually sounding
+        rest  — mouth closed, from the moment the VO ends
+     The title is written in (left-to-right wipe) as she starts to talk. Same shell as the engine's
+     phaseBlurTransition (blur, token, header hide); replaced by assignment, engine file untouched.
+     Falls back to the engine's own gate when the card has no gate.peek. */
+  setTimeout(()=> (function patchGate(tries){
+    let ok = false;
+    try {
+      if(typeof phaseBlurTransition === "function" && typeof _gateToken !== "undefined"){
+        const _orig = phaseBlurTransition;
+        phaseBlurTransition = function(cb, toPhase){
+          const G = (CARD && CARD.gate) || {};
+          if(!G.peek) return _orig(cb, toPhase);
+          const tok = ++_gateToken;
+          stopNudge(); stopAudio();
+          const gate = $("phaseGate"), im = $("phaseGateImg"), title = $("phaseGateTitle");
+          const setImg = (src)=>{ im.removeAttribute("src"); void im.offsetWidth; im.src = src; };
+          if(im){ im.classList.add("pg-card"); setImg(G.peek); }
+          if(title){ title.textContent = PHASE_GATE_TITLE[toPhase] || ""; title.classList.remove("pg-write"); title.classList.add("pg-wait"); }
+          $("stage").classList.add("blurred", "gating");
+          document.body.classList.add("gating");
+          gate.classList.add("show", "hint-glow");
+          SwiftPAL.emit("phase_transition", { to: toPhase });
+          const closeGate = ()=>{ gate.classList.remove("show"); $("stage").classList.remove("blurred", "gating"); document.body.classList.remove("gating"); };
+          const voId = PHASE_GATE_VO[toPhase];
+          const voSrc = voId ? ("assets/Audio/" + voId + "." + AUDIO_EXT) : null;
+          let finished = false;
+          const finish = ()=>{
+            if(finished) return; finished = true;
+            if(tok !== _gateToken){ closeGate(); return; }
+            if(im && G.rest) setImg(G.rest);                 /* mouth closes with the last word */
+            setTimeout(()=>{
+              if(tok !== _gateToken){ closeGate(); return; }
+              gate.classList.remove("show");
+              $("stage").classList.remove("blurred");
+              if(cb) cb();
+              $("stage").classList.remove("gating");
+              document.body.classList.remove("gating");
+            }, G.hold_ms || 450);
+          };
+          const talk = ()=>{
+            if(tok !== _gateToken){ closeGate(); return; }
+            if(title){ title.classList.remove("pg-wait"); void title.offsetWidth; title.classList.add("pg-write"); }
+            if(im && G.talk) setImg(G.talk);
+            /* play() starts the clip at once; the talk loop runs until its onEnd */
+            play(voSrc, finish);
+            setTimeout(finish, 12000);                       /* never strand the child */
+          };
+          /* the peek clock starts when the peek image has actually loaded (it is warmed at boot) */
+          let started = false;
+          const go = ()=>{ if(started) return; started = true; setTimeout(talk, G.peek_ms || 1500); };
+          if(!im || im.complete) go();
+          else { im.addEventListener("load", go, { once:true }); im.addEventListener("error", go, { once:true }); setTimeout(go, 2500); }
+        };
+        /* warm the three pieces too, so no gate opens on an empty frame */
+        const G = (CARD && CARD.gate) || {};
+        window.__gateWarm2 = [G.peek, G.talk, G.rest].filter(Boolean).map(u => { const i = new Image(); i.src = u; if(i.decode) i.decode().catch(()=>{}); return i; });
+        ok = true;
+      }
+    } catch(e){}
+    if(!ok && tries < 400) setTimeout(()=> patchGate(tries + 1), 25);
+  })(0), 0);
+
+  /* round 2j: the celebration screen shows the team's own Swiftie GIF (CARD.end_mascot), used exactly as
+     supplied — background included (user instruction: do not remove or alter its background). */
+  setTimeout(()=> (function endMascot(tries){
+    try {
+      const src = CARD && CARD.end_mascot;
+      const im = document.querySelector("#endScreen .end-mascot");
+      if(!src) return;
+      if(!im){ if(tries < 200) setTimeout(()=> endMascot(tries + 1), 25); return; }
+      im.src = src; im.classList.add("end-mascot-team");
+    } catch(e){ if(tries < 200) setTimeout(()=> endMascot(tries + 1), 25); }
+  })(0), 0);
+
+  /* round 2k: the team's button sounds — ▶ on the landing plays sfx_play_button; the arrow (आगे) and
+     the celebration's arrow play sfx_next_button. Own Audio element, so no VO is cut by it. Only a
+     real, enabled press counts (a disabled button fires no click). */
+  document.addEventListener("click", (e)=>{
+    const b = e.target && e.target.closest && e.target.closest("#sgBtn, #navBtn, #endBtn");
+    if(!b || b.disabled) return;
+    sfxFile(b.id === "sgBtn" ? "sfx_play_button" : "sfx_next_button", null);
+  }, true);
+
+  /* ============ CELEBRATION SWIFTIE, round 2l — lip-synced to the VO ============
+     The team's jumping + speaking Swiftie (36 frames) is a sprite sheet the page drives itself, because
+     a GIF runs on its own 4 s clock and cannot follow a 5.7 s line. The timeline comes from the VO:
+       before the voice      frame 21 (arms out, ready)
+       «शाबाश!» (1st word)    the jump, frames 22-32 (arms up, mouth open), stretched over that word
+       the pause after it     fist pump 33-35 (mouth closed)
+       the rest of the line   standing; every step the VO's loudness at THAT moment picks a mouth-open
+                              frame (loud) or a mouth-closed one (quiet) — so the mouth moves with the
+                              syllables and shuts on every pause
+       after the voice        two fist pumps, then a standing idle with a blink, mouth shut
+     The VO clock is the moment the engine's clip actually starts (isPlaying), not the mount. */
+  setTimeout(()=> (function wrapCel(tries){
+    const C = (typeof SlideModules !== "undefined") && SlideModules.CELEBRATION;
+    if(!C || !C.mount){ if(tries < 200) setTimeout(()=> wrapCel(tries + 1), 25); return; }
+    if(C.__celWrapped) return; C.__celWrapped = true;
+    const _mount = C.mount;
+    C.mount = function(host, slide){
+      const r = _mount.apply(this, arguments);
+      try { runCelSprite(); } catch(e){}
+      return r;
+    };
+    /* already on the celebration (a direct ?slide= jump mounts it before this wrap runs) */
+    try { const es = $("endScreen"); if(es && es.classList.contains("show")) setTimeout(()=>{ try { runCelSprite(); } catch(e){} }, 0); } catch(e){}
+  })(0), 0);
+  let _celGen = 0;
+  /* round 2m — THREE SHEETS, ONE CLOCK. The clock is the celebration VO itself (from the moment the
+     engine's clip is actually sounding):
+       [0, first sound)            «शाबाश» sheet 0-5   standing, mouth shut
+       first word «शाबाश!»        «शाबाश» sheet 6-29  the jump, mouth open — stretched to that word
+       the pause after it          «शाबाश» sheet 30-35 lands, mouth shut
+       rest of the line            talk sheet: the cursor walks the sheet forward (so the body keeps
+                                   moving naturally) but only ever lands on a frame whose mouth matches
+                                   the VO at that instant — open on each syllable, shut in every dip
+       after the VO                idle sheet, mouth-shut frames only, looping
+     All three sheets share frame size and alignment (make_cel_sprite.py), so switching never jumps. */
+  function runCelSprite(){
+    const A = CARD && CARD.end_anim;
+    const im = document.querySelector("#endScreen .end-mascot");
+    if(!A || !im || !A.bits || !A.shabaash) return;
+    const gen = ++_celGen;
+    let sp = document.getElementById("celSprite");
+    if(!sp){
+      sp = document.createElement("div"); sp.id = "celSprite"; sp.className = "cel-sprite";
+      sp.innerHTML = '<div class="cel-art"></div>';
+      im.parentNode.insertBefore(sp, im);
+    }
+    im.style.display = "none";
+    const art = sp.querySelector(".cel-art");
+    art.style.aspectRatio = A.fw + " / " + A.fh;
+    let curSrc = "";
+    const show = (sheet, i)=>{
+      if(sheet.src !== curSrc){ art.style.backgroundImage = 'url("' + sheet.src + '")'; curSrc = sheet.src; }
+      const c = i % A.cols, r = Math.floor(i / A.cols);
+      art.style.backgroundPosition = (c * 100 / (A.cols - 1)) + "% " + (r * 100 / (A.cols - 1)) + "%";
+      sp.dataset.sheet = sheet === A.shabaash ? "shabaash" : (sheet === A.idle ? "idle" : "talk");
+      sp.dataset.f = i;
+    };
+    const S = A.shabaash, T = A.talk, I = A.idle;
+    const OPEN = new Set(T.open);
+    show(S, S.pre[0]);
+    const bits = A.bits || "";
+    const step = A.step_ms || 25;
+    const loud = (t)=> bits.charAt(Math.floor(t / step)) === "1";
+    /* first word = first loud run, a 200 ms silence ends it */
+    const GAP = Math.round(200 / step);
+    let s0 = bits.indexOf("1"), e0 = s0, gap = 0;
+    for(let k = s0; k >= 0 && k < bits.length; k++){ if(bits[k] === "1"){ e0 = k; gap = 0; } else if(++gap >= GAP) break; }
+    const speechStart = Math.max(0, s0) * step, wordEnd = (e0 + 1) * step;
+    let ns = bits.indexOf("1", e0 + GAP); const nextStart = ns < 0 ? wordEnd : ns * step;
+    const lenMs = bits.length * step;
+    const seg = (list, t, a, b)=> list[Math.min(list.length - 1, Math.max(0, Math.floor((t - a) / Math.max(1, b - a) * list.length)))];
+    let t0 = 0, started = false, done = false, cursor = 0, curOpen = null, lastStep = 0;
+    const waitStart = performance.now();
+    const idle = ()=>{
+      let j = 0;
+      (function tick(){
+        if(gen !== _celGen || !sp.isConnected) return;
+        show(I, I.loop[j % I.loop.length]); j++;
+        setTimeout(tick, 110);
+      })();
+    };
+    (function frame(){
+      if(gen !== _celGen || !sp.isConnected || done) return;
+      const now = performance.now();
+      if(!started){
+        if(isPlaying){ started = true; t0 = now; }
+        else if(now - waitStart > 1800){ done = true; idle(); return; }     /* the VO never started */
+        else { requestAnimationFrame(frame); return; }
+      }
+      const t = now - t0;
+      if(!isPlaying || t > lenMs + 400){ done = true; idle(); return; }
+      if(t < speechStart) show(S, seg(S.pre, t, 0, speechStart));
+      else if(t < wordEnd) show(S, seg(S.word, t, speechStart, wordEnd));
+      else if(t < nextStart) show(S, seg(S.post, t, wordEnd, nextStart));
+      else {
+        const want = loud(t + 16);                     /* one paint ahead: the frame shows on the NEXT paint */
+        /* step the talk sheet forward: at once when the mouth must change, else every 80 ms */
+        if(want !== curOpen || now - lastStep > 80){
+          let k = 1;
+          while(k < 36 && OPEN.has((cursor + k) % 36) !== want) k++;
+          cursor = (cursor + k) % 36;
+          show(T, cursor); curOpen = want; lastStep = now;
+        }
+      }
+      requestAnimationFrame(frame);
+    })();
+  }
+  /* warm the sheet during the lesson, so the end screen never opens on an empty box */
+  setTimeout(()=>{ try { const A = CARD && CARD.end_anim; if(A && A.shabaash){
+    window.__celWarm = [A.shabaash.src, A.talk.src, A.idle.src].map(u => { const i = new Image(); i.src = u; if(i.decode) i.decode().catch(()=>{}); return i; }); } } catch(e){} }, 1500);
+  function sfxFile(name, fb){
+    try {
+      const p = "assets/Audio/" + name + "." + AUDIO_EXT;
+      const a = new Audio(typeof _av === "function" ? _av(p) : p);
+      a.volume = 0.6;
+      a.play().catch(()=>{ if(fb) fb(); });
+    } catch(e){ if(fb) fb(); }
+  }
+})();
+/* == REFERENCE UI SET :: END == */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ---------- 13. CONTROLLER ---------- */
 /* r4: gold star burst for the celebration finale (adopted from Shruti's build) */
 function starBurst(){
@@ -6370,7 +13231,11 @@ function mountSlide(idx){
                               // (else the auto prompt-chain stomps/truncates the module's timed VO)
   state.revealing = false;    // [24a N8] true while a reveal_seq/sortSeqReveal is mid-flight (blocks replay + drag)
   state.demoRunning = false;  // [24a N8] true while a self-driving teach chain runs (blocks the replay chips)
-  resetWrongLadder();         // [LOCAL 2026-08-03] hint ladder starts at rung 1 on EVERY entry, incl. a re-entry
+  /* [r26] per-slide reset for the train hand-off. trainDepart is re-registered by buildTrain on
+     the screens that have a train; clearing it here is what makes a sentence screen fall back to
+     advancing without one instead of inheriting the previous screen's departure. */
+  state.trainDepart = null; state._autoFired = -1; clearTimeout(state._autoFallback);
+  document.body.classList.toggle("auto-next", autoAdvances(idx));
   const slide = CARD.slides[idx];
   clearHost();
 
@@ -6381,13 +13246,7 @@ function mountSlide(idx){
   // exposed (graduated scaffold). Mastery uses the SAME scaffold — not excluded.
   $("hintBtn").classList.remove("show");
   $("hintBtn").style.display = "";
-  /* [LOCAL 2026-08-03] Yasir: remove आगे entirely on practice + guided. Every mechanic this game
-     uses in those phases (TAP_LETTER_BY_PICTURE / TAP_PICTURE_BY_LETTER via mountTapOptions,
-     MATCH_DRAG_N, SEQUENCE_COMPLETE) already auto-advances on its own through celebrateThenAdvance /
-     completeSlide(true) — आगे was never the way forward there, just a permanently-disabled pill
-     sitting on screen (setNavActive(true) is never called by any of them). Tutorial keeps it: those
-     STORY_SCENE teach beats genuinely gate on a tap to move to the next scene. */
-  $("navBtn").style.display = (slide.phase === "guided" || slide.phase === "practice") ? "none" : "";
+  $("navBtn").style.display = (slide.phase === "guided" || slide.phase === "practice") ? "none" : "";   // as the 28t engine: no आगे on guided/practice until the screen turns it on (capNavOn)
   // [16i] DEFAULT nav wiring — a module that enables आगे without overriding onclick still advances.
   // (DEMO_COUNT shipped an enabled-but-dead button; auto-INTRO inherited an unfulfillable tap guard.)
   $("navBtn").onclick = ()=> completeSlide(true);
@@ -6495,11 +13354,52 @@ const PHASE_GATE_VO    = { tutorial:"vo_pt_tutorial", guided:"vo_pt_guided",
 const PHASE_ROUND = { tutorial:"tutorial", guided:"guided", practice:"round3", independent:"round3" };
 const _gatedPhases = new Set();   // each ROUND gate plays ONCE (Start→tutorial, →guided, →round 3)
 let _gateToken = 0;
+/* [r66] THE GATE BIRD IS FETCHED AND DECODED AT BOOT, NOT WHEN THE GATE OPENS.
+   Yasir: "there is slight delay in playing swifty gif and its VO in transition screen". Two
+   causes, both from r65 setting the src at the moment of the gate: (1) the WebP was first
+   requested THEN, so the gate opened on an empty frame and the bird appeared late; (2) the talk
+   timer ran from the gate opening, not from the bird starting, so once the bird was late the VO
+   drifted against her mouth. Now the art is warm before the first gate, and the timer is
+   anchored to the moment the image has actually loaded. */
+let _gateWarm = null;
+function _warmGate(){
+  const g = (typeof CARD !== "undefined" && CARD && CARD.gate) || null;
+  if(!g || !g.img || _gateWarm) return;
+  const im = new Image();
+  try{ im.fetchPriority = "high"; }catch(e){}
+  im.src = g.img;
+  _gateWarm = (im.decode ? im.decode() : new Promise(r => { im.onload = r; im.onerror = r; }))
+                .catch(()=>{});
+  window.__gateWarmImg = im;                 /* hold a reference so the decoded copy stays cached */
+}
+/* NOT on window 'load': that waits for every other asset, and on a slow link the child can
+   press play before it fires. Measured at 8 Mbit/s: the bird was still downloading when the gate
+   opened and arrived 4.7s late. So the fetch starts as soon as the card is parsed. */
+(function _warmSoon(tries){
+  if(typeof CARD !== "undefined" && CARD){ _warmGate(); return; }
+  if(tries > 200) return;
+  setTimeout(()=> _warmSoon(tries + 1), 25);
+})(0);
+
 function phaseBlurTransition(cb, toPhase){
   const tok = ++_gateToken;
   stopNudge(); stopAudio();
   const gate = $("phaseGate"), img = $("phaseGateImg");
-  if(img) img.src = "assets/UI/peeking.webp?r=" + Date.now();   // restart the loop each time (cache-bust)
+  /* [gate-cache] restart the peek animation WITHOUT re-downloading it. `?r=+Date.now()` minted a new
+     URL per gate, so the 1286KB bird downloaded AGAIN at every transition — measured 2026-08-08:
+     one session with 2 gates = 3 fetches = 3.9MB for one asset, and on the tab's Wi-Fi that download
+     races the gate VO. Clearing src + forcing a reflow restarts the animated WebP from the cached copy. */
+  /* [r65] A CARD MAY BRING ITS OWN GATE BIRD, AND SAY WHEN SHE STARTS TALKING.
+     Yasir's swifty_seeking_transition: she rises, peeks, rises again and only THEN speaks - the
+     mouth starts moving 3.8s in. So the VO is held back by `talk_at_ms` and starts on her first
+     word instead of over her climb. Additive: a card without CARD.gate gets the stock peek and
+     the stock timing, byte for byte. */
+  const _G = (CARD && CARD.gate) || {};
+  const _gateSrc = _G.img || "assets/UI/peeking.webp";
+  const _talkAt  = _G.img ? Math.max(0, _G.talk_at_ms || 0) : 0;
+  if(img){ img.classList.toggle("pg-card", !!_G.img);
+           img.removeAttribute("src"); void img.offsetWidth; img.src = _gateSrc; }
+  _warmGate();                                  /* no-op once warm; covers a gate before 'load' */
   const title = $("phaseGateTitle"); if(title) title.textContent = PHASE_GATE_TITLE[toPhase] || "";
   $("stage").classList.add("blurred", "gating");
   document.body.classList.add("gating");
@@ -6510,6 +13410,19 @@ function phaseBlurTransition(cb, toPhase){
   const voId = PHASE_GATE_VO[toPhase];
   const voSrc = voId ? ("assets/Audio/" + voId + "." + AUDIO_EXT) : null;   // [20a] use AUDIO_EXT path so generated clips resolve (was: assets.audio .mp3 map -> silent)
   const openedAt = Date.now();
+  /* [r66] the talk clock starts when the bird does. `complete` is already true when the warm
+     copy is cached, which is the normal case. If she arrives, she speaks talk_at_ms after she
+     STARTS; if she has not arrived in 4s there is no mouth to sync to any more, so the line
+     plays at once rather than keeping the child waiting a further 3.8s on top. */
+  const _startTalkClock = (fn)=>{
+    if(!_G.img || !img || img.complete){ setTimeout(fn, _talkAt); return; }
+    let done = false;
+    const go = (late)=>{ if(done) return; done = true; setTimeout(fn, late ? 0 : _talkAt); };
+    img.addEventListener("load", ()=> go(false), { once:true });
+    img.addEventListener("error", ()=> go(true), { once:true });
+    setTimeout(()=> go(true), 4000);
+  };
+  _startTalkClock(()=>{ if(tok !== _gateToken){ closeGate(); return; }
   play(voSrc, ()=>{
     if(tok !== _gateToken){ closeGate(); return; }               // a newer gate superseded us
     const hold = Math.max(200, 2000 - (Date.now() - openedAt));  // Swiftie peeks ≥2s even with no/short VO
@@ -6522,6 +13435,7 @@ function phaseBlurTransition(cb, toPhase){
       document.body.classList.remove("gating");
     }, hold);
   });
+  });                                           /* [r65/r66] she speaks when her mouth moves */
 }
 
 function completeSlide(success){
@@ -6608,15 +13522,122 @@ function conceptTileHTML(c){
       return `<div class="sg-ex sg-ex-wt" role="img"${lbl}>` + SG_BALANCE_SVG + `</div>`;
     case "image":
       return `<div class="sg-ex" role="img"${lbl}><img src="${c.src}" alt="${c.label || ''}"></div>`;
+    /* [S03P2-p · BACK-PORTED 2026-09-14] LANDING LETTER STRIP.
+       Verbatim from HIKGH09_L01_S03's engine, which carries this case; the copy this
+       engine_local was taken from (HI01H11_L03_S01) does NOT, even though BOTH stamp
+       ENGINE_VERSION 2026.08.04b-r4-unified. Without it a landing_hero cell of
+       type:"letter" hits the switch's default and returns "", so the strip renders EMPTY with no
+       error anywhere — which is exactly what happened on this lesson's first build.
+       Rendered WITHOUT the ink-glyph class deliberately: centerInkGlyph measures against a
+       CONTENT-SIZED box, the compounding-shrink trap [S03P2-n] exists to defeat. A landing
+       tile is fixed-size chrome, so it must not opt into that budget.
+       Visual only — no clip is wired and none is generated for it. */
+    case "letter":
+      return `<div class="sg-ex sg-ex-letter" role="img"${lbl}><span class="sg-letter-glyph">${c.letter || ""}</span></div>`;
     default:
       return "";
   }
 }
 
 /* ---------- 15. BOOT ---------- */
+function _collectAudioIds(o,out){
+  if(!o)return;
+  if(Array.isArray(o)){o.forEach(v=>_collectAudioIds(v,out));return;}
+  if(typeof o==="object"){for(const k in o)_collectAudioIds(o[k],out);return;}
+  if(typeof o==="string"&&/^(vo|phon|sfx)_[A-Za-z0-9_]+$/.test(o))out.add(o);
+}
+function _warmAudioSources(srcs,concurrency){
+  let next=0;
+  const worker=async()=>{while(next<srcs.length){const src=srcs[next++];try{await _loadVoiceBuffer(src);}catch(e){}}};
+  const count=Math.max(1,Math.min(concurrency||4,srcs.length||1));
+  return Promise.all(Array.from({length:count},worker)).then(()=>{});
+}
+/* [31x] Fetch AND DECODE every clip the card references, during the landing screen. Landing/gate/slide-1
+   clips go first so a fast tap on शुरू करें cannot beat the warm. IDs come from audio_text keys (all
+   verified on disk by verify_bundle) plus any vo_/phon_/sfx_ id in the slides — a 404 here surfaces in
+   render_check, which is wanted: it means the card references a missing clip. */
+function warmCardAudio(){
+  try{
+    const allIds=new Set(Object.keys((CARD.assets||{}).audio_text||{}));
+    _collectAudioIds(CARD.slides,allIds);
+    const initialIds=new Set();
+    if(CARD.landing_audio)initialIds.add(CARD.landing_audio);
+    if(typeof PHASE_GATE_VO!=="undefined"&&PHASE_GATE_VO.tutorial)initialIds.add(PHASE_GATE_VO.tutorial);
+    if(CARD.slides&&CARD.slides[0])_collectAudioIds(CARD.slides[0],initialIds);
+    initialIds.forEach(id=>allIds.add(id));
+    /* [r17] versioned here TOO, and not only for the cache. `_loadVoiceBuffer` keys its
+       decoded-buffer cache by URL, so preloading the unversioned path while play() asks
+       for the versioned one missed on every single clip - the warm-up was thrown away and
+       all 91 files were fetched twice. Same string both sides: one fetch, one buffer. */
+    const toSrc=id=>_av("assets/Audio/"+id+"."+AUDIO_EXT);
+    const first=[...initialIds].map(toSrc);
+    const rest=[...allIds].filter(id=>!initialIds.has(id)).map(toSrc);
+    window.__voWarm=_voiceBuffers;
+    _initialAudioWarmPromise=_warmAudioSources(first,4);
+    _audioWarmPromise=_initialAudioWarmPromise.then(()=>_warmAudioSources(rest,6));
+    return _audioWarmPromise;
+  }catch(e){_initialAudioWarmPromise=Promise.resolve();_audioWarmPromise=Promise.resolve();return _audioWarmPromise;}
+}
+/* [31q] Fetch AND DECODE every card image during the landing. Art used to arrive ~1s after the text on
+   the tab, and an undecoded image in an unreserved box is 0px tall, which is what slid a word strip down
+   onto an already-placed hand nudge. EXACT art keys only, plus a value guard: a first cut matched any key
+   ending `_pic`, swept up AUDIO ids and requested `assets/Images/assets/Audio/vo_corr_pic.ogg.png` — 3x404
+   that verify_bundle read as 0 FAIL and only render_check caught. A real art id is a bare token: never a
+   path, an extension, or Devanagari. */
+function warmCardImages(){
+  try{
+    const keys = new Set();
+    (function walk(o){
+      if(!o) return;
+      if(Array.isArray(o)) return o.forEach(walk);
+      if(typeof o === "object"){
+        for(const k in o){
+          const v = o[k];
+          if(typeof v === "string" && /^(img|image|image_id|recall_image_id)$/.test(k)
+             && /^[A-Za-z0-9_-]+$/.test(v)) keys.add(v);
+          else walk(v);
+        }
+      }
+    })(CARD);
+    keys.forEach(k => {
+      const im = new Image();
+      im.src = "assets/Images/" + k + "." + IMG_EXT;
+      if(im.decode) im.decode().catch(()=>{});
+    });
+  }catch(e){}
+}
+/* [31q-ui] THE MASCOT IS NOT IN THE CARD, SO warmCardImages() NEVER SEES IT.
+   warmCardImages walks CARD and builds `assets/Images/<id>` paths. Swiftie, the peeking gate bird and
+   the hint mascot all live in assets/UI and are chosen at RUNTIME by setSwMood(), so nothing prefetches
+   them: the first teaching slide requests sw_head_hint_anim.webp (425 KB) at mount, and the mascot pops
+   in AFTER the board has already painted. MEASURED off QA's screen recording (HIKGH02_L02_S02,
+   2026-08-08): board complete at 0.31s, Swiftie at 0.98s — a 0.67s hole, and that is on localhost; over
+   the tab's Wi-Fi it is worse. Same defect class as [31q], different folder.
+   The pose list is DERIVED from SW_POSE rather than hand-typed, so adding a mood cannot silently miss
+   the warm the way the hand-maintained body.vo-lock enumeration keeps doing. */
+function warmUiChrome(){
+  try{
+    const files = new Set(["end_screen.webp", "mascot.webp", "start_card.webp", "start_mascot.webp", "startnew_bg.webp", "sw_head_talking.webp"]);
+    const poses = (typeof SW_POSE !== "undefined") ? new Set(Object.values(SW_POSE)) : new Set(["talking"]);
+    poses.forEach(p => {
+      files.add("sw_head_" + p + ".webp");
+      if(p !== "talking") files.add("sw_head_" + p + "_anim.webp");   // setSwMood picks _anim unless SW_STILL
+    });
+    window.__uiWarm = [];                       // pin: GC can cancel an in-flight fetch
+    files.forEach(f => {
+      const im = new Image();
+      im.src = "assets/UI/" + f;
+      if(im.decode) im.decode().catch(()=>{});  // DECODE too — the decode is half the visible delay
+      window.__uiWarm.push(im);
+    });
+  }catch(e){}
+}
 function boot(){
   // god-mode visual theme (opt-in via CARD.theme) — warms the whole stage; scoped CSS under .thm-*
   if(CARD.theme) $("stage").classList.add("thm-" + CARD.theme);
+  warmCardImages();     // [31q] fetch+decode all art now, while the landing screen is up
+  warmUiChrome();       // [31q-ui] mascot/gate chrome from assets/UI — NOT in CARD
+  warmCardAudio();      // [31x] fetch+DECODE every clip into memory; first-slide clips prioritised
   // banner title = skill name only (strip "(भाग…)" and the ": letters" list)
   $("sgTitle").textContent = (CARD.title.hi || "").split(/[:：(]/)[0].trim();
   // 16j: landing subtitle line (r4 dropped it) + fix the stale document <title> (was hardcoded to
@@ -6669,8 +13690,72 @@ function boot(){
   // greeting lives HERE now (not on slide 0), which also kills the old overlap glitch where the
   // landing VO and slide-0 VO could talk over each other.
   const landSrc = (CARD.assets && CARD.assets.audio && CARD.assets.audio["vo_landing"]) || ("assets/Audio/vo_landing." + AUDIO_EXT);
-  const playLanding = ()=>{ if(!$("startGate").classList.contains("hidden")) play(landSrc, ()=>{}); };
-  const sgVo = $("sgVo"); if(sgVo) sgVo.onclick = (e)=>{ e.stopPropagation(); playLanding(); };
+  /* [r5] THE TWO START-BUTTON STATES, ported from S01.
+     (a) WAITING. The greeting is the lesson's opening instruction and the cover is the one screen
+         with nothing else to do, so the button is genuinely dead until it finishes - and therefore
+         has to look dead. setStartBtnReady(false) is called as the greeting starts and (true) at
+         its end, on the same path that arms the idle timer, so the button and the pulse can never
+         disagree about whether the VO is still running.
+     (b) THE EARNED PULSE. Our [30l] ruling killed the always-on pulse: it ran from first paint, so
+         it was wallpaper, not a signal, and there was nothing left to escalate to when the child
+         actually stalled. This does not revive it - the pulse now waits for 5 seconds of stillness
+         on the cover. Any touch of the cover counts as activity and RESTARTS the wait rather than
+         ending it: cancelling outright meant one stray tap bought permanent silence, which is not
+         what "inactive for 5 seconds" describes. */
+  const setStartBtnReady = (ready)=>{
+    const b = $("sgBtn"); if(!b) return;
+    b.disabled = !ready;
+    b.classList.toggle("sg-waiting", !ready);
+    if(!ready) b.classList.remove("idle-pulse");
+  };
+  let _startNudgeT = 0;
+  const _onLandingNow = ()=> !$("startGate").classList.contains("hidden");
+  const disarmStartNudge = ()=>{ clearTimeout(_startNudgeT); _startNudgeT = 0;
+    const b = $("sgBtn"); if(b) b.classList.remove("idle-pulse"); };
+  const armStartNudge = ()=>{
+    clearTimeout(_startNudgeT);
+    _startNudgeT = setTimeout(()=>{
+      if(!_onLandingNow()) return;
+      const btn = $("sgBtn");
+      if(!btn || btn.disabled) return;      /* a button the child cannot press yet must not beg */
+      btn.classList.add("idle-pulse");
+    }, 5000);
+  };
+  setStartBtnReady(false);                  /* dead from first paint - the greeting is coming */
+  { const sg = $("startGate");
+    if(sg) sg.addEventListener("pointerdown", ()=>{ disarmStartNudge(); armStartNudge(); }, true); }
+
+  /* [r7] THE GREETING WAITS FOR THE TRAIN TO ARRIVE.
+     `playLanding()` is two callers with one body: the automatic greeting on first paint, and the
+     सुनो chip. Only the FIRST is gated - an explicit replay must always replay at once, which is
+     the whole point of the chip. `window.landingTrainReady` is defined only when a matra_train
+     hero is on the cover; every other landing keeps talking immediately. */
+  /* [r9] Did the greeting ever actually SOUND? The autoplay fallback below has to tell "the
+     browser refused it" from "it already played" and from "it is queued behind the train", and
+     live-audio state reports the same thing (nothing is playing) in all three.
+     THIS IS NOT A CALL-FLAG. [30m] warns, correctly, that "did we call play()" kills the very
+     fallback it is meant to guard - on a refused autoplay we DID call it. The signal is the
+     RETURN: a greeting that reports back in under 600ms never sounded, because a refused clip
+     comes back at once and a real 5s one cannot. Only a clip that actually ran counts. */
+  let _landingPlayedOk = false;
+  const _speakLanding = ()=>{ if(!_onLandingNow()) return;
+    const _t0 = Date.now();
+    setStartBtnReady(false); disarmStartNudge();
+    play(landSrc, ()=>{ if(Date.now() - _t0 > 600) _landingPlayedOk = true;
+                        setStartBtnReady(true); armStartNudge(); }); };
+  const playLanding = (immediate)=>{
+    if(!_onLandingNow()) return;
+    if(!immediate && typeof window.landingTrainReady === "function"){
+      setStartBtnReady(false);          /* stay visibly busy through the arrival, not just silent */
+      window.landingTrainReady(_speakLanding);
+      return;
+    }
+    _speakLanding();
+  };
+  /* never strand the child behind a clip that never ends or never starts */
+  setTimeout(()=>{ if(_onLandingNow() && $("sgBtn") && $("sgBtn").disabled){
+    setStartBtnReady(true); armStartNudge(); } }, 12000);
+  const sgVo = $("sgVo"); if(sgVo) sgVo.onclick = (e)=>{ e.stopPropagation(); playLanding(true); };   /* true = an explicit replay never waits for the train */
   // ---- [engine JS] r4/P2 boot loader: loader.gif until assets warm, then it dismisses ITSELF into
   // the landing (NO tap gate). DUAL auto-dismiss (window 'load' OR a 2.5s watchdog — never strand the
   // child), deduped by .done. The same handler adds body.loaded (unblocks the concept-strip stagger)
@@ -6688,10 +13773,10 @@ function boot(){
        or stutters later. Each item has its own timeout and errors count as done, and a 30 s watchdog still
        guarantees the child is never stranded on the loader. The objects are kept (window._capPreloaded) so
        the browser keeps them in memory. */
-    const PRELOAD_EXTRA = ["assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
+    const PRELOAD_EXTRA = ["assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
     const urls = new Set(PRELOAD_EXTRA);
     (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
-      if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })(CARD.assets);
+      if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.landing_hero]);
     const keep = window._capPreloaded = [];
     const one = (u)=> new Promise(res => { let done = false; const fin = ()=>{ if(!done){ done = true; res(); } };
       setTimeout(fin, 12000);                                       // a slow / missing file never blocks the start
@@ -6719,23 +13804,51 @@ function boot(){
     setTimeout(ready, 30000);   // watchdog: never strand the child on the loader
   })();
   // landing VO best-effort on first interaction too (some browsers block autoplay pre-gesture)
-  window.addEventListener("pointerdown", function once(){ window.removeEventListener("pointerdown", once);
+  window.addEventListener("pointerdown", function once(e){ window.removeEventListener("pointerdown", once);
     /* [30m] THE LANDING GREETING MUST NOT RESTART ON THE FIRST TAP (Yasir: "the landing VO does not
-       seem fine"). This listener is ONLY an autoplay-policy fallback, but it fired unconditionally, so
-       when autoplay HAD worked the first tap anywhere replayed the greeting from the top. Guard on
-       whether sound is genuinely moving, NOT on "did we call play()" — on a blocked autoplay we DID
-       call it, so a call-flag would kill the very fallback this line exists for. */
+       seem fine"). This listener exists ONLY as an autoplay-policy fallback: if the browser refused
+       the greeting on load, the first real user gesture is our chance to start it. But it fired
+       UNCONDITIONALLY, so when autoplay HAD worked, the child's first tap anywhere restarted the 9s
+       greeting from the top — and on a tap that happened to be शुरू करें, it bled into the tutorial.
+       Guard on whether audio is genuinely audible right now, NOT on "did we call play()": on a blocked
+       autoplay we DID call it, so a call-flag would kill the very fallback this line is for.
+       currentAudio is set inside play(); paused/ended/currentTime tell us if sound is actually moving.
+       The सुनो chip's own playLanding() is untouched — an explicit replay must always replay. */
+    _resumeVoiceAudio();
     const _a = (typeof currentAudio !== "undefined") ? currentAudio : null;
-    const _audible = _a && !_a.paused && !_a.ended && _a.currentTime > 0;
-    if(!_audible) playLanding(); }, { once:true });
+    /* [31x] a buffer clip has no element to inspect — isPlaying + a live source is the real signal. */
+    const _audible = !!(isPlaying && (currentVoiceSource || (_a && !_a.paused && !_a.ended)));
+    if(_audible) return;
+    /* [r9] THREE THINGS THAT ARE NOT A BLOCKED AUTOPLAY, and used to look like one.
+       (a) A TAP ON A CONTROL. The child pressing ▶ is asking to start the lesson, not asking to
+           hear the greeting. Worse than useless: the greeting disables the button, and a button
+           that becomes disabled mid-gesture never receives the click — so the press was eaten and
+           the child had to sit through the whole clip before the button returned. That is the bug
+           this comment exists for.
+       (b) THE GREETING ALREADY RAN — and ran for real, not "we called play()". `_audible` is
+           false the moment it ends, so every later tap looked like a refused autoplay and
+           replayed a 5s clip from the top.
+       (c) THE GREETING IS QUEUED behind the train's arrival (r7). Nothing is audible yet because
+           nothing is meant to be yet. */
+    if(e && e.target && e.target.closest &&
+       e.target.closest("button,a,input,select,textarea,[role=button],[onclick]")) return;   /* (a) */
+    if(_landingPlayedOk) return;                                                              /* (b) */
+    if(typeof window.landingTrainReady === "function" && !window.__ltReady) return;           /* (c) */
+    playLanding(); }, { once:true });
 
-  $("sgBtn").onclick = ()=>{
+  let _starting=false;
+  $("sgBtn").onclick = async()=>{
     /* ADDITIVE: activity_launched — the child tapping शुरू करें. The only verb of the seven
        with no existing signal in this engine. One-shot inside _xapi, so a mashed start
        cannot double-report, and a game opened-and-abandoned reports nothing. */
     try{ SwiftPAL.emit("activity_launched", { skill_code: CARD.skill_code }); }catch(e){}
+    if(_starting)return; _starting=true; disarmStartNudge(); $("sgBtn").disabled=true;   // a double-tap must not start twice
     stopAudio();          // silence the landing greeting BEFORE slide 0 speaks (no VO overlap)
-    _ac();                // unlock/resume WebAudio on the start gesture so the first clip never clips
+    _resumeVoiceAudio();  // [31x] unlock/resume INSIDE the Android user gesture
+    _ac();
+    /* [31x] hold the start until slide 1's clips are decoded, so a fast tap cannot beat the warm.
+       Capped: a stalled network must never strand the child on the landing. */
+    await Promise.race([_initialAudioWarmPromise,new Promise(resolve=>setTimeout(resolve,3000))]);
     // [engine JS] r4/P1: peek gate into the tutorial. The landing stays visible-and-BLURRED behind the
     // peeking Swiftie + "चलिए शुरू करें"; it hides once the tutorial mounts (in the callback).
     _gatedPhases.add("tutorial");

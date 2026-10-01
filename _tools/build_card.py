@@ -248,6 +248,7 @@ async def main():
     for p in ("tutorial", "guided", "practice"):
         audio["vo_pt_" + p] = audio["cap_pt_" + p]
     audio["sfx_celebrate"] = "assets/Audio/sfx_celebrate.mp3"
+    audio.update({"sfx_play_button": "assets/Audio/sfx_play_button.mp3", "sfx_next_button": "assets/Audio/sfx_next_button.mp3", "sfx_fb_correct": "assets/Audio/sfx_fb_correct.mp3", "sfx_fb_incorrect": "assets/Audio/sfx_fb_incorrect.mp3"})   # ▶ / आगे button sounds + feedback stings (reference UI set)
     audio["sfx_pour"] = "assets/Audio/sfx_pour.mp3"      # recorded pour (from pouring.mp3)   # the engine's CELEBRATION sting
     audio_text = {cid: t for cid, (t, _, _) in LINES.items()}
     cues = {}
@@ -259,7 +260,7 @@ async def main():
       "version": "0.2",
       "skill_code": "MTG2A04_L03_S01", "lo_code": "MTG2A04_L03", "grade": "G2", "attribute": "A04",
       "skill_type": "CORE", "part_label": "", "theme": "toybox",
-      "landing_hero": {"kind": "image", "src": "assets/Images/cap_landing_strip.png"},   # (animation-v2 art was never added: folder is empty)
+      "landing_hero": {"kind": "image", "src": "assets/Images/cap_landing_pour.jpg"},   # supplied landing picture (ASSETE MAP, Oct 1)   # (animation-v2 art was never added: folder is empty)
       "title": {"hi": "कितना पानी है?", "en": "Measuring capacity in non-standard units"},
       "subtitle_hi": "भरिए · गिनिए · बताइए",
       "skill_description_hi": "किसी बर्तन की मात्रा (धारिता) एक जैसे छोटे बर्तन से मापता है - बार-बार वही गिलास/कप भरकर गिनता है और बताता है कि बर्तन में कितने गिलास/कप समाते हैं।",
@@ -270,10 +271,15 @@ async def main():
       "signals_expected": ["slide_entered", "slide_completed", "capacity_compare_first_try", "pour_done",
                            "capacity_count_first_try", "shop_pick_first_try", "phase_transition",
                            "mastery_score", "lesson_completed"],
+      # transition gate + celebration Swiftie (reference UI set, from CodeWithPiyush0/MTG204_L01_S01):
+      # gate = peek once -> talk while the gate VO sounds -> rest; end_anim = 3 sprite sheets lip-synced to
+      # the celebration VO (bits = 1 char / 25 ms, from celebration_kit/make_lipsync.py on cap_well_done.mp3)
+      "gate": {"img": "assets/UI/gate_peek.webp", "peek": "assets/UI/gate_peek.webp", "talk": "assets/UI/gate_talk.webp", "rest": "assets/UI/gate_rest.webp", "peek_ms": 1520, "hold_ms": 450},
+      "end_anim": {"cols": 6, "fw": 329, "fh": 440, "step_ms": 25, "bits": "00000000000000000011110000111100000011000000000000000000000000000000000000000000000000001110000000011111000000011110000000000011111000011110000000001110000111100000110000000011000001111100000011100000011000011111111100111000000000000000000000000000000000000000000", "vo": "cap_well_done", "shabaash": {"src": "assets/UI/cel_shabaash.webp", "pre": [0, 1, 2, 3, 4, 5], "word": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "post": [30, 31, 32, 33, 34, 35]}, "talk": {"src": "assets/UI/cel_talk.webp", "open": [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32]}, "idle": {"src": "assets/UI/cel_idle.webp", "loop": [0, 1, 2, 3, 4, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]}},
       "slides": SLIDES,
       "assets": {"audio": audio, "audio_text": audio_text, "audio_cues": cues,
                  "image": {"cap_shop_bg": "assets/Images/cap_shop_bg.jpg", "cap_shop_order": "assets/Images/cap_shop_order.jpg", "cap_shop_front": "assets/Images/cap_shop_front.png", "cap_shop_man": "assets/Images/cap_shop_man.png", "cap_shop_woman": "assets/Images/cap_shop_woman.png", "cap_shop_boy": "assets/Images/cap_shop_boy.png", "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
-                           "cap_landing_strip": "assets/Images/cap_landing_strip.png",
+                           "cap_landing_strip": "assets/Images/cap_landing_strip.png", "cap_landing_pour": "assets/Images/cap_landing_pour.jpg",
                            "cap_glass": "assets/Images/cap_glass.png", "cap_mug": "assets/Images/cap_mug.png", "cap_cup": "assets/Images/cap_cup.png"}},
     }
     js = json.dumps(card, ensure_ascii=False, indent=2)
