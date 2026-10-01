@@ -13741,8 +13741,12 @@ function boot(){
   const _speakLanding = ()=>{ if(!_onLandingNow()) return;
     const _t0 = Date.now();
     setStartBtnReady(false); disarmStartNudge();
-    play(landSrc, ()=>{ if(Date.now() - _t0 > 600) _landingPlayedOk = true;
-                        setStartBtnReady(true); armStartNudge(); }); };
+    /* the ▶ button turns on ONLY when the greeting has really played to its end. A refused autoplay comes
+       back at once (< 600 ms): the button stays off, and the child's first tap on the cover starts the
+       greeting (pointerdown fallback below); the button turns on when that one ends. */
+    play(landSrc, ()=>{ if(Date.now() - _t0 > 600){ _landingPlayedOk = true; setStartBtnReady(true); armStartNudge(); }
+                        else if(_landingRefused++ >= 2){ setStartBtnReady(true); armStartNudge(); } }); };   /* no sound at all (3 tries): never strand the child */
+  let _landingRefused = 0;
   const playLanding = (immediate)=>{
     if(!_onLandingNow()) return;
     if(!immediate && typeof window.landingTrainReady === "function"){
@@ -13753,8 +13757,10 @@ function boot(){
     _speakLanding();
   };
   /* never strand the child behind a clip that never ends or never starts */
-  setTimeout(()=>{ if(_onLandingNow() && $("sgBtn") && $("sgBtn").disabled){
-    setStartBtnReady(true); armStartNudge(); } }, 12000);
+  /* (only a clip that STALLS: while the greeting is still sounding the button stays off) */
+  (function watch(n){ setTimeout(()=>{ if(!_onLandingNow() || !$("sgBtn") || !$("sgBtn").disabled) return;
+    if(isPlaying && n < 30){ watch(n + 1); return; }
+    if(_landingPlayedOk || n >= 30){ setStartBtnReady(true); armStartNudge(); } else watch(n + 1); }, 1000); })(0);
   const sgVo = $("sgVo"); if(sgVo) sgVo.onclick = (e)=>{ e.stopPropagation(); playLanding(true); };   /* true = an explicit replay never waits for the train */
   // ---- [engine JS] r4/P2 boot loader: loader.gif until assets warm, then it dismisses ITSELF into
   // the landing (NO tap gate). DUAL auto-dismiss (window 'load' OR a 2.5s watchdog — never strand the
@@ -13784,8 +13790,8 @@ function boot(){
         a.addEventListener("canplaythrough", fin, { once: true }); a.addEventListener("error", fin, { once: true }); a.src = u; a.load(); }
       else { const im = new Image(); keep.push(im); im.onload = ()=>{ (im.decode ? im.decode() : Promise.resolve()).then(fin, fin); }; im.onerror = fin; im.src = u; } });
     const list = [...urls]; let loaded = 0;
-    const bar = document.createElement("div"); bar.className = "boot-progress"; bar.innerHTML = "<i></i>"; bl.appendChild(bar);
-    const fill = bar.firstChild;
+    // the loader looks exactly like the reference's (only loader.gif on white, no progress bar); the preload runs behind it
+    const fill = { style: {} };
     const all = Promise.all(list.map(u => one(u).then(()=>{ loaded++; fill.style.width = (100 * loaded / list.length).toFixed(1) + "%"; })))
       .then(()=> document.fonts && document.fonts.ready);
     const ready = ()=>{

@@ -4003,9 +4003,6 @@ body.vo-lock .sg-vo{ pointer-events:none !important; opacity:.45; filter:graysca
    so the frame blends into the page instead of white bands */
 html:has(.cap-scene.full), body:has(.cap-scene.full){
   background:#7E421E linear-gradient(90deg,#6E3716 0%,#874922 18%,#7E421E 50%,#874922 82%,#6E3716 100%);}
-/* boot loader: asset preload progress bar (fills as every image + clip becomes ready) */
-.boot-progress{position:absolute;left:50%;bottom:14%;width:min(320px,60vw);height:8px;transform:translateX(-50%);border-radius:6px;background:rgba(21,101,244,.15);overflow:hidden;}
-.boot-progress i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#1987FC,#1565F4);transition:width .2s ease;}
 /* landing: the supplied picture (ASSETE MAP, Oct 1 — jug pouring into a row of glasses) fills the whole
    panel box; the title sits on its sky and the ▶ button on the table */
 .start-gate .sg-card{background:#8FD3F7 url("assets/Images/cap_landing_pour.jpg") center 62%/cover no-repeat;overflow:hidden;}
@@ -4015,3 +4012,10 @@ html:has(.cap-scene.full), body:has(.cap-scene.full){
 .start-gate .sg-card .sg-content{position:absolute;left:0;right:0;top:34px;margin:0;}
 .start-gate .sg-card .sg-content{width:100%;max-width:none;padding:0;display:flex;flex-direction:column;align-items:center;transform:none;}
 .start-gate .sg-card .sg-title{text-align:center;margin:0 auto;}
+/* ▶ while waiting for the greeting: a tap passes through to the cover (that tap starts a refused greeting) */
+.sg-btn.sg-waiting{pointer-events:none;}
+/* landing card = the reference's scene card (MTG204_L01_S01 .sg-card.sg-scene): 1040x574, 8px white frame,
+   40px radius; ▶ 140px inside the scene. Swiftie + the speaker keep the engine's own size and anchor, so
+   they land exactly where the reference has them (mascot 208x204 at the card's bottom-left, speaker 58px). */
+.start-gate .sg-card{width:1040px;height:574px;border:8px solid #fff;border-radius:40px;box-shadow:0 18px 40px rgba(0,47,118,.25);background-position:center;}
+.start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:30px;width:140px;height:140px;}
