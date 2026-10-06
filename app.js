@@ -11165,7 +11165,10 @@ function capSay(id, handlers, onEnd){
   const tick = ()=>{ if(over || currentAudio !== a) return; fireUpTo(a.currentTime * 1000); requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
 }
-function capStage(host, h){ const st = document.createElement("div"); st.className = "cap-stage"; st.style.height = h + "px"; host.appendChild(st); return st; }
+function capStage(host, h){ const st = document.createElement("div"); st.className = "cap-stage"; st.style.height = h + "px"; host.appendChild(st);
+  // data.flip: the whole scene is mirrored left<->right (layout AND pours) — numbers/text inside are flipped back to read normally
+  try { const sl = CARD.slides[state.idx]; if(sl && sl.data && sl.data.flip) st.classList.add("cap-flip"); } catch(e){}
+  return st; }
 function capAdd(stage, v, x, y){ stage.appendChild(v.el); return v.place(x, y); }
 /* a static picture vessel (no liquid) — same place()/el contract as capVessel, for supplied art */
 function capImgVessel(key, w, aspect, alt){
@@ -11914,8 +11917,9 @@ Object.assign(SlideModules, {
       // same focus panel + raised shelf as the other scenes (consistency); vessels stand on the shelf
       const panel = document.createElement("div"); panel.className = "cap-focus cap-focus-tut"; stage.appendChild(panel);
       const BASE = 348;
-      const glass = capAdd(stage, capImgVessel("cap_glass", 185, 426 / 520, "गिलास"), 250, BASE - 226);
-      const mug = capAdd(stage, capImgVessel("cap_mug", 250, 496 / 520, "मग"), 540, BASE - 262);
+      // new art (ASSETE MAP "new glass.png" / "new mug.png"): glass clearly smaller than the mug, both on the shelf line
+      const glass = capAdd(stage, capImgVessel("cap_glass_new", 140, 438 / 657, "गिलास"), 270, BASE - 210);
+      const mug = capAdd(stage, capImgVessel("cap_mug_new", 316, 925 / 732, "मग"), 500, BASE - 250);
       glass.el.classList.add("tappable"); mug.el.classList.add("tappable");
       const mid = capMarker(stage, 480, 330);
       let done = false, onlyMug = false, attempts = 0, idleN = 0, busy = false;
@@ -11943,22 +11947,29 @@ Object.assign(SlideModules, {
   /* PAGE 3 — "कौन-सा तरीका सही है?"  autonomous: highlight each method with the VO, then the
      identical-cups method is highlighted (✓) while the mixed one stays dimmed. */
   CAP_METHOD: {
+    /* "कौन-सा तरीका सही है?" — the green bowl to be measured sits on top; below it two ways to measure it:
+       three identical glasses vs a glass + a plate + a cup. The VO explains the measuring vessels must be the
+       same, and the identical-glasses way is ticked. */
     mount(host, slide){
-      const stage = capStage(host, 400), ctx = capCtx(slide, stage), A = slide.audio;
+      const stage = capStage(host, 380), ctx = capCtx(slide, stage), A = slide.audio;
       setNavActive(false); setSwMood("teach");
-      const box = (x)=>{ const b = document.createElement("div"); b.className = "cap-box"; b.style.left = x + "px"; b.style.top = "56px";
-        b.style.width = "440px"; b.style.height = "270px"; stage.appendChild(b); return b; };
-      const b1 = box(30), b2 = box(530);
-      const put = (bx, v, x)=>{ bx.appendChild(v.el); v.place(x, 270 - v.h - 56); return v; };
-      // supplied art (ASSETE MAP/cup.png, glass.png): three identical cups vs two cups + a glass
-      const cup = ()=> capImgVessel("cap_cup", 124, 420 / 354, "कप");
-      const cups1 = [0, 1, 2].map(i => put(b1, cup(), 18 + i * 138));
-      put(b2, cup(), 18); put(b2, cup(), 156);
-      put(b2, capImgVessel("cap_glass", 108, 426 / 520, "गिलास"), 300);
-      const tick = document.createElement("div"); tick.className = "cap-tick"; tick.textContent = "✓";
-      const introCues = { box1: ()=> b1.classList.add("cap-hl"), box2: ()=>{ b1.classList.remove("cap-hl"); b2.classList.add("cap-hl"); } };
-      const explainCues = { same: ()=> cups1.forEach((v, i)=> setTimeout(()=> capFlash(v.el, "cap-pulse", 1400), i * 220)),
-        correct: ()=>{ b1.appendChild(tick); b1.classList.add("cap-ok"); } };
+      const bowl = capImgVessel("cap_bowl", 190, 700 / 427, "कटोरा"); capAdd(stage, bowl, 405, 30);   // smaller, so nothing reaches Swiftie
+      const box = (x)=>{ const b = document.createElement("div"); b.className = "cap-box"; b.style.left = x + "px"; b.style.top = "156px";
+        b.style.width = "405px"; b.style.height = "184px"; stage.appendChild(b); return b; };
+      const b1 = box(90), b2 = box(515);
+      const put = (bx, v, x)=>{ bx.appendChild(v.el); v.place(x, 184 - v.h - 30); return v; };
+      const glass = ()=> capImgVessel("cap_glass", 86, 426 / 520, "गिलास");
+      const g1 = [0, 1, 2].map(i => put(b1, glass(), 42 + i * 118));                       // three identical glasses
+      put(b2, glass(), 20);                                                                   // a glass,
+      const plate = document.createElement("div"); plate.className = "cap-v cap-v-img cap-v-cap_plate";
+      plate.style.width = "142px"; plate.style.height = "60px";
+      plate.innerHTML = '<img src="assets/Images/cap_plate.svg" alt="प्लेट" draggable="false">';
+      b2.appendChild(plate); plate.style.left = "116px"; plate.style.top = (184 - 60 - 34) + "px";   // a plate,
+      put(b2, capImgVessel("cap_cup", 122, 420 / 354, "कप"), 268);                          // and a cup
+      const introCues = { bowl: ()=> capFlash(bowl.el, "cap-hl", 1500),
+        box1: ()=> b1.classList.add("cap-hl"), box2: ()=>{ b1.classList.remove("cap-hl"); b2.classList.add("cap-hl"); } };
+      const explainCues = { same: ()=> g1.forEach((v, i)=> setTimeout(()=> capFlash(v.el, "cap-pulse", 1400), i * 220)),
+        correct: ()=>{ b1.classList.add("cap-ok"); } };   // green glow only — no ✓ mark (user)
       const explain = (then)=>{ b2.classList.remove("cap-hl"); b2.classList.add("cap-dim"); b1.classList.add("cap-hl");
         ctx.say(A.explain, explainCues, then); };
       ctx.say(A.intro, introCues, ()=> ctx.after(400, ()=> explain(()=>{
@@ -12062,7 +12073,8 @@ Object.assign(SlideModules, {
         const nearest = ()=>{ const jx = jar.x + jar.w / 2 + dx, jy = jar.y + jar.h / 2 + dy; let best = null, bd = 1e9;
           cups.forEach(c => { if(c.full) return; const [cx, cy] = c.center(); const dd = Math.hypot(cx - jx, cy - jy); if(dd < bd){ bd = dd; best = c; } });
           return bd < 140 ? best : null; };
-        const mv = (ev)=>{ dx = (ev.clientX - sx) / sc; dy = (ev.clientY - sy) / sc; jar.el.style.transform = `translate(${dx}px,${dy}px)`;
+        const fx = stage.classList.contains("cap-flip") ? -1 : 1;   // mirrored scene: screen-right is stage-left
+        const mv = (ev)=>{ dx = fx * (ev.clientX - sx) / sc; dy = (ev.clientY - sy) / sc; jar.el.style.transform = `translate(${dx}px,${dy}px)`;
           const t = nearest(); cups.forEach(c => c.el.classList.toggle("cap-target", c === t)); };
         const up = ()=>{ jar.el.removeEventListener("pointermove", mv); jar.el.removeEventListener("pointerup", up); jar.el.removeEventListener("pointercancel", up);
           jar.el.classList.remove("dragging"); const t = nearest();
@@ -12312,8 +12324,68 @@ Object.assign(SlideModules, {
       const measured = new Set();
       const next = ()=> d.vessels.map(s => V[s.key]).find(v => !measured.has(v.spec.key));
       const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(busy) return;
-        if(phase === "measure"){ const n = next(); if(n) capPoint(n.hit); }
+        if(phase === "measure"){ const n = next(); if(n) capPoint(BV[n.spec.key] ? BV[n.spec.key].el : n.hit); }
         else if(phase === "pick" && onlyRight) capPoint(TV.hit); });
+      /* ---- ZOOM to the bottles (after the last order) ----
+         The counter scene smoothly zooms in on the three bottles (and softly blurs), then dissolves into the
+         bottles close-up: the same three bottles, larger, on the pouring-view table (same art + background).
+         The child taps a bottle there -> the pouring view. When all three are measured, it zooms back out to the
+         counter for the delivery. Nothing new is drawn: only the existing art, re-framed. */
+      let zl = null, bview = null; const BV = {};
+      /* The three bottles themselves carry the transition: they glide up from the counter and grow, keeping
+         exactly their order and their gaps (the counter layout, scaled about its centre), while the shop
+         behind them sinks down, blurs and fades away and the plain pouring-view wall fades in behind them for
+         focus. Zooming back out is the same motion reversed. (FLIP: the close-up bottles start drawn exactly
+         over the counter ones.) */
+      /* glasses card: N identical glasses of milk side by side on a light card, one colour per bottle
+         (blue / green / yellow). count = number badges 1..N that pop in one by one with a soft pop. */
+      const CARD_COL = ["blue", "green", "yellow"];
+      const glassCard = (spec, gw, count)=>{
+        const card = document.createElement("div"); card.className = "cap-bv-glasses col-" + CARD_COL[d.vessels.indexOf(spec) % 3];
+        for(let gi = 0; gi < spec.glasses; gi++){ const mg = capArtVessel("shopglass", { w: gw, level: 1, liquid: d.liquid, art: CAP_SHOP_ART });
+          mg.el.classList.add("cap-mini-glass"); const delay = 0.2 + gi * 0.38; mg.el.style.animationDelay = delay + "s";
+          if(count){ const bd = document.createElement("span"); bd.className = "cap-mini-badge"; bd.textContent = String(gi + 1);
+            bd.style.animationDelay = (delay + 0.12) + "s"; mg.el.appendChild(bd);
+            ctx.after(Math.round((delay + 0.12) * 1000), ()=>{ try{ capSfxPop(true); }catch(e){} }); }
+          card.appendChild(mg.el); }
+        return card; };
+      const K = 1.3, BASE = () => CAP_SHOP_FIG.pour_bottle[3] + 4;
+      const buildBView = ()=>{
+        bview = document.createElement("div"); bview.className = "cap-bview";
+        bview.innerHTML = `<img class="cap-scene-bg cap-bview-bg" src="${IMG.cap_shop_pour || "assets/Images/cap_shop_pour.jpg"}" alt="">`;
+        const src = d.vessels.map(spec => V[spec.key]);
+        const gcx = (Math.min(...src.map(v => v.x)) + Math.max(...src.map(v => v.x + v.w))) / 2;   // counter group centre
+        d.vessels.forEach((spec)=>{ const A0 = CAP_SHOP_ART[spec.art], sv = V[spec.key];
+          const b = artVessel(spec.art, A0.vb[0] * K, sv.level); bview.appendChild(b.el);
+          b.place(960 + (sv.x + sv.w / 2 - gcx) * K - b.w / 2, BASE() - b.h);     // same order, same gaps (x K)
+          b.top = capShopTop(b, spec.art); b.top.cork(false); b.el.classList.add("cap-bv-tap"); b.spec = spec;
+          b.el.onclick = ()=>{ if(busy || phase !== "measure" || measured.has(spec.key)) return; sfxTap(); measure(sv); };
+          BV[spec.key] = b; });
+        scene.appendChild(bview); };
+      // the close-up bottle drawn exactly where (and as big as) its counter bottle is
+      const atCounter = (b)=>{ const sv = V[b.spec.key], k = sv.w / b.w;
+        return `translate(${(sv.x - b.x).toFixed(1)}px,${(sv.y + sv.h - (b.y + b.h * k)).toFixed(1)}px) scale(${k.toFixed(4)})`; };
+      const zoomIn = (then)=>{ busy = true; stopNudge();
+        zl = document.createElement("div"); zl.className = "cap-zoom";
+        [...scene.children].forEach(c => zl.appendChild(c)); scene.appendChild(zl); scene.classList.add("zooming");
+        buildBView();
+        Object.values(BV).forEach(b => { b.el.style.transition = "none"; b.el.style.transform = atCounter(b); });
+        d.vessels.forEach(sp => { V[sp.key].el.style.visibility = "hidden"; });
+        requestAnimationFrame(()=> requestAnimationFrame(()=>{
+          Object.values(BV).forEach(b => { b.el.style.transition = ""; b.el.style.transform = ""; });   // glide + grow
+          zl.classList.add("in"); bview.classList.add("show"); }));             // shop sinks + blurs, wall fades in
+        ctx.after(2900, ()=>{ busy = false; then(); }); };   // bottles first (1.4 s), THEN the background changes (1.4 s)
+      const zoomOut = (then)=>{ busy = true; stopNudge();
+        zl.classList.remove("in"); bview.classList.remove("show");               // reverse: the shop comes back first...
+        ctx.after(1300, ()=> Object.values(BV).forEach(b => { b.el.style.transform = atCounter(b);   // ...then the bottles settle back onto the counter
+          const c = b.card, cc = zl && zl.querySelector(".cap-counter-card." + b.spec.key); if(!c || !cc) return;   // ...and their cards ride along
+          const sx = cc.offsetWidth / c.offsetWidth, dx = parseFloat(cc.style.left) - parseFloat(c.style.left), dy = parseFloat(cc.style.top) - parseFloat(c.style.top);
+          c.style.animation = "none"; c.style.transformOrigin = "50% 0"; c.style.transition = "transform 1.4s cubic-bezier(.45,0,.2,1)";
+          c.style.transform = `translateX(-50%) translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${sx.toFixed(3)})`; }));
+        ctx.after(2800, ()=>{ d.vessels.forEach(sp => { V[sp.key].el.style.visibility = ""; });
+          if(zl) zl.querySelectorAll(".cap-counter-card").forEach(cc => { cc.style.visibility = ""; });
+          [...zl.children].forEach(c => scene.insertBefore(c, zl)); zl.remove(); zl = null;
+          bview.remove(); bview = null; scene.classList.remove("zooming"); busy = false; then(); }); };
       // ---- pouring view (Figma "puring view") ----
       /* measuring (Figma "puring view"): the EMPTY bottle + five glasses FULL of milk. The child taps the glasses
          one by one; each lifts, pours into the bottle and goes back empty. When the bottle is full the remaining
@@ -12334,11 +12406,16 @@ Object.assign(SlideModules, {
         const gIdle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!done && !pouring){ const g = nextGlass(); if(g) capPoint(g.el); gIdle.arm(); } });
         const close = ()=>{ gIdle.stop(); view.classList.remove("show"); ctx.after(380, ()=>{ view.remove();
           v.set(1); v.top.cork(false);                                       // back at the counter the bottle is full (corked)
-          const chip = document.createElement("div"); chip.className = "cap-chip " + v.spec.key; chip.textContent = v.spec.label;
-          chip.style.left = (v.x + v.w / 2) + "px"; chip.style.top = (v.y + v.h + 10) + "px"; scene.appendChild(chip);
-          measured.add(v.spec.key); v.el.classList.add("cap-ok"); busy = false;
-          if(measured.size === d.vessels.length){ setTimeout(()=> v.el.classList.remove("cap-ok"), 900); ctx.after(500, startPick); }
-          else { ctx.after(900, ()=> v.el.classList.remove("cap-ok")); idle.arm(); } }); };
+          // the counter keeps the same glasses card (no words) under the bottle; it shows when the close-up cards land on it
+          const chip = glassCard(v.spec, 34, false); chip.classList.add("cap-chip", "cap-counter-card", v.spec.key); chip.setAttribute("aria-label", v.spec.label);
+          chip.style.left = (v.x + v.w / 2) + "px"; chip.style.top = (v.y + v.h + 10) + "px"; chip.style.visibility = zl ? "hidden" : ""; (zl || scene).appendChild(chip);
+          measured.add(v.spec.key); busy = false;
+          const b = BV[v.spec.key]; if(b){ b.set(1); b.top.cork(false); b.el.classList.remove("cap-bv-tap"); capFlash(b.el, "cap-ok", 900);
+            // under the filled bottle: a card with as many identical glasses of milk as it took (side by side)
+            const card = glassCard(v.spec, 50, true); b.card = card;
+            card.style.left = (b.x + b.w / 2) + "px"; card.style.top = (b.y + b.h + 16) + "px"; bview.appendChild(card); }
+          if(measured.size === d.vessels.length) ctx.after(2400, ()=> zoomOut(()=>{ capFlash(v.el, "cap-ok", 900); ctx.after(300, startPick); }));
+          else idle.arm(); }); };
         const finish = ()=>{ done = true; stopNudge();
           gl.forEach(g => { g.el.classList.remove("tappable"); if(!g.used) g.el.classList.add("cap-spare"); });   // these did not fit
           capFlash(bv.el, "cap-hl", 1200); ctx.after(250, ()=> bvTop.cork(true));   // full: the cork goes in
@@ -12449,9 +12526,9 @@ Object.assign(SlideModules, {
           if(phase === "measure"){ if(measured.has(spec.key)) return; sfxTap(); measure(v); }
         }; });
       // ---- intro: narration → the three customers ask → "tap all three vessels" ----
-      const customer = (i)=>{ if(i >= 3){ ctx.after(300, ()=> ctx.say(A.tap_all, { vessels: ()=> d.vessels.forEach(s => capFlash(V[s.key].el, "cap-hl", 1600)) }, ()=>{
-          phase = "measure"; setSwMood("point"); const n = next(); if(n) capPoint(n.hit); idle.arm();
-          ctx.replayFn = ()=>{ if(!busy && phase === "measure") ctx.say(A.tap_all); }; })); return; }
+      const customer = (i)=>{ if(i >= 3){ ctx.after(500, ()=> zoomIn(()=> ctx.say(A.tap_all, { vessels: ()=> d.vessels.forEach(s => capFlash(BV[s.key].el, "cap-hl", 1600)) }, ()=>{
+          phase = "measure"; setSwMood("point"); const n = next(); if(n) capPoint(BV[n.spec.key].el); idle.arm();
+          ctx.replayFn = ()=>{ if(!busy && phase === "measure") ctx.say(A.tap_all); }; }))); return; }
         walkIn(i);   // one at a time: this customer walks in only after the previous one has ordered
         whenArrived(i, ()=>{ scene.appendChild(bubbles[i]); CUST[i].classList.add("talking"); talk(CUST[i], true);
           ctx.say(A.customers[i], null, ()=>{ CUST[i].classList.remove("talking"); talk(CUST[i], false); ctx.after(250, ()=> customer(i + 1)); }); }); };
@@ -13738,6 +13815,15 @@ function boot(){
      RETURN: a greeting that reports back in under 600ms never sounded, because a refused clip
      comes back at once and a real 5s one cannot. Only a clip that actually ran counts. */
   let _landingPlayedOk = false;
+  /* landing Swiftie moves ONLY while a voice-over is sounding on the cover (the greeting, or a सुनो replay):
+     the looping animation while it speaks, the still rest pose the moment it stops. */
+  (function(){ const LOOP = "assets/UI/landing_swiftee_loop.webp", STILL = "assets/UI/landing_swiftee_still.png";
+    [LOOP, STILL].forEach(u => { const i = new Image(); i.src = u; });
+    let cur = null;
+    const tick = ()=>{ const m = document.querySelector("#startGate .sg-mascot");
+      if(m && _onLandingNow()){ const want = isPlaying ? LOOP : STILL; if(want !== cur){ cur = want; m.src = want; } }
+      if(_onLandingNow()) setTimeout(tick, 120); else cur = null; };
+    tick(); window.__landingMascotTick = tick; })();
   const _speakLanding = ()=>{ if(!_onLandingNow()) return;
     const _t0 = Date.now();
     setStartBtnReady(false); disarmStartNudge();

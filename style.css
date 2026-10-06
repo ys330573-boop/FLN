@@ -135,7 +135,7 @@ body.is-start{background:#47BCFD;}   /* [20a landing] new-blue ground */
 .opt-cell:hover{transform:translateY(-3px);border-color:var(--selected);box-shadow:0 8px 20px rgba(56,106,246,.18);}
 .opt-cell.selected{background:var(--selected-bg);border-color:var(--selected);box-shadow:0 0 0 4px rgba(56,106,246,.20),0 5px 10px rgba(0,0,0,.10);}
 .opt-cell.correct{border-color:var(--correct);background:var(--correct-bg);box-shadow:0 5px 10px rgba(0,177,50,.15);}
-.opt-cell.wrong{border-color:var(--wrong);background:var(--wrong-bg);box-shadow:0 5px 10px rgba(249,53,68,.15);}
+.opt-cell.wrong{border-color:var(--wrong);background:var(--wrong-bg);box-shadow:0 5px 10px rgba(120,140,160,.15);}
 .opt-cell .big-glyph{font-size:96px;font-weight:800;color:var(--navy);line-height:1;}
 .opt-cell .pic-img{width:134px;height:134px;object-fit:contain;}
 .opt-cell .pic-img.fallback{display:none;}
@@ -891,7 +891,7 @@ body.is-end .stage-inner{visibility:hidden;}
    fading in through .opt-cell's box-shadow transition, so the buzz reads instantly. */
 /* NB: !important goes ONCE at the END of a multi-value box-shadow — putting it after each shadow
    makes the whole declaration invalid and it is dropped silently (caught in browser, 27a). */
-.opt-cell.crossed{opacity:1;pointer-events:none;border-color:var(--wrong);background:var(--wrong-bg);position:relative;animation:buzzShake .4s;transition:none !important;box-shadow:0 0 0 4px var(--wrong),0 6px 14px rgba(249,53,68,.25) !important;}
+.opt-cell.crossed{opacity:1;pointer-events:none;border-color:var(--wrong);background:var(--wrong-bg);position:relative;animation:buzzShake .4s;transition:none !important;box-shadow:0 0 0 4px var(--wrong),0 6px 14px rgba(120,140,160,.25) !important;}
 @keyframes buzzShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-9px);}40%{transform:translateX(9px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
 .conf-shot{position:absolute;width:11px;height:15px;border-radius:2px;z-index:70;pointer-events:none;animation:confShot 1.1s cubic-bezier(.15,.6,.4,1) forwards;}
 @keyframes confShot{0%{transform:translate(0,0) rotate(0);opacity:1;}80%{opacity:1;}100%{transform:translate(var(--tx),var(--ty)) rotate(560deg);opacity:0;}}
@@ -1486,7 +1486,7 @@ body.is-start .phase-gate{
 .stage.thm-toybox .opt-cell.wrong-flash{
   border-color:var(--wrong);
   background:var(--wrong-bg);
-  box-shadow:0 0 0 4px var(--wrong), 0 6px 14px rgba(249,53,68,.28);
+  box-shadow:0 0 0 4px var(--wrong), 0 6px 14px rgba(120,140,160,.28);
   animation:buzzShake .4s;
   transition:none !important;
 }
@@ -2759,7 +2759,7 @@ body.is-start .phase-gate{
    rocking, which is precisely the moment the colour has something to say. */
 .train-coach.is-shake .coach-body{
   animation:coachShake 460ms ease-in-out;
-  filter:drop-shadow(0 0 2px rgba(249,53,68,.75)) drop-shadow(0 0 13px rgba(249,53,68,.55));
+  filter:drop-shadow(0 0 2px rgba(120,140,160,.75)) drop-shadow(0 0 13px rgba(120,140,160,.55));
 }
 @media (prefers-reduced-motion:reduce){
   .train-coach.is-shake .coach-body{ animation:none; }
@@ -4005,7 +4005,7 @@ html:has(.cap-scene.full), body:has(.cap-scene.full){
   background:#7E421E linear-gradient(90deg,#6E3716 0%,#874922 18%,#7E421E 50%,#874922 82%,#6E3716 100%);}
 /* landing: the supplied picture (ASSETE MAP, Oct 1 — jug pouring into a row of glasses) fills the whole
    panel box; the title sits on its sky and the ▶ button on the table */
-.start-gate .sg-card{background:#8FD3F7 url("assets/Images/cap_landing_pour.jpg") center 62%/cover no-repeat;overflow:hidden;}
+.start-gate .sg-card{background:#8FD3F7 url("assets/Images/cap_cover.jpg") center/cover no-repeat;overflow:hidden;}
 .start-gate .sg-card #sgHero{display:none;}
 .start-gate .sg-card .sg-title{text-shadow:0 2px 0 rgba(255,255,255,.85),0 0 18px rgba(255,255,255,.9);}
 .start-gate .sg-card{border:8px solid #FFFFFF;border-radius:44px;box-shadow:0 18px 40px rgba(11,61,140,.18);box-sizing:border-box;}
@@ -4019,3 +4019,94 @@ html:has(.cap-scene.full), body:has(.cap-scene.full){
    they land exactly where the reference has them (mascot 208x204 at the card's bottom-left, speaker 58px). */
 .start-gate .sg-card{width:1040px;height:574px;border:8px solid #fff;border-radius:40px;box-shadow:0 18px 40px rgba(0,47,118,.25);background-position:center;}
 .start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:30px;width:140px;height:140px;}
+/* Swiftie + the speaker sit on the layer ABOVE the panel and may overhang its edge (as in the reference):
+   the card must not clip them (its background picture is rounded by border-radius on its own) */
+.start-gate .sg-card{overflow:visible;}
+.start-gate .sg-card .sg-mascot,.start-gate .sg-card #sgVo{z-index:6;}
+/* [page 11] zoom from the counter to the three bottles, then the bottles close-up (same art, re-framed) */
+.cap-scene.fig.zooming{overflow:hidden;}
+.cap-scene.fig .cap-zoom{position:absolute;inset:0;transform:none;filter:none;
+  transition:transform 1.2s cubic-bezier(.55,0,.25,1),filter 1.2s ease;will-change:transform;}
+.cap-scene.fig .cap-zoom.in{transform:var(--zt);filter:blur(4px);}
+.cap-scene.fig .cap-bview{position:absolute;inset:0;z-index:19;opacity:0;transition:opacity .6s ease;}
+.cap-scene.fig .cap-bview.show{opacity:1;}
+.cap-scene.fig .cap-bview .cap-v{transform:scale(.82) translateY(20px);opacity:.4;transition:transform .8s cubic-bezier(.3,1.25,.5,1),opacity .6s ease;transform-origin:50% 100%;}
+.cap-scene.fig .cap-bview.show .cap-v{transform:none;opacity:1;}
+.cap-scene.fig .cap-bview .cap-v.cap-bv-tap{cursor:pointer;}
+.cap-scene.fig.zooming{background:#7E421E;}   /* no white edge while the counter layer moves */
+/* [page 11] close-up -> pouring view: a right-to-left slide (and back) */
+.cap-scene.fig .cap-pourview.slide{opacity:1;transform:translateX(100%);transition:transform .6s cubic-bezier(.55,0,.25,1);}
+.cap-scene.fig .cap-pourview.slide.show{transform:translateX(0);}
+.cap-scene.fig .cap-bview{transition:opacity .6s ease,transform .6s cubic-bezier(.55,0,.25,1);}
+.cap-scene.fig .cap-bview.away{transform:translateX(-100%);}
+/* [page 11] bottle label = N identical small glasses of milk (no text) */
+.cap-scene.fig .cap-chip.cap-chip-glasses{display:flex;gap:4px;align-items:flex-end;padding:6px 10px 4px;}
+.cap-scene.fig .cap-chip-glasses .cap-v.cap-mini-glass{position:relative;left:auto;top:auto;transform:none;pointer-events:none;flex:0 0 auto;}
+/* [page 11] v2 zoom: the bottles glide + grow (FLIP), the shop sinks down / blurs / fades, the wall fades in */
+.cap-scene.fig .cap-zoom{transition:transform 1.4s cubic-bezier(.45,0,.2,1),filter 1.4s ease,opacity 1.4s ease;}
+.cap-scene.fig .cap-zoom.in{transform:translateY(260px) scale(1.06);filter:blur(7px);opacity:0;}
+.cap-scene.fig .cap-bview{opacity:1;}
+.cap-scene.fig .cap-bview .cap-bview-bg{opacity:0;transition:opacity 1.1s ease .25s;}
+.cap-scene.fig .cap-bview.show .cap-bview-bg{opacity:1;}
+.cap-scene.fig .cap-bview .cap-v{opacity:1;transform:none;transform-origin:0 0;transition:transform 1.4s cubic-bezier(.45,0,.2,1);}
+/* step order: the bottles glide + grow FIRST; only when they have arrived does the background change */
+.cap-scene.fig .cap-zoom.in{transition-delay:1.35s;}
+.cap-scene.fig .cap-bview.show .cap-bview-bg{transition-delay:1.35s;}
+.cap-scene.fig .cap-bview .cap-bview-bg{transition:opacity 1.2s ease;}
+/* mirrored scenes (data.flip): the stage is flipped as a whole, so the layout and every pour/animation mirror
+   together; anything that carries text or numbers is flipped back so it reads normally */
+.cap-stage.cap-flip{transform:scaleX(-1);}
+.cap-stage.cap-flip .cap-badge,.cap-stage.cap-flip .cap-opts,.cap-stage.cap-flip .cap-chip{scale:-1 1;}   /* number row flipped back as a whole: same order + readable */   /* the `scale` property composes with their own transforms/animations */
+/* mirrored scenes: the badge is flipped back about its own centre and then centred over its vessel with the
+   `translate` property (applied after `scale`), so it sits exactly mid-top of the glass */
+.cap-stage.cap-flip .cap-badge{transform:none;translate:-50% 0;}
+.cap-stage.cap-flip .cap-badge.pop{animation:capPopFlip .42s cubic-bezier(.34,1.5,.6,1);}
+@keyframes capPopFlip{0%{transform:scale(.3);}100%{transform:scale(1);}}
+/* [T4] method screen: the bowl shows alone first, then steps aside as the two option boxes pop in */
+.cap-v.cap-method-bowl{transition:left .7s cubic-bezier(.4,.1,.3,1),top .7s cubic-bezier(.4,.1,.3,1),width .7s ease,height .7s ease;}
+.cap-v.cap-method-bowl.side{width:240px;}
+.cap-box{transition:opacity .45s ease,transform .45s cubic-bezier(.34,1.4,.6,1);}
+.cap-box.cap-box-hide{opacity:0;transform:scale(.85);pointer-events:none;}
+/* WHOLE GAME (user, Oct 5): no ✓ tick marks anywhere, and no red glow / red colour on wrong answers.
+   Wrong feedback stays: the wiggle + a soft grey-blue edge (never red). */
+:root{--wrong:#AFC0D3 !important;--wrong-bg:#F2F6FB !important;}
+.cap-tick,.opt-cell.correct::after,.tap-all-item.got::after{display:none !important;content:none !important;}
+.hint-text.wrong{color:var(--navy) !important;}
+/* [page 11] bottles close-up: the glasses card under a filled bottle (N identical glasses, side by side) */
+.cap-scene.fig .cap-bv-glasses{position:absolute;transform:translateX(-50%);z-index:4;display:flex;gap:6px;align-items:flex-end;
+  padding:10px 12px 8px;border-radius:20px;background:linear-gradient(#FFFFFF,#F3F8FE);border:4px solid #FFFFFF;
+  box-shadow:0 0 0 3px #CFE3F5,0 12px 24px rgba(11,61,140,.18);animation:capCardIn .45s cubic-bezier(.34,1.5,.6,1) both;}
+.cap-scene.fig .cap-bv-glasses .cap-v.cap-mini-glass{position:relative;left:auto;top:auto;transform:none;flex:0 0 auto;pointer-events:none;
+  animation:capGlassIn .4s cubic-bezier(.34,1.5,.6,1) both;}
+@keyframes capCardIn{from{opacity:0;transform:translateX(-50%) translateY(18px) scale(.85);}to{opacity:1;transform:translateX(-50%);}}
+@keyframes capGlassIn{from{opacity:0;transform:translateY(12px) scale(.6);}to{opacity:1;transform:none;}}
+/* glasses cards: one light colour per bottle, number badges that count up */
+.cap-scene.fig .cap-bv-glasses.col-blue{background:linear-gradient(#F1F8FF,#DCEEFF);box-shadow:0 0 0 3px #8CC3F5,0 12px 24px rgba(11,61,140,.18);}
+.cap-scene.fig .cap-bv-glasses.col-green{background:linear-gradient(#F2FBF3,#DDF4E0);box-shadow:0 0 0 3px #8FD19A,0 12px 24px rgba(20,90,40,.16);}
+.cap-scene.fig .cap-bv-glasses.col-yellow{background:linear-gradient(#FFFBEA,#FFF0C2);box-shadow:0 0 0 3px #F0CD62,0 12px 24px rgba(120,80,0,.16);}
+.cap-scene.fig .cap-mini-glass{overflow:visible;}
+.cap-scene.fig .cap-mini-badge{position:absolute;left:50%;top:-36px;translate:-50% 0;min-width:30px;height:30px;padding:0 4px;border-radius:15px;
+  background:var(--navy);color:#fff;font:800 20px/30px var(--font-hi);text-align:center;border:3px solid #fff;box-shadow:0 3px 6px rgba(0,0,0,.2);
+  animation:capGlassIn .35s cubic-bezier(.34,1.6,.6,1) both;}
+.cap-scene.fig .cap-bv-glasses:has(.cap-mini-badge){padding-top:42px;}
+.cap-scene.fig .cap-counter-card{padding:6px 8px 5px;gap:4px;border-width:3px;border-radius:14px;font-size:0;}
+.cap-scene.fig .cap-counter-card,.cap-scene.fig .cap-counter-card .cap-mini-glass{animation:none;}
+/* cover page (ASSETE MAP "cover page.png"): the title is painted into the picture, so the text title is kept
+   for screen readers only (as the reference's scene landing does) */
+.start-gate .sg-card .sg-title,.start-gate .sg-card .sg-sub{position:absolute !important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0;padding:0;}
+/* cover: the picture sits a little higher (full width, nudged up) so the ▶ button lands on the empty front of the
+   shelf below the glasses and bowls; the strip it leaves at the bottom is filled with the picture's own peach */
+.start-gate .sg-card{background:#FCCDB3 url("assets/Images/cap_cover.jpg") center -14px/96% auto no-repeat;}
+.start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:8px;}   /* on the empty shelf front, below the objects */
+/* wide banner-style cover (like the reference title screens): ~2.4 : 1 card, the cover picture fills it */
+.start-gate .sg-card{width:1072px;height:446px;background:#FCCDB3 url("assets/Images/cap_cover_wide.jpg") center/cover no-repeat;}
+.start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:10px;width:104px;height:104px;}
+/* new wide cover (no painted title): the game's title is shown again, big and centred on the wall, like the
+   reference cover (navy with a thick white outline) */
+.start-gate .sg-card{background-position:center 40%;}
+.start-gate .sg-card .sg-title{position:static !important;width:auto;height:auto;overflow:visible;clip:auto;margin:0 auto;
+  font-size:64px;line-height:1.1;color:#0B3D8C;-webkit-text-stroke:0;paint-order:stroke fill;
+  text-shadow:0 0 0 #fff,3px 3px 0 #fff,-3px -3px 0 #fff,3px -3px 0 #fff,-3px 3px 0 #fff,0 4px 0 #fff,0 -4px 0 #fff,4px 0 0 #fff,-4px 0 0 #fff,0 10px 18px rgba(11,61,140,.35);}
+.start-gate .sg-card .sg-content{top:44px;}
+.start-gate .sg-card{background-position:center 22%;}
+.start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:6px;width:100px;height:100px;}

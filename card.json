@@ -9,7 +9,7 @@
   "theme": "toybox",
   "landing_hero": {
     "kind": "image",
-    "src": "assets/Images/cap_landing_pour.jpg"
+    "src": "assets/Images/cap_cover_wide.jpg"
   },
   "title": {
     "hi": "कितना पानी है?",
@@ -51,6 +51,118 @@
     "mastery_score",
     "lesson_completed"
   ],
+  "gate": {
+    "img": "assets/UI/gate_peek.webp",
+    "peek": "assets/UI/gate_peek.webp",
+    "talk": "assets/UI/gate_talk.webp",
+    "rest": "assets/UI/gate_rest.webp",
+    "peek_ms": 1520,
+    "hold_ms": 450
+  },
+  "end_anim": {
+    "cols": 6,
+    "fw": 329,
+    "fh": 440,
+    "step_ms": 25,
+    "bits": "00000000000000000011110000111100000011000000000000000000000000000000000000000000000000001110000000011111000000011110000000000011111000011110000000001110000111100000110000000011000001111100000011100000011000011111111100111000000000000000000000000000000000000000000",
+    "vo": "cap_well_done",
+    "shabaash": {
+      "src": "assets/UI/cel_shabaash.webp",
+      "pre": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "word": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "post": [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    },
+    "talk": {
+      "src": "assets/UI/cel_talk.webp",
+      "open": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        15,
+        16,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    "idle": {
+      "src": "assets/UI/cel_idle.webp",
+      "loop": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    }
+  },
   "slides": [
     {
       "id": "T1",
@@ -72,18 +184,6 @@
       "id": "T2",
       "phase": "tutorial",
       "eis": "iconic",
-      "type": "CAP_METHOD",
-      "prompt_hi": "कौन-सा तरीका सही है?",
-      "audio": {
-        "intro": "cap_p3_a",
-        "explain": "cap_p3_b"
-      },
-      "data": {}
-    },
-    {
-      "id": "T3",
-      "phase": "tutorial",
-      "eis": "iconic",
       "type": "CAP_POUR_IN_DEMO",
       "prompt_hi": "कितने गिलास दूध?",
       "audio": {
@@ -92,11 +192,12 @@
       },
       "data": {
         "count": 4,
-        "liquid": "milk"
+        "liquid": "milk",
+        "flip": true
       }
     },
     {
-      "id": "T4",
+      "id": "T3",
       "phase": "tutorial",
       "eis": "iconic",
       "type": "CAP_POUR_OUT_DEMO",
@@ -108,8 +209,21 @@
       "data": {
         "count": 4,
         "glasses": 6,
-        "liquid": "water"
+        "liquid": "water",
+        "flip": true
       }
+    },
+    {
+      "id": "T4",
+      "phase": "tutorial",
+      "eis": "iconic",
+      "type": "CAP_METHOD",
+      "prompt_hi": "कौन-सा तरीका सही है?",
+      "audio": {
+        "intro": "cap_p3_a",
+        "explain": "cap_p3_b"
+      },
+      "data": {}
     },
     {
       "id": "G1",
@@ -138,7 +252,8 @@
           "ok": "cap_p7_ok",
           "h1": "cap_p7_h1",
           "h2": "cap_p7_h2"
-        }
+        },
+        "flip": true
       }
     },
     {
@@ -170,7 +285,8 @@
           "ok": "cap_p8_ok",
           "h1": "cap_p8_h1",
           "h2": "cap_p8_h2"
-        }
+        },
+        "flip": true
       }
     },
     {
@@ -199,7 +315,8 @@
           "ok": "cap_p9_ok",
           "h1": "cap_p9_h1",
           "h2": "cap_p9_h2"
-        }
+        },
+        "flip": true
       }
     },
     {
@@ -389,11 +506,11 @@
       "vo_pt_guided": "assets/Audio/cap_pt_guided.mp3",
       "vo_pt_practice": "assets/Audio/cap_pt_practice.mp3",
       "sfx_celebrate": "assets/Audio/sfx_celebrate.mp3",
-      "sfx_pour": "assets/Audio/sfx_pour.mp3",
       "sfx_play_button": "assets/Audio/sfx_play_button.mp3",
       "sfx_next_button": "assets/Audio/sfx_next_button.mp3",
       "sfx_fb_correct": "assets/Audio/sfx_fb_correct.mp3",
-      "sfx_fb_incorrect": "assets/Audio/sfx_fb_incorrect.mp3"
+      "sfx_fb_incorrect": "assets/Audio/sfx_fb_incorrect.mp3",
+      "sfx_pour": "assets/Audio/sfx_pour.mp3"
     },
     "audio_text": {
       "cap_landing": "नमस्ते दोस्त! मैं हूँ स्विफ्टी। आइए, देखते और सीखते हैं कि कौन-से बर्तन में कितना पानी है।",
@@ -404,7 +521,7 @@
       "cap_p2_idle": "ज़्यादा पानी किसमें आएगा, गिलास में या मग में? सही बर्तन पर टैप करिए।",
       "cap_p2_ok": "शाबाश! गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।",
       "cap_p2_wrong": "गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।",
-      "cap_p3_a": "यहाँ हम सीखेंगे कि जब किसी बड़े बर्तन में पानी या किसी चीज़ की मात्रा मापनी हो, तो छोटे बर्तनों का सही उपयोग कैसे किया जाता है। यहाँ दो अलग-अलग तरीके दिए गए हैं। एक जगह तीन कप हैं, और दूसरी जगह दो कप और एक गिलास है।",
+      "cap_p3_a": "यहाँ हम सीखेंगे कि किसी बर्तन की मात्रा कैसे मापी जाती है। इस कटोरे में पानी की मात्रा मापनी है। यहाँ दो अलग-अलग तरीके दिए गए हैं। एक जगह तीन एक जैसे गिलास हैं, और दूसरी जगह एक गिलास, एक प्लेट और एक कप है।",
       "cap_p3_b": "जब भी हम किसी बर्तन में पानी या किसी चीज़ की मात्रा को मापते हैं, तो मापने के लिए इस्तेमाल होने वाले बर्तन एक जैसे होने चाहिए। वरना हम मात्रा को सही तरीके से नहीं माप सकेंगे। इसलिए सही तरीका यह है, जिसमें सभी बर्तन एक जैसे हों।",
       "cap_p4_a": "अब हम सीखते हैं, इस बोतल में दूध की मात्रा कितने गिलास है? यहाँ एक बोतल पूरी खाली है, और चार एक जैसे गिलास में दूध है। इन गिलासों का सारा दूध एक-एक करके बोतल में डालते हैं, और देखते हैं कि यह बोतल कितने गिलास से भरती है।",
       "cap_p4_b": "यह बोतल चार गिलास से पूरी भर गई। तो इस बोतल में दूध की मात्रा चार एक जैसे गिलास के बराबर है।",
@@ -491,11 +608,15 @@
       ],
       "cap_p3_a": [
         {
-          "t": 14670,
+          "t": 5774,
+          "k": "bowl"
+        },
+        {
+          "t": 13141,
           "k": "box1"
         },
         {
-          "t": 17064,
+          "t": 16412,
           "k": "box2"
         }
       ],
@@ -713,122 +834,16 @@
       "cap_shop_boy": "assets/Images/cap_shop_boy.png",
       "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
       "cap_landing_strip": "assets/Images/cap_landing_strip.png",
+      "cap_landing_pour": "assets/Images/cap_landing_pour.jpg",
+      "cap_cover": "assets/Images/cap_cover.jpg",
+      "cap_cover_wide": "assets/Images/cap_cover_wide.jpg",
       "cap_glass": "assets/Images/cap_glass.png",
+      "cap_bowl": "assets/Images/cap_bowl.png",
+      "cap_plate": "assets/Images/cap_plate.svg",
+      "cap_glass_new": "assets/Images/cap_glass_new.png",
+      "cap_mug_new": "assets/Images/cap_mug_new.png",
       "cap_mug": "assets/Images/cap_mug.png",
-      "cap_cup": "assets/Images/cap_cup.png",
-      "cap_landing_pour": "assets/Images/cap_landing_pour.jpg"
-    }
-  },
-  "gate": {
-    "img": "assets/UI/gate_peek.webp",
-    "peek": "assets/UI/gate_peek.webp",
-    "talk": "assets/UI/gate_talk.webp",
-    "rest": "assets/UI/gate_rest.webp",
-    "peek_ms": 1520,
-    "hold_ms": 450
-  },
-  "end_anim": {
-    "cols": 6,
-    "fw": 329,
-    "fh": 440,
-    "step_ms": 25,
-    "bits": "00000000000000000011110000111100000011000000000000000000000000000000000000000000000000001110000000011111000000011110000000000011111000011110000000001110000111100000110000000011000001111100000011100000011000011111111100111000000000000000000000000000000000000000000",
-    "vo": "cap_well_done",
-    "shabaash": {
-      "src": "assets/UI/cel_shabaash.webp",
-      "pre": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
-      "word": [
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29
-      ],
-      "post": [
-        30,
-        31,
-        32,
-        33,
-        34,
-        35
-      ]
-    },
-    "talk": {
-      "src": "assets/UI/cel_talk.webp",
-      "open": [
-        0,
-        1,
-        2,
-        4,
-        5,
-        6,
-        8,
-        9,
-        10,
-        11,
-        15,
-        16,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        28,
-        29,
-        30,
-        31,
-        32
-      ]
-    },
-    "idle": {
-      "src": "assets/UI/cel_idle.webp",
-      "loop": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35
-      ]
+      "cap_cup": "assets/Images/cap_cup.png"
     }
   }
 }

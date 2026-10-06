@@ -45,9 +45,9 @@ LINES = {
   "cap_p2_wrong": ("गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।", SWIFTEE, [("और मग", "mug")]),
 
   # PAGE 3 — which method is right
-  "cap_p3_a": ("यहाँ हम सीखेंगे कि जब किसी बड़े बर्तन में पानी या किसी चीज़ की मात्रा मापनी हो, तो छोटे बर्तनों का सही उपयोग कैसे किया जाता है। "
-               "यहाँ दो अलग-अलग तरीके दिए गए हैं। एक जगह तीन कप हैं, और दूसरी जगह दो कप और एक गिलास है।",
-               SWIFTEE, [("एक जगह", "box1"), ("दूसरी जगह", "box2")]),
+  "cap_p3_a": ("यहाँ हम सीखेंगे कि किसी बर्तन की मात्रा कैसे मापी जाती है। इस कटोरे में पानी की मात्रा मापनी है। "
+               "यहाँ दो अलग-अलग तरीके दिए गए हैं। एक जगह तीन एक जैसे गिलास हैं, और दूसरी जगह एक गिलास, एक प्लेट और एक कप है।",
+               SWIFTEE, [("इस कटोरे", "bowl"), ("एक जगह", "box1"), ("दूसरी जगह", "box2")]),
   "cap_p3_b": ("जब भी हम किसी बर्तन में पानी या किसी चीज़ की मात्रा को मापते हैं, तो मापने के लिए इस्तेमाल होने वाले बर्तन एक जैसे होने चाहिए। "
                "वरना हम मात्रा को सही तरीके से नहीं माप सकेंगे। इसलिए सही तरीका यह है, जिसमें सभी बर्तन एक जैसे हों।",
                SWIFTEE, [("एक जैसे होने", "same"), ("इसलिए सही", "correct")]),
@@ -144,17 +144,17 @@ SLIDES = [
    "prompt_hi": "ज़्यादा पानी किसमें, गिलास या मग?",
    "audio": {"prompt": "cap_p2_q", "idle": "cap_p2_idle", "correct": "cap_p2_ok", "wrong": "cap_p2_wrong"},
    "data": {"idle_ms": 7000}},
-  {"id": "T2", "phase": "tutorial", "eis": "iconic", "type": "CAP_METHOD",
-   "prompt_hi": "कौन-सा तरीका सही है?",
-   "audio": {"intro": "cap_p3_a", "explain": "cap_p3_b"}, "data": {}},
-  {"id": "T3", "phase": "tutorial", "eis": "iconic", "type": "CAP_POUR_IN_DEMO",
+  {"id": "T2", "phase": "tutorial", "eis": "iconic", "type": "CAP_POUR_IN_DEMO",
    "prompt_hi": "कितने गिलास दूध?",
    "audio": {"intro": "cap_p4_a", "conclude": "cap_p4_b"},
    "data": {"count": 4, "liquid": "milk"}},
-  {"id": "T4", "phase": "tutorial", "eis": "iconic", "type": "CAP_POUR_OUT_DEMO",
+  {"id": "T3", "phase": "tutorial", "eis": "iconic", "type": "CAP_POUR_OUT_DEMO",
    "prompt_hi": "कितने गिलास पानी?",
    "audio": {"intro": "cap_p5_a", "conclude": "cap_p5_b"},
    "data": {"count": 4, "glasses": 6, "liquid": "water"}},
+  {"id": "T4", "phase": "tutorial", "eis": "iconic", "type": "CAP_METHOD",
+   "prompt_hi": "कौन-सा तरीका सही है?",
+   "audio": {"intro": "cap_p3_a", "explain": "cap_p3_b"}, "data": {}},
   {"id": "G1", "phase": "guided", "eis": "enactive", "type": "CAP_JAR_DRAG",
    "prompt_hi": "जार का पूरा तेल कप में डालिए।", "ask_prompt_hi": "इस जार में कितने कप तेल है?",
    "audio": {"intro": "cap_p7_a", "your_turn": "cap_p7_b"},
@@ -260,7 +260,7 @@ async def main():
       "version": "0.2",
       "skill_code": "MTG2A04_L03_S01", "lo_code": "MTG2A04_L03", "grade": "G2", "attribute": "A04",
       "skill_type": "CORE", "part_label": "", "theme": "toybox",
-      "landing_hero": {"kind": "image", "src": "assets/Images/cap_landing_pour.jpg"},   # supplied landing picture (ASSETE MAP, Oct 1)   # (animation-v2 art was never added: folder is empty)
+      "landing_hero": {"kind": "image", "src": "assets/Images/cap_cover_wide.jpg"},   # cover page (ASSETE MAP)   # supplied landing picture (ASSETE MAP, Oct 1)   # (animation-v2 art was never added: folder is empty)
       "title": {"hi": "कितना पानी है?", "en": "Measuring capacity in non-standard units"},
       "subtitle_hi": "भरिए · गिनिए · बताइए",
       "skill_description_hi": "किसी बर्तन की मात्रा (धारिता) एक जैसे छोटे बर्तन से मापता है - बार-बार वही गिलास/कप भरकर गिनता है और बताता है कि बर्तन में कितने गिलास/कप समाते हैं।",
@@ -276,11 +276,11 @@ async def main():
       # the celebration VO (bits = 1 char / 25 ms, from celebration_kit/make_lipsync.py on cap_well_done.mp3)
       "gate": {"img": "assets/UI/gate_peek.webp", "peek": "assets/UI/gate_peek.webp", "talk": "assets/UI/gate_talk.webp", "rest": "assets/UI/gate_rest.webp", "peek_ms": 1520, "hold_ms": 450},
       "end_anim": {"cols": 6, "fw": 329, "fh": 440, "step_ms": 25, "bits": "00000000000000000011110000111100000011000000000000000000000000000000000000000000000000001110000000011111000000011110000000000011111000011110000000001110000111100000110000000011000001111100000011100000011000011111111100111000000000000000000000000000000000000000000", "vo": "cap_well_done", "shabaash": {"src": "assets/UI/cel_shabaash.webp", "pre": [0, 1, 2, 3, 4, 5], "word": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "post": [30, 31, 32, 33, 34, 35]}, "talk": {"src": "assets/UI/cel_talk.webp", "open": [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32]}, "idle": {"src": "assets/UI/cel_idle.webp", "loop": [0, 1, 2, 3, 4, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]}},
-      "slides": SLIDES,
+      "slides": [dict(sl, data=dict(sl.get("data") or {}, flip=True)) if sl["id"] in ("T2", "T3", "G1", "G2", "P1") else sl for sl in SLIDES],   # these 4 scenes are mirrored (user, Oct 5)
       "assets": {"audio": audio, "audio_text": audio_text, "audio_cues": cues,
                  "image": {"cap_shop_bg": "assets/Images/cap_shop_bg.jpg", "cap_shop_order": "assets/Images/cap_shop_order.jpg", "cap_shop_front": "assets/Images/cap_shop_front.png", "cap_shop_man": "assets/Images/cap_shop_man.png", "cap_shop_woman": "assets/Images/cap_shop_woman.png", "cap_shop_boy": "assets/Images/cap_shop_boy.png", "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
-                           "cap_landing_strip": "assets/Images/cap_landing_strip.png", "cap_landing_pour": "assets/Images/cap_landing_pour.jpg",
-                           "cap_glass": "assets/Images/cap_glass.png", "cap_mug": "assets/Images/cap_mug.png", "cap_cup": "assets/Images/cap_cup.png"}},
+                           "cap_landing_strip": "assets/Images/cap_landing_strip.png", "cap_landing_pour": "assets/Images/cap_landing_pour.jpg", "cap_cover": "assets/Images/cap_cover.jpg", "cap_cover_wide": "assets/Images/cap_cover_wide.jpg",
+                           "cap_glass": "assets/Images/cap_glass.png", "cap_bowl": "assets/Images/cap_bowl.png", "cap_plate": "assets/Images/cap_plate.svg", "cap_glass_new": "assets/Images/cap_glass_new.png", "cap_mug_new": "assets/Images/cap_mug_new.png", "cap_mug": "assets/Images/cap_mug.png", "cap_cup": "assets/Images/cap_cup.png"}},
     }
     js = json.dumps(card, ensure_ascii=False, indent=2)
     open(os.path.join(ROOT, "card.json"), "w", encoding="utf8").write(js)
