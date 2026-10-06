@@ -4110,3 +4110,4 @@ html:has(.cap-scene.full), body:has(.cap-scene.full){
 .start-gate .sg-card .sg-content{top:44px;}
 .start-gate .sg-card{background-position:center 22%;}
 .start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:6px;width:100px;height:100px;}
+.cap-stage.cap-flip .cap-hand{scale:-1 1;}   /* the demo hand keeps its normal (un-mirrored) look on mirrored screens */

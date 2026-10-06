@@ -13815,15 +13815,6 @@ function boot(){
      RETURN: a greeting that reports back in under 600ms never sounded, because a refused clip
      comes back at once and a real 5s one cannot. Only a clip that actually ran counts. */
   let _landingPlayedOk = false;
-  /* landing Swiftie moves ONLY while a voice-over is sounding on the cover (the greeting, or a सुनो replay):
-     the looping animation while it speaks, the still rest pose the moment it stops. */
-  (function(){ const LOOP = "assets/UI/landing_swiftee_loop.webp", STILL = "assets/UI/landing_swiftee_still.png";
-    [LOOP, STILL].forEach(u => { const i = new Image(); i.src = u; });
-    let cur = null;
-    const tick = ()=>{ const m = document.querySelector("#startGate .sg-mascot");
-      if(m && _onLandingNow()){ const want = isPlaying ? LOOP : STILL; if(want !== cur){ cur = want; m.src = want; } }
-      if(_onLandingNow()) setTimeout(tick, 120); else cur = null; };
-    tick(); window.__landingMascotTick = tick; })();
   const _speakLanding = ()=>{ if(!_onLandingNow()) return;
     const _t0 = Date.now();
     setStartBtnReady(false); disarmStartNudge();
