@@ -1,4 +1,404 @@
 const CARD = JSON.parse(document.getElementById('cardData').textContent);
+/* == REF2 (Prashantkumar12345678/Hindi-game-gender-identify) FLN kit: confetti / burst / cue sounds == */
+/* ===== FLN ANIMATION KIT: preview-js BEGIN ===== */
+(function(){ "use strict";
+/* ===== FLN ANIMATION KIT: core BEGIN ===== */
+(function(){ "use strict";
+  var M = window.FLNMotion = window.FLNMotion || {};
+  M.still = function(){
+    try{ return document.documentElement.classList.contains("no-anim") ||
+      (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+    catch(_){ return false; }
+  };
+  M.scale = function(){
+    try{ return parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue("--scale")) || 1; }catch(_){ return 1; }
+  };
+  M.rect = function(r, sw){                    // screen rect -> stage coords (R1/R2)
+    var s = M.scale();
+    if(document.documentElement.classList.contains("rotated")){
+      return { left:(r.top - sw.top)/s, top:(sw.right - r.right)/s, w:r.height/s, h:r.width/s };
+    }
+    return { left:(r.left - sw.left)/s, top:(r.top - sw.top)/s, w:r.width/s, h:r.height/s };
+  };
+  M.guard = function(fn){                      // R4
+    try{ fn(); }catch(e){ try{ console.warn("[animation-kit]", e && e.message); }catch(_){} }
+  };
+  var _actx = null;
+  M.audio = function(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+      _actx = _actx || new AC();
+      if(_actx.state === "suspended") _actx.resume();
+      return _actx;
+    }catch(_){ return null; }
+  };
+  M.ready = function(fn){
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  };
+})();
+/* ===== FLN ANIMATION KIT: core END ===== */
+/* R5, the JS half: the engine has no ?still=1 of its own - the string does not appear
+   in it once - so PHASE 3 check 13c had nothing to switch off. This gives the kit flag
+   something to bind to, and the reduced-motion CSS above does the rest. */
+try{ if(/[?&]still=1/.test(location.search))
+  document.documentElement.classList.add("no-anim"); }catch(e){}
+  /* `cue` is the preview's sound trigger and the ONLY thing its effect code reaches for
+     outside itself. Mapped onto the real recordings in assets/SFX. `sprinkle`
+     shares sfx_burst on the kit's own instruction: burst fires on "every elements-burst
+     moment: landing stars, the end-screen burst, and the correct-answer confetti". */
+  var SFX = { correct:"sfx_correct", wrong:"sfx_wrong", burst:"sfx_burst",
+              celebrate:"sfx_celebrate", sprinkle:"sfx_burst" };
+  function cue(el, name){
+    /* [H11-54] THIS LOADER WAS LEFT BEHIND BY THE FOLDER SPLIT. [H11-50] moved the effects to
+       assets/SFX and taught audioDir() to _sfxFile and playSfx - but cue() is a THIRD loader,
+       inside the kit block, with its own hard-coded folder, so every effect it plays (correct,
+       wrong, burst, celebrate, sprinkle) has been asking for a file that is not there. Caught
+       by logging a real match: the confetti burst requested assets/VO/sfx_burst.ogg.
+       audioDir lives in a later script block, but cue() only ever runs on a user action, long
+       after that block has parsed; the inline fallback covers the impossible case rather than
+       letting a missing helper silence the effects a second time. */
+    try{ var f = SFX[name]; if(!f) return;
+         /* [H11-150] ONE SOUND PER MOMENT. A right answer asks for sfx_correct twice in the same
+            tick - the engine's sfxCorrect() and this kit's tile confirm - and a wrong one asks for
+            sfx_wrong twice the same way. Two copies of one clip started together play as one clip
+            twice as loud, which the new SwiftPAL set (mastered to full scale) made audible. The
+            second request inside 150ms is dropped; window.__sfxLast is shared with _sfxFile. */
+         var _now = Date.now(), _last = (window.__sfxLast = window.__sfxLast || {});
+         if(_last[f] && _now - _last[f] < 150) return; _last[f] = _now;
+         var dir = (typeof audioDir === "function") ? audioDir(f)
+                 : (f.indexOf("sfx_") === 0 ? "assets/SFX/" : "assets/VO/");
+         var a = new Audio((typeof bustAudio==="function"?bustAudio(dir+f+".wav"):dir+f+".wav")); a.volume = 0.7;   /* [H11-156] WAV now */
+         a.play().catch(function(){}); }catch(e){}
+  }
+var CONF = [
+  ["#8B2FC9","#5E1C8C"],   /* violet */
+  ["#3F51B5","#27358A"],   /* indigo */
+  ["#1E88E5","#135FA6"],   /* blue   */
+  ["#22B24C","#157A34"],   /* green  */
+  ["#FFD21E","#D9A800"],   /* yellow */
+  ["#FF8A1E","#C75F00"],   /* orange */
+  ["#E5322D","#A81F1B"]    /* red    */
+];
+
+var COLORS = ["#FFE400","#FFBD00","#E89400","#FFCA6C","#FDFFB8"];
+
+var HUES = ["#FCB717","#3B7DD8","#21A74A","#E5484D","#7048D6","#F1781D"];
+
+var KIND = {s1:"k-star", s2:"k-star", s3:"k-spark", s4:"k-dot", s5:"k-dot"};
+
+var SHAPES = ["st","st","st","st","rc","rc","ln","ln","sq","sq"];
+
+var OL_ST = ["is-correct", "is-wrong", "is-muted"];
+
+var SB_NEW = { stars:32, circles:8, startV:14, decay:0.975, ticks:150,
+               shots:[0,220,440], spin:0.18, starScale:1.8, circleScale:1.0 };
+
+function rnd(a, b){ return a + Math.random() * (b - a); }
+
+function still(){
+  try{ return document.documentElement.classList.contains("no-anim") ||
+    (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+  catch(e){ return false; }
+}
+
+function mk(cls){ var i = document.createElement("i"); i.className = cls; return i; }
+
+function tempo(el){
+  var cs = getComputedStyle(el);
+  function num(p, d){
+    var v = parseFloat(cs.getPropertyValue(p));
+    if(!v && v !== 0) return d;
+    return v > 20 ? v / 1000 : v;
+  }
+  var beat = num("--fx-beat", 0.4);
+  return { beat: beat, reward: beat * (parseFloat(cs.getPropertyValue("--fx-reward")) || 2) };
+}
+
+function later(el, fn, ms){
+  el._selT = el._selT || [];
+  el._selT.push(setTimeout(fn, ms));
+}
+
+function selClear(el){
+  if(el._selT){ for(var j = 0; j < el._selT.length; j++) clearTimeout(el._selT[j]); }
+  el._selT = [];
+  el.classList.remove("ck-correct", "wg-wrong", "wg-out", "wg-rel",
+                      "old-correct", "old-wrong");
+  var fx = el.querySelectorAll(".ck-fx,.wg-fx");
+  for(var i = 0; i < fx.length; i++) fx[i].remove();
+}
+
+function ckPlay(el, o){
+  o = o || {};
+  var crown = (o.crown == null) ? 5 : o.crown;
+  selClear(el);
+  void el.offsetWidth;                        /* forced reflow - restarts the pop */
+  var dur = o.dur || tempo(el).reward;        /* CSS owns the tempo */
+  if(o.dur) el.style.setProperty("--ckT", dur + "s");
+
+  var fx = mk("ck-fx");
+
+  if(crown && !still()){
+    var cr = mk("ck-crown");
+    /* clientWidth is layout px INSIDE the scaled stage - i.e. design px already.
+       getBoundingClientRect() here would come back multiplied by --scale (R1). */
+    var w = el.clientWidth || 96, h = el.clientHeight || 96;
+    var rx = w * 0.46, ry = h * 0.46;      /* the tile's own edge */
+    for(var i = 0; i < crown; i++){
+      var t = (crown === 1) ? 0.5 : i / (crown - 1);
+      var a = (-158 + t * 136 + rnd(-7, 7)) * Math.PI / 180;   /* TOP arc only */
+      var x0 = Math.cos(a) * rx, y0 = Math.sin(a) * ry;       /* start ON the edge */
+      var out = rnd(.20, .34);                                /* ...and travel out */
+      var s = mk("");
+      s.style.cssText =
+        "--ss:" + rnd(7, 12).toFixed(1) + "px;" +
+        "--x0:" + x0.toFixed(1) + "px;" +
+        "--y0:" + y0.toFixed(1) + "px;" +
+        "--sx:" + (x0 + Math.cos(a) * w * out).toFixed(1) + "px;" +
+        "--sy:" + (y0 + Math.sin(a) * h * out).toFixed(1) + "px;" +
+        "--sr:" + Math.round(rnd(-140, 140)) + "deg;";
+      cr.appendChild(s);
+    }
+    fx.appendChild(cr);
+  }
+
+  /* class FIRST - the border and pop must not wait on the decoration being built */
+  el.classList.add("ck-correct");
+  el.appendChild(fx);
+  cue(el, "correct");
+  /* Only the TRANSIENT layers are swept. .ck-correct stays: the green outline is
+     the correct-mark and it belongs to the tile until the slide advances. */
+  later(el, function(){
+    var t = fx.querySelectorAll(".ck-crown");
+    for(var i = 0; i < t.length; i++) t[i].remove();
+  }, dur * 1050);
+}
+
+function wgPlay(el, o){
+  o = o || {};
+  selClear(el);
+  void el.offsetWidth;
+  var dur = o.dur || tempo(el).beat;          /* CSS owns the tempo */
+  if(o.dur) el.style.setProperty("--wgT", dur + "s");
+  el.classList.add("wg-wrong");          /* class first - see ckPlay */
+  cue(el, "wrong");
+  var fx = mk("wg-fx");
+  fx.appendChild(mk("wg-pulse"));
+  el.appendChild(fx);
+  /* RELEASE on a timeout, never on animationend: under the reduced-motion kill
+     switch animationend never fires and the tile would stay red forever - on
+     exactly the devices least able to recover from it. (R5, second half.)
+     .wg-rel goes on BEFORE .wg-wrong comes off so the border has something to
+     transition with; see the CSS note. */
+  later(el, function(){
+    el.classList.add("wg-rel");
+    el.classList.remove("wg-wrong");
+    var f = el.querySelector(".wg-fx"); if(f) f.remove();
+    later(el, function(){
+      el.classList.remove("wg-rel");
+      if(o.then) o.then();
+    }, 260);
+  }, dur * 1500 + 40);
+}
+
+function wgOut(el, o){
+  o = o || {};
+  selClear(el);
+  void el.offsetWidth;
+  var dur = o.dur || tempo(el).beat;
+  if(o.dur) el.style.setProperty("--wgT", dur + "s");
+  el.classList.add("wg-out");
+  cue(el, "wrong");
+  var fx = mk("wg-fx");
+  fx.appendChild(mk("wg-pulse"));
+  el.appendChild(fx);
+}
+
+function confettiNew(host, n){
+  cue(host, "sprinkle");
+  host.querySelectorAll(".fx-confetti").forEach(function(x){ x.remove(); });
+  var dist = host.clientHeight + 60, maxLife = 0;
+  var wrap = document.createElement("div");
+  wrap.className = "fx-confetti";
+  for(var i = 0; i < n; i++){
+    var z     = rnd(0.75, 1.15);           /* depth: nearer pieces are bigger */
+    var fall  = rnd(1.1, 1.8) / z;         /* ...and fall faster (parallax)   */
+    var delay = rnd(0, 0.35);
+    if(fall + delay > maxLife) maxLife = fall + delay;
+    var pair = CONF[i % CONF.length];
+    /* Two regimes, and a real plate moves DIFFERENTLY in each:
+       flutter = zigzags a lot, almost no net sideways drift;
+       tumble  = autorotation produces a steady lateral force, so it barely zigzags
+                 but drifts consistently to one side. */
+    var flutter = Math.random() > 0.22;
+    var rockT   = flutter ? rnd(0.6, 1.2) : rnd(0.75, 1.5);
+    var sway    = flutter ? rnd(10, 34)   : rnd(2, 8);
+    var drift   = flutter ? rnd(-12, 12)  : rnd(-45, 45);
+    var bob     = flutter ? rnd(3, 7)     : rnd(2, 4);
+
+    /* every custom property is set once here and INHERITS down to .w and .f */
+    var p = document.createElement("i"); p.className = "p";
+    p.style.cssText =
+      "--x:"     + rnd(-2, 98).toFixed(1) + "%;" +
+      "--dist:"  + dist + "px;" +
+      "--fall:"  + fall.toFixed(2) + "s;" +
+      "--delay:" + delay.toFixed(2) + "s;" +
+      "--drift:" + drift.toFixed(0) + "px;" +
+      "--sway:"  + sway.toFixed(0) + "px;" +
+      "--bob:"   + bob.toFixed(1) + "px;" +
+      "--rockT:" + rockT.toFixed(2) + "s;" +
+      /* capped short of 90deg: even at max tilt the face still reads */
+      "--amp:"   + Math.round(rnd(28, 52)) + "deg;" +
+      "--yaw:"   + Math.round(rnd(-30, 30)) + "deg;" +
+      "--tilt:"  + Math.round(rnd(-25, 25)) + "deg;" +
+      "--z:"     + z.toFixed(2) + ";" +
+      "--dim:"   + (0.72 + (z - 0.75) / 0.4 * 0.28).toFixed(2) + ";" +
+      "--c:"     + pair[0] + ";--c2:" + pair[1] + ";";
+
+    var w = document.createElement("i"); w.className = "w";
+    var f = document.createElement("i");
+    f.className = "f " + SHAPES[Math.floor(Math.random() * SHAPES.length)] +
+                  (flutter ? "" : " tum");
+    w.appendChild(f); p.appendChild(w); wrap.appendChild(p);
+  }
+  host.appendChild(wrap);
+  setTimeout(function(){ wrap.remove(); }, (maxLife + 0.3) * 1000);
+}
+
+function starBurst(host, o){
+  cue(host, "celebrate");
+  host.querySelectorAll("canvas.fx").forEach(function(c){ c.remove(); });
+  var W = host.clientWidth, H = host.clientHeight;
+  var cv = document.createElement("canvas");
+  cv.className = "fx"; cv.width = W; cv.height = H;
+  cv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;";
+  host.insertBefore(cv, host.firstChild);
+  var ctx = cv.getContext("2d"), parts = [];
+  /* the real stage is 1333x750; scale velocity and size so the preview reads true */
+  var k = W / 1333;
+  var COLORS = ["#FFE400","#FFBD00","#E89400","#FFCA6C","#FDFFB8"];
+
+  function starPath(r){
+    ctx.beginPath();
+    for(var i = 0; i < 10; i++){
+      var rad = (i % 2 === 0) ? r : r / 2, a = Math.PI / 5 * i - Math.PI / 2;
+      ctx[i === 0 ? "moveTo" : "lineTo"](Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    ctx.closePath();
+  }
+  function add(n, scalar, shape){
+    for(var i = 0; i < n; i++){
+      var a = Math.random() * Math.PI * 2;
+      parts.push({ x:W/2, y:H*0.52, ax:Math.cos(a), ay:Math.sin(a),
+        vel:o.startV * k * (0.5 + Math.random()), tick:0,
+        scalar:scalar * k, shape:shape,
+        color:COLORS[Math.floor(Math.random()*COLORS.length)],
+        rot:Math.random()*Math.PI*2, spin:(Math.random()-.5)*o.spin });
+    }
+  }
+  function shoot(){ add(o.stars, o.starScale, "star"); add(o.circles, o.circleScale, "circle"); }
+  o.shots.forEach(function(ms){ ms ? setTimeout(shoot, ms) : shoot(); });
+
+  /* derived from the LAST shot, so retiming the shots cannot end the loop early */
+  var minFrames = Math.max.apply(null, o.shots) / 16 + 20;
+  var frames = 0;
+  (function frame(){
+    ctx.clearRect(0, 0, W, H);
+    var alive = false;
+    for(var i = 0; i < parts.length; i++){
+      var p = parts[i];
+      if(p.tick >= o.ticks) continue;
+      alive = true;
+      p.x += p.ax*p.vel; p.y += p.ay*p.vel; p.vel *= o.decay;
+      p.rot += p.spin; p.tick++;
+      ctx.globalAlpha = 1 - p.tick/o.ticks;
+      ctx.fillStyle = p.color;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      if(p.shape === "star"){ starPath(8*p.scalar); ctx.fill(); }
+      else { ctx.beginPath(); ctx.arc(0,0,6*p.scalar,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    }
+    frames++;
+    if(alive || frames < minFrames) requestAnimationFrame(frame);
+    else setTimeout(function(){ cv.remove(); }, 300);
+  })();
+}
+
+function starPath(r){
+    ctx.beginPath();
+    for(var i = 0; i < 10; i++){
+      var rad = (i % 2 === 0) ? r : r / 2, a = Math.PI / 5 * i - Math.PI / 2;
+      ctx[i === 0 ? "moveTo" : "lineTo"](Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    ctx.closePath();
+  }
+
+function olSet(el, state){
+  if(!el) return;
+  /* the same two cues as the tiles: a child should not have to learn a second
+     vocabulary because the mechanic changed */
+  if(state === "correct") cue(el, "correct");
+  else if(state === "wrong") cue(el, "wrong");
+  for(var i = 0; i < OL_ST.length; i++) el.classList.remove(OL_ST[i]);
+  void el.offsetWidth;                       /* restart - same reason as recipe 19 */
+  if(state) el.classList.add("is-" + state);
+}
+
+function olBeat(el){
+  var v = parseFloat(getComputedStyle(el).getPropertyValue("--olT"));
+  if(!v) return 0.4;
+  return v > 20 ? v / 1000 : v;
+}
+
+function olWrong(el, then){
+  olSet(el, "wrong");
+  if(el._olT) clearTimeout(el._olT);
+  el._olT = setTimeout(function(){
+    el.classList.remove("is-wrong");
+    if(then) then();
+  }, olBeat(el) * 1500 + 40);
+}
+
+function olReset(scope){
+  var els = document.querySelectorAll(scope + " .ol");
+  for(var i = 0; i < els.length; i++){
+    if(els[i]._olT) clearTimeout(els[i]._olT);
+    olSet(els[i], "");
+  }
+}
+  window.FLNKit = { confetti:confettiNew, starBurst:starBurst, ck:ckPlay, wg:wgPlay,
+                    wgOut:wgOut, olSet:olSet, olBeat:olBeat, olWrong:olWrong,
+                    olReset:olReset, still:still, SB:SB_NEW };
+  /* SB is not optional - starBurst reads o.stars/o.startV/o.shots with no fallbacks.
+     No sky/boom/pop here: recipes 1+2 ship their own and own .sg-sky / .sg-burst;
+     keeping the preview's too would put two star fields on the same screen. */
+/* The sky keeps recipe 1's OWN defaults - lanes 29, 3 layers, r0 22, r1 72vmax.
+   They were designed for this masked layout: r0 22 puts the spawn ring just behind the
+   card so stars EMERGE from its edge, and r1 72 carries them to the screen edge. The
+   preview-matched geometry I had here (r0 7.3, r1 47) was tuned for the UNMASKED look;
+   with the mask back it spawned stars deep inside the card - the card edge is ~42vmax
+   out - so they were clipped for almost their whole life and only a few ever showed. */
+})();
+
+/* The mask HIDES the stars over the landing card, it does not remove them: the <i>
+   elements are still in the DOM and recipe 2 hit-tests by rectangle, so a tap on the
+   white box would burst a star nobody can see. This runs BEFORE recipe 2 (registered
+   earlier on the same node, capture phase) and swallows those taps - never on a
+   control, so the start button and the speaker chip are untouched, and only where a
+   .sg-card exists, so the end screen keeps its tappable field. */
+try{ document.addEventListener("pointerdown", function(e){
+  try{
+    if(e.target.closest("button,[data-act],.sg-vo,.sg-btn,a,[role=button]")) return;
+    var c = document.querySelector(".sg-card"); if(!c) return;
+    var r = c.getBoundingClientRect();
+    if(e.clientX < r.left || e.clientX > r.right ||
+       e.clientY < r.top  || e.clientY > r.bottom) return;
+    e.stopImmediatePropagation();
+  }catch(_){}
+}, true); }catch(e){}
+/* ===== FLN ANIMATION KIT: preview-js END ===== */
   const AUDIO_EXT = (CARD.assets && CARD.assets.audio_ext) || "mp3";  // 32c-b: THE RUNG-2 HINT WAS BEING KILLED BY ITS OWN REVEAL, 1ms IN. revealOne() opened with play(audioFor(slide,'reveal')) while dragWrong(slide) had started hint2 in the SAME event, and play() begins with stopAudio() -- so the longest, most informative clip in the lesson (the one that NAMES the order) was cut at ~1ms of 5931-8651ms, measured on all four parts of HIKGH04_L01_S02. A child who got it wrong twice heard nothing of the help authored for exactly that moment. It also spoke 'यह सही क्रम है।' before anything was placed -- the same premature-reveal defect 25d removed from MATCH_DRAG_N. Now guarded: `if(!isPlaying) play(reveal)`, so a revealOne() reached in silence still speaks it, and the reveal line is not lost either way -- celebrateThenAdvance(slide, revealed=true) speaks it when the child then places the tile. Applied to BOTH copies (SEQUENCE_DRAG + MATCH_GENDER_PAIRS hold byte-identical revealOne()s; leaving one copy of a copy-pasted bug is how 31o's missing clearHold survived in these same two mechanics). SCOPE MEASURED before landing, not claimed: _tools/prove_scope.py --type SEQUENCE_DRAG MATCH_GENDER_PAIRS -> 6 of 33 bundles can reach it, 27 provably cannot. Patch C of vo_no_cut_standard.py was NOT applied: 32b nocut had already unified the reveal path into one celebrateThenAdvance(slide, revealed) behind a single word-wait, which is C's intent in a better shape -- the script now recognises that instead of refusing the whole run and blocking this BLOCKING patch behind it. · 32d: max_attempts fallback ||3 -> ||2 in 10 sites. The engine's own default contradicted the house value and would have silently handed a 3rd attempt with an empty third rung to any new game that omitted the field -- the defect closed fleet-wide on 08-03. Inert today (all 33 cards set it explicitly); this closes the door, it does not change a shipping game. · .mp3 (maths) / .ogg (Hindi FLN)
   const IMG_EXT   = (CARD.assets && CARD.assets.img_ext)   || "png";  // .png (working) / .webp (delivered/FLN) — twin of AUDIO_EXT (fixes A3)
   const ENGINE_VERSION = "2026.08.04b-r4-unified";  // 31o: TERMINAL HELP LEFT THE TRAY PERMANENTLY DEAD IN TWO MECHANICS. revealOne() -> terminalHold() disables every OTHER tile with inline pointer-events:none !important and opacity:.4 so the child can only act on the revealed one. clearHold() has existed to release that since [28l] and PATTERN_BUILD, SEQUENCE_COMPLETE and SORT_GENDER all call it — but SEQUENCE_DRAG and MATCH_GENDER_PAIRS never did. So after two wrong tries, placing the revealed tile CORRECTLY left every remaining tile dead and faded for the rest of the slide: the game simply stopped accepting input, with the tray visibly greyed. Yasir hit it twice on HIKGH04_L01_S02 P3's SEQUENCE_DRAG and named the precondition exactly — "even after placing the correct after two wrong attempts, the cards remain blocked". MATCH_DRAG_N was never affected because it has its own local clearHelp() on the correct path. Both now call clearHold(tileRow) before settle(). NOTE for future engine work: terminalHold and clearHold must be added in the SAME edit — a mechanic that dims without releasing looks fine in every static check and only fails after a specific 3-step sequence (wrong, wrong, right), which no existing harness walked. · 31n: REVERTS 31m's 20s DRAG-GATE WINDOW (my regression, Yasir caught it in minutes) AND STOPS A FILLED SEQUENCE_DRAG SLOT SHRINKING. (a) 31m widened installDragVoGate's window from 4000ms to 20000ms reasoning that real clips outlast 4s. True, but it misread the window's PURPOSE: blocking during a live clip is the CSS lock's job (body.vo-lock is exact — on for precisely as long as isPlaying); this window is the ESCAPE HATCH. Widening it turned a stalled or slow-to-end clip into a twenty-second dead screen — place one letter correctly, then every remaining tile refuses to move. Back to 4000ms. The gap 31m was really chasing (.cdm-objtile/.cdm-card/.combine-drag having no CSS entry, so relying on this gate alone) stays closed in the CSS rule, which is where it belonged. LESSON: widening a safety valve is not the same as tightening a gate. (b) .seq-slot 104px -> 150px. SEQUENCE_DRAG's settle() does zone.classList.remove('dd-zone') so a filled slot stops accepting drops, and .dd-zone was the ONLY rule sizing it at 150 — so a correctly placed letter's box instantly shrank to 104 beside its 150px empty neighbours (measured 79 vs 114 on screen at the 0.757 fit-scale). Sizing now lives on .seq-slot itself and no longer depends on a class the mechanic deliberately removes. · 31m: THE DRAG VO-GATE'S SAFETY WINDOW WAS SHORTER THAN THE CLIPS IT GUARDED. installDragVoGate decided `isPlaying && now-_voStart < 4000`, so it stopped blocking FOUR SECONDS into every line while the child was still being spoken to — and real VO is routinely longer (this game's own placeholder clip is 4.41s). It never surfaced on .dd-tile or .sort-item because the CSS lock covers those and CSS has no escape hatch; but .cdm-objtile, .cdm-card and .combine-drag appear in the gate's SEL list with NO CSS entry, so they were live on the JS gate alone and grabbable mid-sentence. Both halves fixed: those three classes join the body.vo-lock rule (CSS is now the primary gate for every draggable the gate names), and the JS window becomes 20s — purely a stall backstop so a clip that never ends cannot freeze the tiles forever, not a mid-clip escape. play()'s existing 800ms/1200ms fallbacks already handle missing and undecodable clips. Measured with a stubbed 6s Audio (headless here cannot decode, which is why a real-clip window never appeared in earlier tests): tile stays pointer-events:none for the full clip and the drag is refused at t=4.5s, freeing only when the clip ends. · 31l: two more mechanics onto the vo-lock list — COMBINE_COUNT (.combine-grp, cursor:grab) and ORDER_BY_ATTR (.ord-item, five slides across guided AND practice on MTKGA02_L02_S02). Both were found by RE-RUNNING _tools/vo_lock_audit.py after 31k, which is the point: the lock is a denylist and a denylist cannot tell you what it is missing — only walking every slide with the lock forced on can. Run that audit whenever a mechanic is added. Children need no entry (.ord-obj-img is inside .ord-item; pointer-events:none blocks descendants). · 31k: THE VO LOCK WAS SHORT BY NINE MECHANICS (style.css). Yasir 2026-08-02: "even when the VO is being played the student can drag/tap the card." body.vo-lock is a DENYLIST of interactive classes, so any mechanic not named in it stayed fully live while a clip spoke — and adding a mechanic never failed loudly. Audited every slide of HIKGH04_L01_S02 P1-P4 and the 6 maths games with the lock forced on (_tools/vo_lock_audit.py): drag/drop and tap-option slides WERE locked correctly, but INTRO (.intro-letter), MEET_LETTER (.meet-letter-box), SHAPE_INTRO (.intro-shape), TRACE_SEQUENCE (.tseq-box), TRACE_SHAPE (.trace-box), ROTATE_SHAPES (.rot-tile), COUNT_TAP (.count-item) and MAKE_EQUAL (.cobj/.balance-add) were not. TRACE_SHAPE runs in guided AND independent, COUNT_TAP in practice: a stray tap there spends one of the child's two attempts while the instruction is still being read to them. Parents only — pointer-events:none blocks descendants, so .cobj-img/.count-badge/.rot-art/.rot-name need no entry. .tut-audio stays reachable on purpose (it is the replay control) and already refuses mid-VO in JS. STILL POINTER-EVENTS ONLY: no opacity, no filter, no pale board — the screen must look identical, the cards simply do not respond. · 31j: THE CAPTION CHIP IS FOR TILES THAT CANNOT FIT THE BADGE, nothing else — supersedes 31h, 31i and two private fixes. The constraint is TWO-SIDED: never bury the zone's word, never smother the picture. 31h keyed on the .zone-lbl ELEMENT (always emitted, empty when unlabelled -> 15 word tiles would have been clipped into a 62px badge). 31i keyed on label TEXT (lifted from HI01H02_L01_S01's private fix) but protects only the label, so on HIKGH02_L02_S01 — zones with no label — single letters got the caption chip, which that game's own engine_local had MEASURED at 47.1% of the tile over the art vs 9.4% for the corner badge. HIKGH02_L02_S01/S02's private [...text].length>1 counts CODE POINTS, so अं and अः (HIKGH04_L01_S01 P2, labelled zones) read as words and would caption straight onto the label. Now: a single BASE character always fits the badge and always gets it; only a genuine multi-character word takes the caption, and only where no label would be buried. Base characters means stripping the Devanagari combining block (matras/anusvara/visarga/virama/nukta) before counting. Fleet census of all 90 MATCH_DRAG_N tiles: 68 letters on labelled zones, 7 letters on unlabelled zones, 15 words on unlabelled zones, ZERO words on a labelled zone — the two clauses never fight; the label clause is a guard for a future card. · 31i: 31h's LABEL TEST WAS WRONG FOR WORD TILES. The zone builder always emits `<span class="zone-lbl">${p.picture||""}</span>`, so an UNLABELLED zone still carries the span, empty — and `!zone.querySelector('.zone-lbl')` read it as LABELLED and gave it the 62px corner badge. Measured 15 word tiles that would have been clipped: HIKGH04_L02_S02 (घर नल कप बस जग) and HI01H04_L03_S01 (घास माला दादा पापा नाक कान). Now tests the label's TEXT. Found by reading HI01H02_L01_S01's engine_local before sweeping it: that game had diagnosed and fixed this exact bug on 2026-07-28 ("after getting the letter placed on the correct answer card it overlaps the images") with the correct textContent check, and HIKGH02_L02_S01/S02 had a weaker grapheme-count variant from 2026-07-29 — three private fixes for one engine bug, none upstreamed, which is the isolation tax in one line. The canonical fix now supersedes all three. · 31h: TWO MATCH_DRAG_N DEFECTS YASIR CAUGHT ON HIKGH04_L01_S02 P1 G4, 2026-08-02. (a) THE GUIDE HAND OUTLIVED THE TASK. travelNudge loops iterations:Infinity from coordinates captured ONCE, and only stopNudge() cancels it. The correct-drop path ran leaveTrayGhost -> clearHelp -> settle and none of them called it; clearHelp only strips CSS classes. So once terminal help had fired, the child placing that very tile correctly left the hand looping over the ghost slot the tile came from — pointing at an empty box, and still pointing at a FINISHED pair while they worked the remaining ones. stopNudge() now runs in settle(), the single correct-placement path (drop AND reveal). (b) THE PLACED LETTER COVERED THE PICTURE'S WORD. settle() added `md-word` unconditionally while its own comment called it the caption look "for WORD tiles (not the letter badge)" — there is no word/letter branch here, every tile comes from p.letter. md-word is bottom:6px/left:50%, exactly where .zone-lbl sits: measured a 40x21px chip over a 40x21px label, 100% occlusion, so matching घ to the house DELETED the word घर — the reinforcement the exercise exists for. .dd-tile.snapped's top-right corner badge had consequently never shipped. The new test is NOT letter-vs-word (Devanagari makes length useless: अं is one letter in two code points) but "is there a label to cover" — checked per zone at settle time. Every word-tile card in the fleet (HI01H04_L03_S01, HIKGH04_L02_S02) renders no .zone-lbl and keeps the caption chip unchanged; labelled cards get the corner badge. · 31g: TWO AUTONOMY RULINGS FROM YASIR, 2026-08-02. (a) SHAPE_INTRO GETS AN AUTONOMOUS PATH. It was the last teaching mechanic with none at all — it unlocked आगे only at tapped.size >= shapes.length, so the child was held hostage by the lesson that is supposed to teach them. This is INTRO's [16h] chain shape-for-letter: each tile highlights and speaks itself, the instruction VO plays, _autoDone flips, आगे unlocks, and taps THEN become per-shape replays (taps are ignored before that so the lesson cannot be cut off). Gated on data.auto, so no card changes behaviour until it opts in. A missing clip is a silent beat that still advances — play() fires its callback on both the no-src and the error path — so an un-recorded build teaches itself rather than stalling on a dead screen. (b) NO आगे ON SELF-ADVANCING SLIDES: "we dont need the buttons in guided and independent". Every tap mechanic already hid the button; MATCH_DRAG_N and SEQUENCE_DRAG were the only non-tutorial slides still showing one, so a run read as button-free and then sprouted a button on the drag pages. It was never a completion signal there — filling the last zone / placing the last tile calls celebrateThenAdvance -> completeSlide unaided, so the button could only skip the child PAST their own finished work. Verified before removing: nothing is stranded, which is the same contract the tap slides have had all along. · 31f: INTRO TILE SIZER NOW CLAMPS BY HEIGHT — the tutorial heading was sitting BEHIND the letters. Yasir 2026-08-01 on HIKGH04_L01_S02 P1. The sizer only ever considered WIDTH: when n letters could not fit one row at the 110px touch floor it wrapped to two rows and then RE-EXPANDED each tile back toward the 184px cap, because 4 of 8 do fit a 960px row. Result: a 392px grid inside the 318px .tut-content box. That box centres its overflow, so half the excess (37px layout / 28px on screen at the 0.757 fit-scale) rode UP into .tut-prompt. Measured, not guessed: P1 (8 letters) and P2 (9) overlap by 28px and 22px; P3 (5) and P4 (6) stay on one row and are clean — which is exactly why it looked intermittent. FIX: row COUNT still comes from width alone (behaviour unchanged for every already-correct slide); only the tile SIZE is now additionally clamped to the real available height, host.clientHeight, falling back to 318 when a phase-gate blur has the card hidden and clientHeight reads 0. TOUCH=110 stays a hard floor: a viewport too short for that overflows rather than shrink a KG tile below a reliable target. Two-row grids now compute (availH-GAP)/2 = 149px instead of 184px. · 30o: THE TTS FALLBACK IS REMOVED ENGINE-WIDE. Yasir 2026-07-31, urgent, after hearing a robot voice on a game whose VO is 100% human: "there should be no way to fall back on tts, it is fine if we dont have audio, we will know if an audio is missing but having tts is worse." _ttsSay was added at 20a as a REVIEW PLACEHOLDER so an un-recorded build was never silent. That reasoning was backwards and this ruling corrects it: a synthetic voice MASKS a missing clip. It made a broken build sound finished, so nobody could hear the gap the placeholder existed to cover — and worse, it spoke over 60-of-60 HUMAN VO whenever autoplay was refused (see 30n). Silence is diagnostic; a missing clip must read as missing. WHAT CHANGED: both call sites now go straight to the silent beat they already had as their alternative (onFail -> setTimeout(fire,1200); no-src -> setTimeout(fire,800)), and _ttsSay's body is replaced by `return false`. The browser speech API is unreachable from engine code: zero SpeechSynthesisUtterance constructions, zero speechSynthesis.speak, zero live call sites, all measured on comment-stripped code. WHY A STUB AND NOT A DELETION: any call site this sweep did not find — a per-game engine_local, an older isolated copy, a build script — would throw ReferenceError on a deleted function and take the entire slide chain down with it, turning a wrong-voice bug into a dead game. Returning false routes every caller into the silent path that already exists. Same trade as the unused @keyframes kept at 30j/30l: the stub is the safe half. stopAudio()'s speechSynthesis.cancel() is deliberately KEPT — nothing should be speaking now, but a browser still holding an utterance from a CACHED older build gets silenced by it, and cancelling is not speaking. NOTE ON SCOPE, because a parallel session reported this as a two-game fix: 30n already removed the autoplay trigger on all 28 games, and this removes the fallback itself on all 28 — neither was ever per-game, and a per-game edit to engine_local would have left 26 games speaking. Swept by _tools/no_tts_standard.py. Consequence to accept knowingly: on the ~26 games whose clips are still Gemini TTS FILES (measured 2 of 28 fully human, _tools/vo_provenance.py), those files still play — this ruling removes the browser-voice FALLBACK, not TTS content. Un-recorded lines that had no file at all are now silent, which is exactly what he asked for.  30n: THE LANDING SPOKE IN THE OS VOICE BEFORE THE HUMAN CLIP. Yasir 2026-07-31, on multiple games: "the first time audio being played on the landing screen is the tts audio, and when i click the volume button again on the landing page then the human recorded audio is played." Confirmed HI01H07_L01_S02 and HI01H01_L02_S05. CAUSE: a.play() rejects for TWO different reasons and onFail treated them alike. A missing or undecodable file SHOULD fall through to _ttsSay — that is the deliberate review placeholder for un-recorded lines. But the browser ALSO rejects with NotAllowedError under its autoplay policy, and that fires on every single load before the child's first gesture. So on a game whose VO is 60/60 human, the landing spoke browser speech-synthesis, and the gesture that finally let the real file play was his tap on the volume button. Now NotAllowedError/AbortError are told apart from a real failure and stay SILENT; onerror and every other rejection still route to onFail, so the placeholder keeps working where it is wanted. fire() is still called on the silent path and is NOT optional: play() has already run setPlaying(true), so returning without it would leave body.vo-lock on and the entire screen untappable — a soft-lock traded for a wrong voice. WHAT THIS COST, WRITTEN DOWN: _ttsSay's own header asserted it was "SELF-DISABLING - fires only when the MP3 is missing; once real clips ship, play() succeeds and this never runs". That is true only AFTER a user gesture, which a landing screen by definition does not have. I READ THAT COMMENT EARLIER THE SAME NIGHT while answering his TTS question, repeated its claim back to him as an aside — "no TTS file ships, but a clip that fails to load will be spoken by the OS voice" — and never tested the autoplay path, so he found it by pressing play. A comment asserting a safety property is not the property; when a docstring claims something is self-disabling, that is the line to go and prove. Related and still true: 30m guarded the pointerdown fallback so the greeting no longer RESTARTS on the first tap; these are two different landing-audio bugs and both sweeps live in _tools/landing_vo_standard.py.  30m: TWO LANDING FIXES — MY 30l REGRESSION, AND THE GREETING RESTARTING. Yasir 2026-07-30: "shuru karein is not perfectly in the button. also the landing VO does not seem fine." (1) TEXT OFF-CENTRE IN THE START BUTTON — MINE, from 30l. I set height:64px with padding:12px 36px on a 4.54px border, which leaves 64-24-9.08 = 30.9px of content box for a 32px font: the line box does not fit, so the text is pushed off-centre. Before 30l the pill had NO fixed height and grew to its text, so padding-centring happened to work; copying his approved build's HEIGHT without copying centring with it is what broke it. Now box-sizing:border-box + inline-flex + align-items:center + line-height:1 + padding 0 36px — the line box is centred rather than balanced by padding. Devanagari is why padding-centring can never be trusted here: matras rise above the em box and conjuncts drop below it, so one padding value reads differently per string. (2) THE LANDING GREETING RESTARTED ON THE FIRST TAP. `window.addEventListener("pointerdown", ... playLanding())` is an autoplay-POLICY fallback: if the browser refused the greeting on load, the first gesture is our chance to start it. It fired UNCONDITIONALLY, so whenever autoplay HAD worked the child's first tap anywhere restarted the 9.04s greeting from the top, and on a tap that happened to be शुरू करें it bled into the tutorial. Now guarded on whether sound is genuinely moving (currentAudio && !paused && !ended && currentTime>0) rather than on "did we call play()" — on a BLOCKED autoplay we did call play(), so a call-flag would have killed the very fallback the line exists for. The सुनो chip's own playLanding() is deliberately untouched: an explicit replay must always replay. MEASURED while diagnosing, and worth recording because it answers a standing question: HI01H07_L01_S02 ships ZERO TTS. All 60 wired clips match Downloads\HI01H07_L01_S02_VO_FINAL.zip on duration to within 0.15s, vo_landing is 9.04s identical across human WAV -> factory ogg -> dist ogg, and the only non-VO asset is sfx_celebrate. Its CHANGES.md note about 34 Kore TTS placeholders is SUPERSEDED — a later session wired the FINAL human drop on 07-29. Note the drop names files `<id>.ogg.wav` (double extension); stripping one extension makes every id mismatch and reports 0 overlap, which cost me one false alarm. Engine caveat: play()'s onFail still routes to _ttsSay(), a BROWSER speech-synthesis fallback — no TTS file ships, but a clip that fails to load will be spoken by the OS voice. Isolated copies swept by _tools/start_btn_standard.py (1) and _tools/landing_vo_standard.py (2).  30l: THE START BUTTON (शुरू करें) STANDS STILL, AND IS NOT FAT. Yasir 2026-07-30, and this was his THIRD ask. The first two times I read "the volume button hovers ... make it a little slim" plus a landing screenshot and fixed `.audio-chip`/`.tut-audio` (30j), reporting 28/28 twice. He finally spelled it out: "i am not talking about the audio button — i am talking about the start button". THREE round buttons live on that one screen — .sg-btn (the शुरू करें pill), .sg-vo (the small blue listen chip at Swiftie's hip, hardcoded 58px, does NOT read --chip-size), and .audio-chip (question slides, --chip-size) — and I matched the wrong one twice. THE LESSON IS NOT "ask more", IT IS THAT MY AUDIT CONFIRMED MY OWN EDIT: both green receipts measured the element I had just changed, never the element in his screenshot. A sweep proves a value was written; it says nothing about whether it was the right value to write. When a ruling comes with a screenshot, identify the ELEMENT from the screenshot before choosing the selector. (1) NOT HOVERING: `animation:sgBtnPulse 1.4s ease-in-out infinite` sits on the BASE .sg-btn rule, so the pill breathes continuously from the moment the landing paints — it is not VO-linked at all, which is why chasing VO state found nothing. Killed engine-wide; @keyframes sgBtnPulse stays DEFINED but unused, since a dangling `animation:` naming a deleted keyframe fails silently. His own approved Strilling/Pulling build ALSO runs sgBtnPulse — when his words and his older approved build disagree, the words are the newer ruling and win. (2) NOT FAT: ours shipped `padding:14px 54px` with NO height, so the pill grew to its text at ~76px tall against the 64px his approved build ships — 19% taller, which is what "fatty" meant. Now padding 12px 36px + height 64px + min-width 186px + bottom 34->40px, every number measured off Downloads\HI01H08_L01_S02_Pulling_Streeling_Pehchano.zip. Width is deliberately NOT pinned to his width:250px: that belongs to the IMAGE variant (.sg-btn img, display:none on the text variant) and forcing it would make the pill WIDER than the one he called fat. Content width lands ~202px — slimmer than his reference on both axes. Isolated copies swept by _tools/start_btn_standard.py.  30k: THE FIGMA GREY ON THE TRANSITION SCREEN, THE UNFRAMED STIMULUS, THE SMALLER ANSWER CARD. Three Yasir rulings 2026-07-30, all engine-wide. (1) GATE SCRIM = rgba(57,55,55,.6) — #393737 at 60%, which he read off the ORIGINAL FIGMA transition frame with an eyedropper and sent as a screenshot. It replaces rgba(64,64,70,.58), which was MY approximation of the meeting's "dark 60% blur". This does NOT reopen 30b: he removed the grayscale FILTER, which desaturates the whole scene behind the gate, and kept the grey SCRIM, which only darkens it — the two read identically in prose and completely differently on screen, which is exactly why 28b/30b flip-flopped. All SIX real .phase-gate blocks were normalised to the one value (base rule, the is-start override that used to be `transparent`, and the late overrides), because the LAST declaration wins and a stale override left behind is invisible until someone screenshots it. (2) THE STIMULUS PICTURE IS NEVER FRAMED — "remove the container surrounding the cat image ... apply this for other pages with same mechanic". It was already unframed in TUTORIAL only; the 27c note says so in writing ("the same stimulus stays framed in guided/independent/mastery"). That scoping is now dropped: it is the same teaching art in every phase. Chrome only, sizing untouched, so nothing reflows. (3) ANSWER CARDS ~12% SMALLER — "make the answer card a little bit smaller": .opt-cell min-height 210->184, column caps 300/260/230->264/229/202, option picture 134->118, and the no-stimulus override 300->264 so it keeps its ratio to the base card. .big-glyph STAYS at 96px — on a letter/numeral card the glyph is the thing being learned, 96+22px of label still fits inside 184px, and nobody asked for a legibility cut; the option PICTURE shrinks because a photo is a referent, not a taught letterform. Also only helps the 27h tutorial-fit work, which fights overflow. Isolated copies swept by _tools/gate_standard.py (1) and _tools/card_standard.py (2,3); both audit the LAST EFFECTIVE declaration on comment-stripped CSS, never a marker string — and both now mask comments in BOTH directions, because this file's changelogs QUOTE the rules they supersede, so a raw-text sweep would have silently rewritten the project's own record of the 28b ruling. Measured: 1 of 7 .phase-gate blocks existed only inside a comment. NOTE FOR THE NEXT SESSION: the deny-ACE guard is on app.js ONLY — style.css took all three of these edits with no unguard step at all. Half a guard.  30j: THE AUDIO CHIP STOPS MOVING, AND GETS SLIMMER. Yasir 2026-07-30: "the volume button hovers when VO is being played, it should be just at one place and not hovering not moving" + "the volume button is to be a little slim". (1) Removed `animation:audioPulse 1s ease-in-out infinite` from BOTH .audio-chip.playing and .tut-audio.playing — a 12% scale throb that ran for the whole duration of every clip, which on the landing is most of the screen time. The @keyframes block is deliberately KEPT though now unused: a dangling `animation:` naming a deleted keyframe fails SILENTLY, so leaving the definition is the safe side of that trade. The .playing class is still toggled by setPlaying and still drives the wave arcs (.wv1/.wv2) inside the icon — those signal playback WITHOUT moving the button, which is the distinction he drew; if he wants them still too it is one more rule. (2) --chip-size 70px -> 66px. NOT my guess: 66px is what BOTH of his reference builds ship (HI01H08_L01_S02 Strilling/Pulling and HI01H08_L01_S01 Ekvachan). Ekvachan also already had NO .audio-chip.playing rule at all, i.e. the design had already dropped the throb and our engine was the straggler — fourth time now that reading his approved build gave the exact value where guessing would have cost a round trip (bird height, VO lock shape, mascot ring, this). ASK FOR THE BUILD THAT LOOKS RIGHT. Isolated copies swept by _tools/audio_chip_standard.py.  30i: THE CELEBRATION PAGE — BUTTON IMMEDIATE, NO TEXT. Two Yasir rulings 2026-07-30. (1) "the button appears after the VO is completed. the button should be there as we get on that screen." CELEBRATION.mount used to hide #endBtn and set state.endBtnPending, which autoPlayChain's onDone released — so on a long celebration clip, or a missing one that fell through to the TTS placeholder, the child sat on a dead end screen with nothing to press. Same silent-non-response family as the VO tap gate. Now shown at mount with hint-glow, endBtnPending left false. The onDone branch is deliberately NOT deleted: it is the flag's only consumer, so anything that still sets it keeps working instead of silently never showing a button. (2) "there should be no sentence on the last page, no praising nothing. the only writings allowed on that page is inside the button." #endTitle (was slide.prompt_hi at 44px) and #endSubtitle (was data.end_subtitle) are now set to "" rather than removed — `.end-title:empty` / `.end-subtitle:empty` are already display:none, so they collapse WITH their margins, and a card still carrying end_subtitle just stops rendering it instead of needing 28 cards edited. The celebration VO is untouched: he banned writing, not the spoken praise, and verify_bundle's "every slide SPEAKS its prompt (incl. celebration)" gate reads the card's audio map, not the DOM. Isolated copies swept by _tools/celebration_standard.py — a shared bump reaches none of the 19.  30h: WHITE RING AROUND THE HEADER SWIFTIE. Yasir 2026-07-30: "see the round white ring around swiftie? none of our games have that. it is necessary." Verified he was right: shared .mascot-circle was border-radius:50% + overflow:hidden with no ring, and the avatar art itself is a plain light-blue disc (rendered sw_anim_rest / sw_head_talking / mascot / sw_head_neutral onto the page bg to confirm no ring is baked in, and the art is byte-identical across all 28 games), so NO game could have shown one. Added background:#9DDBF5 + border:4px solid #FFFFFF + box-shadow:0 6px 14px rgba(0,47,118,.20) — values taken from THREE of his own reference builds that agree exactly (HI01H08_L01_S02 Strilling/Pulling, HI01H08_L01_S01 Ekvachan, Final_Deployed_Sorting_Objects_Skill_2/r4_reference); a fourth (MTKGA02_L01_S01_Final) draws the same ring via box-shadow:0 0 0 4px instead. box-sizing:border-box is global so the 4px sits INSIDE the 132px wrap — the disc shrinks 8px, the avatar does not grow, which is the reference look. METHOD NOTE: this is the third look-ruling in a row where reading his own approved build gave the exact value and guessing would have cost a round trip (bird height 172->clamp, VO lock pointer-events-only, now the ring). ASK FOR THE BUILD THAT LOOKS RIGHT. Isolated copies swept by _tools/mascot_ring.py; a shared bump reaches none of the 19.  30g: THE VO LOCK IS BACK, THE PALE BOARD IS NOT. Yasir 2026-07-30, twice, the second time bluntly: "just red glow on card on wrong tap and cards untappable when VO being played, you dont need to show any affect for untappable, just make it untappable." 28u had bundled TWO things under body.vo-lock — `pointer-events:none` (the LOCK, which he wants) and `opacity:.55` on 27 selectors (the PALE BOARD, which he does not). My 30f removed BOTH, so for one bump nothing was untappable while a clip spoke. 30g restores the class with pointer-events ONLY. RULE GOING FORWARD: never put opacity/filter/grayscale under body.vo-lock; if a "wait" cue is ever wanted it goes on the ONE card the child touched, never on the board. HIKGH07_L01_S02's session had independently reached exactly this shape (pointer-events + cursor, no opacity) before I did — I had stripped its JS toggle in 30f, leaving its correct CSS inert, which is why that game looked unfixed. On 28t: with the lock live a feedback-audio tap is not registered, but it is also not CONSUMED — 28t's real bug was the attempt vanishing, and the child can simply tap again when the hint ends. AND THE REASON HE SAW IT "STILL" BROKEN AFTER 30f: the pale effect survives in 16 stale dists and 16 delivered zips cut before 30f. A fleet CSS fix is not visible until the artifacts are re-cut — _tools/recut_all.py.  30f: THE PAGE-WIDE VO DIM IS REMOVED, AND IT WAS MASKING A REGRESSION I CAUSED. Yasir 2026-07-30: "when VO are being said, the whole game goes like blocked mode. it shouldnt be that way, only the red glow should be on the tapped card, if the answer is wrong. dont block the entire screen fam." This reverses 28u's visible half of CIL-2107 / RULING_no_tapping_during_VO: body.vo-lock dimmed 27 selectors to opacity .55 with pointer-events:none for the duration of ANY clip, so one wrong tap greyed the whole board while the hint spoke. THE SERIOUS PART: that pointer-events:none meant a tap during FEEDBACK audio never reached the tap gate — and the gate is `(isPlaying && !_fb)`, i.e. 28t had deliberately made feedback-audio taps COUNT because it found retries being silently discarded and the 2-attempt ladder defeated through that side door. So my CSS from 28u silently killed a JS fix from 28t, one bump earlier, with every check green. Third time a guard inherited from replaced code has caused this class of bug (28r's helpShown early-return, 28e's .crossed bleaching the flash, now this) — and the first time it was CSS undoing JS, which no test we own would have caught. WHAT REMAINS OPEN: the JS half still refuses taps during the PROMPT clip (24a anti-spam), so a prompt tap is still silently refused, which is literally CIL-2107's original complaint. NOT decided here: making prompt taps land would reverse 24a, which is Yasir's call. Isolated copies are swept by _tools/vo_dim_remove.py — a shared bump reaches none of the 19.  30d: GATE BIRD HEIGHT IS NOW YASIR'S OWN MEASURED VALUE, not my guess. `.phase-gate #phaseGateImg` height 215px -> clamp(120px,26vh,250px). He named the build where the peek "was first seen and it was working just right" — Strilling/Pulling — and that build (Downloads\HI01H08_L01_S02_Pulling_Streeling_Pehchano.zip, index.html) renders the gate at clamp(120px,26vh,250px) and references ONLY assets/UI/peeking_pal.gif, which is byte-identical to the pal_2 gif he sent (500x500, 73 frames, final opaque area 96401, 1286 KB). So the art was never at fault: our gate rendered it at 172px, ~31% under its approved size, crushing the flank feather tufts to 1px rows that read as scratch marks. THREE THINGS I GOT WRONG FIRST, so nobody repeats them: (a) I pre-scaled the asset to force an exact 0.5 render scale — moved banding 2% and made the worst row WORSE; (b) 30c's 215px was my own halfway guess; (c) I read a 66.9% mid-animation area collapse in a session-supplied encode as a peek-a-boo animation in the art, when the SOURCE gif measures 0.0% — it was a genuinely broken encode. The clamp being responsive also fixes the small-window check that a fixed 250px would have failed on a 400px stage. The GIF is deliberately not adopted: 1286 KB vs our 676 KB WebP, the 10 MB decimal cap is a hard gate, and the WebP measures faithful to source (worst frame-to-frame opaque-area drop 0.1%). IF THE BIRD LOOKS WRONG AGAIN, CHECK THE HEIGHT BEFORE THE ENCODE. Standardising this across the 19 isolated copies is what _tools/gate_standard.py exists for.  30c: GATE BIRD RENDERS AT 215px, was 172px. Yasir: "the gif is just leaving such marks badly". Chased this to ground and the marks are NOT ours: both WebP encodes measure byte-faithful to his source GIF (0 ghost px and 0 hole px across all 73 frames, diffed against a cumulative composite of the GIF itself). The marks are the SPIKY FEATHER TUFTS down both flanks of the new yellow-jacket art - at 172px the bird is only 146px wide, each spike lands on about one pixel, and the row reads as scratches. Rendering taller fixes it without touching the art: measured side by side, 215px makes the tufts legible and 260px makes them fully clean; 215 chosen because 260 is a 51% increase on a mascot the design lead already approved. WHAT DID NOT WORK, recorded so nobody repeats it: pre-scaling the asset from 330x389 to 292x344 to hit an exact 0.5 render scale changed row-to-row banding by 2% (12.30 -> 12.01) and made the worst row WORSE (41.9 -> 55.7). The constraint is tuft geometry vs render height, not the encode. Also do NOT flatten the animation to fix it - a session did exactly that during this bump, wrote a 1-frame 68 KB peeking.webp over the MASTER chrome_assets, and every future build would have shipped a static bird; chrome_assets now carries a write-deny ACE on all 24 files because isolation covers engine CODE only and never covered the shared art kit.  30b: TWO LOOK FIXES ON THE TRANSITION GATE, both from Yasir seeing 30a live. (1) GRAYSCALE REMOVED from the phase-gate backdrop - "the bg needs just to be blurred, no need of this gray filter". This reverses point 3 of the 2026-07-28 desaturation note: blur plus the dark scrim carry the gate on their own, and grayscale(.9) drained the colour out of the whole scene behind it so it read as broken rather than as depth. brightness(.92) went with it - it existed only to compensate for the grayscale. The rgba(64,64,70,.58) scrim STAYS: that is the "dark 60% blur" meeting ruling and it is what closes flag S2-a. (2) THE GATE BIRD ASSET was re-encoded, not a code change - logged here only so the pairing is traceable. Yasir: "the gif is just leaving such marks badly". The marks were NOT in the file: all four candidate encodes decode clean via ImageDecoder (348 opaque rows on the centre column, 0 hole rows), so the artefact came from the browser downscaling 330px-wide art with dense feather strokes into the gate's 146px box, per animation frame, inside a backdrop-filter compositing layer. Fixed at the source: assets/UI/peeking.webp is now pre-scaled to 292x344 (2x the height:172px render) with LANCZOS at encode time, so the browser only does a DPR scale. Also dropped minimize_size, which enables WebP frame-diffing and is a real alpha-edge hazard even though it was not the cause here. 676 KB, still under the old 824 KB asset. NOTE for anyone re-encoding this: PIL gives GIF frames as PARTIAL TILES with disposal=None, so they must be composited CUMULATIVELY or you extract feet-only frames; and canvas drawImage() on an animated WebP always draws FRAME 1 (nearly empty here), which makes a naive pixel test report every candidate identical - use ImageDecoder with an explicit frameIndex.  28u: FOUR FLEET FIXES IN ONE BUMP, batched deliberately after 28p-28s showed what per-change bumping costs. (1) THE RED WRONG-ANSWER FLASH WAS INVISIBLE ON 23 OF 27 GAMES. `.stage.thm-toybox .opt-cell` is specificity (0,3,0) and sets background + border-color; `.opt-cell.wrong-flash` is (0,2,0). The theme rule therefore won REGARDLESS of source order and painted cream over the red, so 28p's ruling - the thing Yasir explicitly asked for - rendered on almost nothing for a week while every static check passed and check_system stayed happy. Four sessions found it independently on 2026-07-29; 18 had already patched their own engine_local with !important, which is why those copies carry it and why several handoffs say "the !important is NOT laziness". Fixed here by SPECIFICITY - a theme-scoped (0,4,0) twin selector - not by spreading !important. Any future `.stage.thm-x .opt-cell` needs the same twin: that is the real lesson, and it is the second time this exact cascade trap has cost a week. Same bump also gives `.sentence-word.wrong-flash`/`.tap-all-item.wrong-flash` the `transition:none` their .opt-cell twin has had since 28p - without it the chips EASED into red instead of snapping, and the class is removed after 700ms so the ease ate most of its own lifetime. (2) CONFETTI NOW FALLS FROM THE TOP OF THE PAGE (Yasir 2026-07-29, stated final: "confetti is supposed to come from top of the screen and not from the sides", then "it should drop from the top of the entire page"). Replaces the two bottom-corner cannons that shipped r4 through 28t. Parented to <body> in VIEWPORT coords with position:fixed - NOT to .slide-stage, which is inset, so spawning at the stage top edge visibly began part-way down - and z-indexed above the end-screen overlay. Element and --tx/--ty contract unchanged, so the existing .conf-shot keyframes still drive it. Lifted from HI01H01_L02_S04/S05 where it was built and verified first. `.confetti i{top:-24px;animation:confettiFall}` is still DEAD CSS from the pre-r4 implementation - nothing creates those <i> elements - and is left alone deliberately rather than deleted in the same bump. (3) SORT_GENDER SOFT-LOCK: slides were UNWINNABLE. 28p armed the terminal rung here but the correct-drop branch cleared none of it - .reveal-hold on the tile, .tile-disabled plus INLINE pointer-events:none/opacity:.4 on every other tile, the bins marked, and travelNudge's hand still looping - so `placed === need` could never be reached. Found and reproduced with real pointer drags on G3 and G6 by HI01H05_L01_S01, which asked for it to be fixed first; an unwinnable slide is a straight QA fail, not a cosmetic bug. clearHold() already existed for exactly this and also removes the INLINE styles, which a class-only cleanup would leave behind (looking correct while the tiles stay dead). Guarded on state.helpShown - a guard on CLEANUP, not the early-RETURN that stranded a card red in 28r. SORT_SHAPE checked: it never arms terminalHold, so it was never affected. Deliberately did NOT lift the `speak_on_drop` gate from the same local diff: that was a per-game ruling, and defaulting speak-on-match off fleet-wide would silently mute games that rely on it. (4) THE VO LOCK NOW HAS ITS VISIBLE HALF (CIL-2107 / RULING_no_tapping_during_VO). Taps were already refused while a clip played, but nothing on screen changed, so a child tapped an alive-looking card and got silence - and the ruling is explicit that the silent non-response IS the defect. body.vo-lock is toggled from setPlaying(), the one function every playback exit passes through (stopAudio, and fire() for natural end / supersede / cancelled TTS / missing-file fallback), NOT from a timer, so the lock cannot outlive the audio and strand a slide. Grey never red; replay chips stay live; opacity .55 reads as "wait" not "dead". Lifted verbatim from HIKGH04_L02_S02 (also shipped in HIKGH07_L01_S02). PROCESS: only 8 games build from shared now, so this bump rebuilds 8, not 27 - that is the whole point of isolation. The 19 isolated games do NOT receive any of this automatically and must be told.  28t: A TAP DURING FEEDBACK AUDIO COUNTS INSTEAD OF VANISHING. The tap gate ignored a tap while ANY VO sounded — correct for the PROMPT (24a added it to stop spam-tapping), wrong for the hint clip that plays right after a wrong answer: a child who tapped again while hint1 was still speaking had that attempt SILENTLY DISCARDED. They tapped twice, the engine counted once, terminal help never came — the 2-attempt ladder defeated through a side door, on every tap mechanic in the fleet. `_fb` now marks feedback audio specifically: during it a tap is accepted and interrupts the clip (stopAudio first, so never two voices); during the prompt, taps are still ignored. Cleared on every ladder exit so it cannot leak into later prompt audio. Verified: attempts go 1 -> 2 on the second tap and terminal help fires. I could NOT reproduce the exact audio-mid-flight instant headless (clips end in <60ms there), so that specific moment rests on the 3-line gate being reviewable rather than on a measurement — stated plainly rather than claimed. PROCESS NOTE, because Yasir called out the churn and he was right: 28p-28s were four bumps in an hour and TWO of them existed only to fix regressions from the previous one (SORT_SHAPE misplacement, the stranded red state). The cost was never batching, it was shipping before verifying. This bump was made with the engine edited, the monolith regenerated and the game rebuilt at the OLD stamp, behaviour checked, and the version moved only once at the end — which is how the next ones should go.  28s: THE RED NEVER SETTLED TO GREY — my own 28r bug, caught by behavioural verification 20 minutes after writing it. The 700ms flash->lock timer opened with `if(state.helpShown) return;`, inherited from the code it replaced. But at the 2nd wrong, terminal help fires in the SAME beat, so helpShown was already true and the swap was skipped: measured on HI01H01_L02_S05 G1, the card sat RED and untappable at +1.7s and would have stayed that way. That is precisely the stuck-red-ring bug I fixed in 28d and have now reintroduced in a new form. The guard was correct for the OLD behaviour (do not UNBLOCK a card once terminal help owns the board) and wrong for the new one (swap the flash for the lock), and I copied it without re-deriving whether it still applied. Removed from all three paths; only the 'this cell turned out to be the answer' check remains. THE LESSON, written down for the third time: a guard inherited from replaced code must be re-justified against the new behaviour, not carried over.  28r: BOTH WRONG ATTEMPTS FLASH RED FIRST; ONLY THE SECOND ALSO DISABLES. Yasir 2026-07-28: "on second wrong attempt as well we are supposed to give the red glow first and then disable." He is right and 28p was half a fix: it restored red on the 1st wrong but sent the 2nd straight to the grey lock, so the child lost the 'that is not it' signal at the exact moment they most needed it. The red IS the feedback; the grey lock is an EXTRA consequence the 2nd attempt earns. Sequence now, every wrong tap: red buzz for 700ms -> then (2nd only) settle to grey and untappable. SAME FIX IN TWO MORE MECHANICS, where it turned out to be worse: SENTENCE_FIND and TAP_ALL_WITH_SOUND locked their chip PERMANENTLY ON THE FIRST WRONG TAP (.crossed / .nope, both pointer-events:none), so 27a's ruling 'a wrong card must NOT lock on the first miss' had never reached them at all — a child lost a chip for one miss on those slides while every other mechanic gave them a retry. All three paths now share the same flash-then-lock shape. Checked the whole class rather than only the site Yasir named: those were the only three places a wrong tap adds a lock class.  28q: FIXES MY OWN 28p BUG BEFORE IT SHIPPED. The SORT_GENDER terminal rung landed in SORT_SHAPE — I applied it with a first-occurrence string replace, and the `dragWrong(slide); // buzz + Swiftie...` + answer_wrong pair it keyed on is IDENTICAL in both modules, so it went to the wrong one. SORT_SHAPE then referenced `_sgWrong`, which does not exist in its scope: a ReferenceError on any wrong drop, on MTKGA03_L01_S01 P1/P2. Caught by BEHAVIOURAL verification (three real wrong drops on a SORT_GENDER slide showed attempts climbing 1-2-3 with no glow, no dim, no hand) — a syntax check and a rebuild both passed it, and static checks always would have. Nothing shipped: the dists and zips were still on 28o. Moved to SORT_GENDER and addressed via the module BLOCK rather than a global first-match, so the same class of mistake cannot repeat. LESSON, again: when two modules share boilerplate, never target it with an unanchored replace — extract the module's own text first, as the MEET_LETTER edit in 28p did.  28p (batch, 8 items, closes 8 requests): (1) THE HINT BULB IS REMOVED ENTIRELY — Yasir 2026-07-28 "we do not need that idea glow button at all". It appeared WITH A GLOW on the FIRST wrong (the add was above the ladder branch, not inside it) and was never phase-gated — 10 of 10 show-sites ungated — so it also offered help in round 3; on several mechanics TAPPING it flashed the answer ghost, i.e. reveal-on-demand with zero attempts. Hidden via CSS rather than deleting the node, because $("hintBtn") is dereferenced unguarded at all 10 sites and removing it would throw on the first wrong answer in every mechanic. (2) 1st WRONG IS RED AGAIN, ON A LIVE CARD — his ruling, and my own 28e over-correction: 28e said a DISABLED option is never red but implemented it on `.crossed`, the class used for BOTH the momentary buzz and the permanent lock, so it bleached the first-wrong flash too and left a grey disable with no red anywhere. Split into `.wrong-flash` (red, glowing, STILL TAPPABLE, removed after 700ms) and `.crossed` (28e's grey lock, from attempt 2). (3) LANDING HERO CAN GROW — raised THREE times (Yasir + the SME on both games) and also mine: 28i's max-height:180px cap was measured to be exactly the overflow boundary, because .sg-content.has-hero's 206px bottom margin shifted the block up so growth ate the title's headroom instead of the dead space below. Margin 206->120 and cap 180->250. MEASURED at Yasir's own 1919x977: title 7.7px -> 18px below the card edge, hero 166 -> 230px tall, dead space hero->button 92 -> 16px. (4) SORT_GENDER FINALLY HAS A TERMINAL RUNG — it was the sixth terminal-help path with NONE: buzz + try_again forever, no ceiling, no glow, no dim, no hand, so a child could be wrong indefinitely and a guided sort could never earn the hand. Counted PER TILE (a slide-wide streak resets on any correct drop) and routed through the shared terminalHold/travelNudge contract. (5) STORY_SCENE fits OUTSIDE the tutorial too — 27h was scoped to .stage.tut, so on test phases the caption sat behind the आगे pill (measured: 19px under a 136px-wide button on 5 slides of HIKGH07_L01_S02). (6) the tut teach picture may use the room it has (261px of art in a 581px card with 607px of width unused) without reintroducing 27h's overflow. (7) MEET_LETTER: the hardcoded '→' is gone (markup, so no card could remove it) and the auto demo no longer plants a hand on a single-letter slide — "points at the obvious and adds nothing". MEET_SHAPE/NUMBER/GENDER keep their arrows; he named MEET_LETTER. (8) bare .intro-letter glyph tiles are box-free like the pictures beside them.  STILL OPEN, deliberately not rushed into this bump: the other TWO MEET_LETTER asks — a word taught for both sounds (जल = ज + ल) must DISPLAY both letters, and the hand must sync to the glyph being spoken. The existing data.pair mode is not a substitute (it renders 1536px inside 1329px), so it needs real layout work and measurement; item (7) deliberately left no guessed 'is this two-letter' condition behind. Also still open: DEMO_COUNT before->after (a new capability), HIKGH07's baked-in scene backgrounds (art regen), Pehli's 11 dead .webp paths (card fix).  28o: TWO DRAG RULINGS FROM YASIR (2026-07-28). (1) THE HAND SHOWS THE MOVE. "on drag, the hand nudge guides the student precisely... move the hand nudge from the question card to the answer card." A static hand on the tile says 'this one' but never says WHERE it goes — which on a matching slide is the actual thing the child must work out. travelNudge() now slides the hand from the tile to its correct zone on a loop; terminalHold() takes an optional destination, so all three drag modules (MATCH_DRAG_N, MATCH_GENDER_PAIRS, SEQUENCE_DRAG) demonstrate the gesture while every TAP mechanic passes no destination and keeps the static point. Same phase rule as handOnAnswer (tutorial/guided only, never round 3), and the animation is stored on state so stopNudge cancels it — an infinite animation left running would follow the child into the next slide. Falls back to a static point without .animate(). (2) EVERY CARD THE SAME SIZE. "all the cards, both question and answer cards are to be of the same size in matching/dragging." They were three sizes: .dd-zone 150, .dd-tile 104, .dd-tile.pic-tile 134 — the thing you drag was smaller than the thing you drop onto. Unified on 150 (the largest, so nothing shrinks and the drag target gets easier). Deliberately excluded: .dd-tile.snapped (the 62px badge parked inside a filled zone — not a card) and .dd-stage.seq-words (word tiles size to their text; equal squares would clip long words, and sentence-building is not the matching mechanic).  28n: A NO-STIMULUS QUESTION RECLAIMS THE EMPTY SPACE (CSS only). After 28m stripped the 🔊 chip from the four audio-only stimuli, those slides looked half-empty and I flagged it to Yasir as a centring problem; he asked for a centring pass. I MEASURED FIRST and my flag was WRONG — the cells were already centred exactly (142px above, 142px below a 210px row in a 494px grid; .opt-grid already carries align-items:center + align-content:center), so a centring change would have done nothing. The real problem was that the tiles kept their with-a-stimulus size while the stimulus slot stood empty, so the space read as a void. The tiles now grow into it (min-height 210->300, glyph 96->112, pic 134->158), which also gives a KG thumb a bigger target. Scoped with :has() to rows WITHOUT a .stimulus-pic and excluding .stage.tut, so every slide that has a stimulus — and all the 27h tutorial-fit work — is untouched. Also RULED this round: the Swiftie header volume chip is template furniture and STAYS (Yasir 2026-07-28), which closes the flag 28m left open; 'no vol button' means the stimulus chips, not the shell's replay control.  28m: NO VOLUME BUTTON ANYWHERE. Yasir 2026-07-28: "we use vol button nowhere. if nothing then we keep question only." This closes the flag 28c deliberately left open: four stimuli have NO image (TAP_SHAPE_BY_NAME, TAP_LETTER_BY_SOUND, MASTERY_SILENT_PICK sound_to_letter + name_to_shape), so stripping their 🔊 + 'नाम सुनो'/'ध्वनि सुनो' chip looked like it would leave a blank card and I asked rather than guessed. The ruling is that a slide with nothing to show shows the QUESTION only — stimulus is now null on all four. The chip was ALSO the only way to re-hear the sound, so the FUNCTION moved to the header replay (state.replayAudio, set AFTER mount so mountTapOptions cannot overwrite it) rather than being deleted along with the affordance — a KG child must be able to hear the sound again. The 🔊 glyph also came off the three read-aloud BUTTONS (SENTENCE_READ 'पूरा पढ़ो', SENTENCE_SOUND and SENTENCE_PICK_PIC 'फिर सुनो'); those keep the button and their Hindi text, so nothing loses function there either. Touches 4 games: HI01H04_L02_S02 (8 slides), HI01H06_L01_S01 (7), HIKGH02_L01_S03_P2 (8), MTKGA03_L01_S01 (2). NOT TOUCHED, flagged for a ruling: the HEADER replay chip and the LANDING .sg-vo chip are still speaker icons. I left them because they are the only remaining way to re-hear a prompt, and because Yasir and the SME both reviewed screenshots showing the header chip today without flagging it — but if "nowhere" includes those, they need a text affordance first, not deletion.  28l: HARD RULE — NO QUESTION IS EVER SOLVED AUTOMATICALLY IN A TEST PHASE. Yasir 2026-07-28: "regardless of what interaction, as long as we in guided or practice, no question will be solved automatically." Only a tutorial slide may finish a question itself (there it is a demonstration). Two mechanics were still answering FOR the child on the last wrong attempt: PATTERN_BUILD and SEQUENCE_COMPLETE both ran `setTimeout(placeCorrect, 1000)`, so the engine filled the blank in and moved on — the child never answered. Yasir caught SEQUENCE_COMPLETE live on HIKGH04_L02_S02's build slides. Both now glow the correct tray tile, disable the rest, show the hand (phase-gated, so round 3 still gets none) and WAIT. MATCH_GENDER_PAIRS and SEQUENCE_DRAG already held the glow (25d) but never dimmed the distractors or pointed, so they route through the same helper now. The point of this bump is that the rule lives in ONE place — maySolveFor()/terminalHold()/clearHold() — because it has now drifted three times: 25d fixed two mechanics and left two auto-solving and two half-done, and each was re-reported separately (SORT_GENDER 06:32, SEQUENCE_COMPLETE 13:32) after I had already called the class closed. A new mechanic inherits the contract instead of re-deciding it. clearHold() releases the tray when the child does place it, or the disabled tiles would stay dead for the remaining blanks. STILL OPEN and deliberately not in this bump: SORT_GENDER has no terminal rung at all (a 6th path, different structure — bins not tiles); it does not auto-solve, it just gives audio only, so it is queued rather than rushed into this one.  28k: OPTIONAL MIDDLE HINT RUNG (`hint2`). The SME on Pehli Dhwani specified a THREE-rung ladder — rung 1 'फिर से कोशिश कीजिए।', rung 2 'शब्द को बोलकर देखिए, और पहली ध्वनि चुनिए।' (a strategy, NOT the answer), rung 3 the answer. Our ladder had two rungs, so rung 2 spoke `hint`, the level that names the answer; there was nowhere to put a strategy line. Six rung-2 sites (mountTapOptions, dragWrong, wrongClip, SORT, SENTENCE_FIND, TAP_ALL_WITH_SOUND) now call midHint(), which prefers `hint2` and falls back to `hint` — so a card that authors no hint2 behaves EXACTLY as before and the rest of the fleet keeps two rungs. CONFLICT, RAISED AND RULED: a third rung means the answer arrives on the 3rd wrong, so that deck's max_attempts goes to 3 and the card blocks after the 3rd attempt — which contradicts Yasir's standing 'blocks only after the 2nd wrong attempt'. I flagged it; he ruled 2026-07-28 'implement as per written by the SME'. It is therefore DECK-SCOPED to HIKGH02_L02_S01 only. Do not raise max_attempts or author hint2 on another game without the same explicit ask on that game's deck.  28j: THE GUIDING HAND, FIXED AT THE CHOKE POINT INSTEAD OF PER MECHANIC. Yasir found a hand in round 3 again (MTKGA01_L04_S01 P5, a COUNT_TAP practice slide) after I had gated handOnAnswer in 28f and startNudge in 28i. Cause: ~25 sites call pointNudgeAt DIRECTLY and bypassed both gates. Gating call sites one at a time is what produced three rounds of 'fixed'; the rule now lives in pointNudgeAt itself, default TUTORIAL ONLY, so every existing raw site becomes correct by construction and any future mechanic inherits it. handOnAnswer passes earned=true for terminal help, the one case Yasir allows in guided because two failed attempts paid for it. Round 3 gets no hand by ANY route. ALSO FIXED, both regressions from my own 28h placement change: (a) EMPTY SKY — the 'flip above if it would run off the stage' clamp put the hand 100-395px above a tall TAP_IN_SCENE hotspot, pointing at open air on 4 of 6 guided slides of HI01H07_L01_S02. Flipping is simply wrong for a hand that points UP; it now clamps INSIDE the stage instead, worst case overlapping the target's lower edge as it always used to. (b) A LABEL BELOW THE ANCHOR — anchoring to the passed element's bottom only helps if that element contains the text, and GENDER_INTRO passes the cat IMAGE while .cat-word sits below it, so 'below the image' landed on the word (56% covered on T3; 100% before 28h). Rather than teach each mechanic a smarter anchor, placement now MEASURES real text rects in the tile and drops below the lowest one that shares the column. Also: check_system's 'hand on answer, all phases' marker was a FALSE GREEN asserting the opposite of the live rule — renamed and re-keyed to the 28j choke point.  28i: WHY THE ROUND-3 HAND KEPT COMING BACK, plus four fleet-wide gaps. (1) THE ROUND-3 HAND BAN IS NOW ENGINE-ENFORCED. I reported this fixed three times and Yasir kept seeing it, because 28f only closed the answer/tap paths (handOnAnswer + HAND_PHASES) while the drag/count PROGRESS cue reaches the hand through startNudge, whose only round-3 guard was the CARD's scaffold_rules.nudge_timeout_ms — and 22 of 27 cards set `independent: 8000` (two also set practice). So on any drag or count slide in round 3, eight seconds of hesitation still produced a hand, in nearly every game in the fleet. Card data cannot be the guard for a hard rule: startNudge now refuses outside TUTORIAL and ignores a card that arms round 3. Tutorial-only, not {tutorial,guided}: the idle hand is UN-EARNED (a mount timer), and Yasir's rule is that any visual hint waits for 2 failed attempts — guided still gets its hand, but only through handOnAnswer at terminal help, which is where it is earned. Verified with a real 10.6s untouched wait on round-3 drag slides (P1/P3 SORT_GENDER, card arming practice+independent at 8000): no hand. (2) THE SAME FIX, ONE COPY OF IT — startNudge carried its own duplicate of the old positioning formula, so 28h's 'hand sits below the tile, never on its word' never reached a single progress cue; it delegates to pointNudgeAt now, so placement cannot drift between the two paths again. (3) SENTENCE_FIND SPEAKS THE TARGET WORD, NOT ALL FOUR (Yasir): the slide says 'जो शब्द सुनो, उस पर टैप करो।' and the engine read every option aloud, so nothing identified the word to tap — the task was unanswerable by design. Target-only is the default; the word-by-word read is opt-in via data.read_along:true. This REVERSES an SME ask from that same deck (21c flag #5) — flagged for Yasir, not silently dropped. Its trailing startNudge(slide,_tgt) — a pre-attempt hand on the answer, the third form 28f missed — is gone. (4) THE TWO-HINT LADDER REACHES THE PRODUCE MECHANICS. Yasir's 2026-07-25 'two hints everywhere, every game, every interaction type' landed for taps (24a) and drags (25a), but MAKE_SET / MAKE_EQUAL / BUILD_TO_NUMBER / TAP_ALL_WITH_SOUND grade their own wrong answers and inherited neither — and BUILD_TO_NUMBER passed `null`, i.e. its wrong-answer feedback was SILENT, text-only, to a child who cannot read. All four now call wrongClip(), one grader in one place; with no hint1/hint authored it returns the same try_again as before, so no card regresses. MAKE_NUMBER and COMBINE_COUNT reach completeSlide(true) only — no wrong path exists, so demanding a ladder was a checker false positive and they are excluded by name. (5) LANDING IMAGE HERO IS SIZED AT ALL — `.sg-hero img{height:118px}` has never matched anything (the element is .sg-art), so an image hero rendered at natural size: 1244x695 in a 1069x438 card, shoving the landing title to top:-106px, off screen. Same selector mismatch 16e fixed for count hands and left for images. (6) WIDTH-FIT MEASURES INK, NOT ADVANCE — the SME's original 'make the words fit inside the box', still unfixed. Devanagari paints wider than it advances, and the real bug was the BRANCH: a word whose advance fit never entered the shrink path, so its ink overflow was never considered (यह 66 ink vs 59 box, बकरी 138/132, एक 91/85, कहाँ 184/180 — all four had fitting advances). Fits whichever actually paints wider, so Latin/numerals are untouched. Also: engine_guard now WARNS (never blocks) when another session holds the engine lock — the stale-local-copy trap that produced a request against already-fixed 28g code.  28h: TWO FIXES Yasir named directly. (1) THE HAND NO LONGER COVERS THE WORD — pointNudgeAt planted the fingertip 56 design-px INSIDE the tile's bottom edge, which is fine on a bare picture tile (its only caller for years) and fatal the moment 28f started pointing it at an .opt-cell, whose bottom strip IS the label: measured 92x27px of the answer's word hidden under the hand, i.e. we glowed the answer and then covered it. The hand now starts just past the tile's bottom edge, clamped to flip ABOVE the tile if that would run off the stage foot rather than being silently clipped. Verified by measurement AND by looking: G1 hand t646 vs tile b641, label b627, vertical overlap 0, still centred, still tappable. (2) ONE GATE PER ROUND, NOT PER PHASE NAME — 28a made `independent` an alias of practice to fix a MISSING round-3 gate, and thereby created a DUPLICATE one: a card using both names crossed two 'different phases' and showed the identical 'अब आपकी बारी!' gate twice, back to back. 7 of 27 cards use both. Gates now dedupe on a ROUND id (PHASE_ROUND), so that pair collapses to one and any unmapped phase (mastery, or a future name) fails safe to NO gate — which is the ruling: three rounds, no round 4. Also closed as NOT-A-DEFECT: a report that the round-3 hand ban was still broken. Measured on P1 at 28h — terminal help fires, answer glows, stays tappable, handShown FALSE. 28f had already fixed it; the report read a stale source. The raw pointNudgeAt calls left in MEET_ORDER/COMPARE_TWO/the demo step chain are auto-DEMO teaching animations, not hints, and stay.  28g: 'going back from last screen gets swiftie stuck' — clearHost() dropped body.is-end but never removed .show from #endScreen, so the celebration layer (cheering Swiftie + 'बहुत बढ़िया!') stayed overlaid on the slide you navigated back to, covering the middle option. I had hit this myself and mis-triaged it as low severity ('a child cannot go back from celebration') — but REVIEW uses the dev nav, so it hit every review pass, and it also caused 60 phantom overlap findings in my audit sweep. Deliberately scoped to the end screen only: also clearing stage.blurred/gating here would un-blur the gray phase gate mid-flight, since mountSlide runs inside the gate's callback.  28f: ONE RULE FOR THE GUIDING HAND, in one place (handOnAnswer()) — Yasir 2026-07-28, two rulings merged: tutorial may show the hand (teaching); guided ONLY after 2 failed attempts; round 3 (practice / independent / mastery) NEVER, 'regardless of whatever name we save it by'. Also DELETED the idle/mount hand on answerable slides: startNudge fired at nudge_timeout_ms (guided 5000ms) — right after the prompt VO — pointing at the stimulus before the child had tried anything. A visual hint is now earned only by 2 failed attempts. All 5 terminal-help paths route through handOnAnswer, so the phase rule cannot drift per-mechanic again (27d put the hand in 1 of 5 and I reported it as 'every phase'). Demo/progress nudges inside the count and drag mechanics are untouched — teaching animations, not hints.  28e: (1) A DISABLED OPTION IS NEVER RED — .crossed / .sentence-word.crossed / .tap-all-item.nope now match the plain grey .faded lock. Two looks for one meaning was the complaint; this supersedes the red ring 27a introduced. 1st-wrong buzz/shake unaffected (28d unblocks that card after 700ms so it never rests as disabled). (2) TAP_IN_SCENE no longer PULSES the correct hotspot 6s after mount — that handed the answer over before the child tried (measured: identical at t=1s, only .correct-hot pulsing at t=7s). The glow now comes only from terminal help, where distractors also fade. (3) FIXED MY OWN 28a REGRESSION: the new SEQUENCE_COMPLETE picture stimulus pushed .seq-tray under the आगे pill (bottom ~30% of two tiles a dead zone on all 4 build slides). .seq-stage now top-anchors, tightens its gap and reserves the pill's lane.  NOT DONE, needs care: the fleet-default 'remove handnudge on idle' ruling — startNudge is also used by drag/count mechanics for PROGRESS cues, so disarming it globally would remove useful guidance, not just idle hints. Filed.  28d (three REGRESSIONS of my own, re-reported by Yasir): (1) the stuck RED RING — the 700ms unblock was guarded by `if(!state.locked)`, but state.locked is also set TRANSIENTLY while reveal_seq narrates, so a 700ms landing in that window skipped the removal and .crossed stayed FOREVER (permanent red ring, permanently dead card). Now keyed off this cell only (.correct / state.helpShown). I had found that same state.locked trap while fixing the idle-VO ticker, documented it there, and failed to propagate it back. (2) HAND NUDGE only existed on ONE of FIVE terminal-help paths — 27d added it to mountTapOptions.revealAnswer and I reported it as 'every phase', but practice/independent rounds are drags / sentence-finds / scene-taps. Added to MATCH_DRAG_N.terminalHelp, SENTENCE_FIND and TAP_IN_SCENE, each with stopNudge() first so the flow nudge cannot drag the hand off the answer. (3) STORY_SCENE picture drifted via `storyKenBurns` — killed engine-wide; a teaching picture must not move under a KG child. Root cause common to (1) and (2): verified narrowly, reported broadly.  28c: STORY_QUESTION stimulus is the IMAGE ONLY — the 🔊 glyph and the 'प्रश्न सुनो' label were hardcoded in the module (d.stim_hi only reworded the label), so no card could remove them. Tapping the picture still replays the question and the header chip still works: the affordance is gone, not the function. No thumb (mastery / hide_recall) now passes a null stimulus instead of rendering an empty card. The four AUDIO-ONLY chips (TAP_SHAPE_BY_NAME, TAP_LETTER_BY_SOUND, MASTERY_SILENT_PICK x2) are untouched — they have no image, so stripping them leaves a blank card; flagged for a ruling.  28b: PHASE GATE BACKGROUND GOES GRAY (Yasir + Figma ref). Scrim 35% -> rgba(64,64,70,.58) and backdrop-filter gains grayscale(.9) brightness(.92), so a colourful KG scene actually DESATURATES instead of merely dimming; grayscale rides the BACKDROP so the peeking Swiftie and the headline keep full colour. Also kills `body.is-start .phase-gate{background: transparent !important}` — the FIRST gate (landing->tutorial) had NO scrim at all, open as flag S2-a; this closes it. Verified by SCREENSHOTTING the gate (capture_pages cannot — it is a ~2s transient) on both the mid-lesson and is-start paths.  28a [code tags read `[27j]` — written before midnight, engine_bump rolled the date; grep [27j] for these six changes] (batched wave fixes, 6 module changes, all ADDITIVE — a card that does not opt in behaves exactly as before): SEQUENCE_COMPLETE takes an opt-in picture stimulus (d.img/picture/emoji) so build-the-word slides can show the thing being spelled; TAP_IN_SCENE gains the two-rung hint ladder + terminal help that GLOWS the target instead of solving it, and .tis-hot is now VISIBLE on every candidate (it was border:none/transparent, so a child had nothing to aim at); mountTapOptions finally speaks audio.correct after the tapped word (12 STORY_QUESTION slides were silent); MATCH_DRAG_N drop-zones speak on tap, reusing pair.match_audio; SENTENCE_FIND: rung 1 now plays hint1 (it played try_again), `hint` is spoken as the terminal line, and terminal help NO LONGER locks+completes the slide — RULE-9 breach, it was solving the answer for the child; PHASE_GATE_TITLE/VO gain `independent` as an ALIAS of practice — three rounds, not four: round 3 is named practice OR independent and a card using the latter got no round-3 gate. `mastery` is deliberately NOT gated (no round 4), so vo_pt_mastery stays unplayed and that verify_bundle warn is a checker artifact. Also: _tools/check_system.py now verifies the ENGINE READS hint1/hint per mechanic, closing a false green where authored hints could never play.  27h: F1 tutorial-frame fit — tall teach modules (STORY_SCENE .story-frame 900x432, GENDER_INTRO .gender-cat 430px) overflowed the 318px .tut-content and, because it is justify-content:center, split the overflow BOTH ways: heading 78-100% covered above, caption/word-chip behind the आगे pill below. Regression from the 25e/27c change that shortened every tut-card 87px. Now the picture SHRINKS (what the SME asked) instead of pushing the layout apart; scoped to .stage.tut so guided/practice are untouched. Cleared 6 requests across 4 games. · F2 shared baseline — centerInkGlyph ink-centred EACH glyph, so a word with an above-line matra sat up to 23px lower than a plain word inside one row (the SME's 'text alignment is not right', 7 of 17 pages). A row with >1 .ink-glyph now uses constant FONT metrics; a lone showcase glyph keeps ink-centring. Both verified by LOOKING at headless captures, not only by measuring.  ENGINE STAMP — the receipt (verify_bundle.py) asserts a built game carries THIS exact string; a stale/divergent engine → hard FAIL, so the wrong engine can never silently ship. BUMP IN LOCKSTEP with engine_guard.py + swiftpal_build.py + unified_build.py + verify_bundle.py on EVERY engine change (r2: drag/pattern feedback standard + PHASE_TRANSITION; r3c: off-white toybox bg, dual-coded counting options numeral+hand, full-body landing mascot, true-corner square/rect; r3d: Swiftie mouth-stops-when-silent (still frame), Arabic display numerals 1/2/3, landing shows full 1..n hand row, volume-chip aligned in header pill); r4: additive number-sequence path modules MEET_SEQUENCE + SEQUENCE_COMPLETE + SEQUENCE_NEXT (MTKGA01_L02_S04 "completes a number sequence within 20") — purely additive, existing lessons untouched. r4-landing (16c): landing recomposed to match reference — small corner mascot (230px, was 300), content re-centered (dropped padding-left:300 right-shift hack), VO chip moved from top-right to the mascot's shoulder (left:150/bottom:34, 58px). CSS-only; supersedes the 16b right-shift overlap fix.; 16d: TRUNK MERGE — unified the two diverged engine lines at base 12d: the 15e mechanics trunk (CONSERVE_COUNT + COUNT_ACTION + COUNT_DRAG_MATCH + ORDER_BY_WEIGHT + PICK_SET_BY_NUMBER, per_row/dense count-set grouping, bigNumCell numeral-only test options, title_first landing order) + the 16c r4 design trunk (boot loader, peek phase-transition, concept-strip landing, DS header, flat CTAs, sunburst/star-burst celebration, recomposed corner-mascot landing). Nothing dropped from either line. 16e: landing count-hero hand sizing FIXED — the .sg-hero sizing selectors never matched (template uses .sg-art); hands rendered natural-size, overflowing the card (title pushed outside the box, numeral-1 hidden behind the mascot — user-visible on MTKGA01_L02_S01). Retargeted to .sg-art .sg-hand/.sg-hand-cell/.sg-hand-num (112px; image-hero landings untouched). CSS-only. 16f: INTRO strip fit-or-wrap — old sizing assumed 1220px + a -100px breakout and punched wide strips (10 numerals, 7+ letters) through the tut-frame borders; now sized to the frame (960) and wrapping into two balanced rows below the 110px touch floor. Fixes MTKGA01_L02_S01 s00 (user-caught live) AND the HIKGH04_P2 letter-row daylight item. 21a (20a Figma-polish port): production expression heads (setSwMood sw_head_<expr>[_anim].webp + mascot.webp fallback), body-level start/end edge-layers + full-viewport dark blur phase-gate, inline SVG audio/hint/sg-vo chips, nudge_hand_new/nudge_tap_v2, SORT-01 opt-in one-by-one tray reveal + speak-on-match, INTRO picture mode (data.pics) + auto-INTRO instruction VO, transition-audio AUDIO_EXT fix, landing shape-tiles, self-disabling browser-TTS fallback for missing clips (ruled SHIP), F2F7FA ground + red/green-reserved sweep; merged WITH the live in-word-matra colouring + reveal_seq _sayThen strict-VO + MATCH_DRAG_N md-word WIP (nothing reverted). 21c (consolidated wave bump): +COMBINE_COUNT (Put-Together: drag group B onto A, merge to one row, tap-count total ≤10) and +TRACE_SHAPE (finger-trace the outline — a PRODUCE gesture; forgiving corridor, ~80% coverage → success, idle demo, upright/sharp/fixed-colour, no score/timer); MATCH_DRAG_N tap→LETTER (tap_audio) / correct-drop→WORD (match_audio) split (gated+fallback, siblings untouched); SEQUENCE_DRAG word-mode tap-a-tile→speak-word + glow-order + whole-sentence-read-at-end, SENTENCE_READ/SENTENCE_FIND word-by-word read-along hand-nudge (word-mode gated; letter-sequence untouched); landing gate cursor:default (hand-pointer on buttons only). All additive. 24a (HI01H08-fork port + N7-N10 audit bump): AUDIO GEN-TOKEN (_audioGen) — stopAudio/play supersede pattern kills echo/double-voice, orphaned clips, stale fallback-timer resume + cancelled-TTS resume (N7a); replay chips get navUnlock + guards (isPlaying / revealing / demoRunning / ownsAudio-without-replay) so फिर-सुनो mid-VO can no longer brick gated teach slides or gen-kill self-driving demo chains (N7b/N8); state.revealing gates drag + replay during reveal_seq/sortSeqReveal (N8 drag path); capture-phase DRAG VO-GATE on draggable tiles (isPlaying + 4s _voStart cap — speak-on-press tiles NOT over-blocked) (A1); mountTapOptions tap gate: one-tap-at-a-time _busy + 4s _vb + no taps during ANY VO + additive hint1 first-wrong clip (A2); auto walk-through INTRO/GENDER_INTRO ignore card taps until taught, then tap=replay (A3); playbackRate pinned 1.0 (A4); SORT tray ghost-slot .sort-ghost on placement (A5); MATCH_DRAG_N final-drop word no longer truncated by the celebrate VO (C); viewport pinch-zoom lock (N9); star-burst spark fill-mode both (N10). N11 (asset preload) deferred. 25a (drag hint ladder): dragWrong() now grades its spoken feedback like the tap path — 1st wrong plays the slide's hint1, 2nd+ plays hint (the level that GIVES the answer); all 12 drag wrong-drop sites inherit it with no call-site change, and cards without hint1/hint authored still play try_again unchanged (additive, zero sibling regression). Yasir ruling 2026-07-25: two hints everywhere, every game, every interaction type. 27c (autonomous teaching + tutorial fit): mountTapOptions honours slide.data.auto — a TEACHING slide now runs the whole beat itself (prompt on the picture -> teaching line on the right choice -> that choice goes green+pulses, wrong ones fade, its letter sounds -> आगे unlocks), taps dead throughout, no confetti/sfx; opt-in, and SENTENCE_SOUND/INTRO/GENDER_INTRO/MEET_* keep their own pre-existing auto paths (they return before mountTapOptions). CSS: .stage.tut q-rows that carry a picture stimulus lay it BESIDE the options — the 25e card leaves 273 design px and stimulus+gap+opt-cell need 434, so the grid track squashed to 43px and the cells spilled onto the picture (Yasir 2026-07-27, Antim T2/T3). 27g-fix (relabelled — 27d was taken by the terminal-help hand): the auto chain no longer points the hand at the picture stimulus — pointNudgeAt plants the fingertip 56px above an element bottom, i.e. straight over a .stimulus-pic .lbl, so the hand hid the very word being taught for the whole prompt beat.
@@ -330,6 +730,7 @@ let isMuted = false;
 function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAudio();
   document.querySelectorAll(".audio-chip").forEach(c => c.classList.toggle("muted", m)); }
 function setPlaying(on){
+  setTimeout(()=>{ try{ bgmUpdate(); }catch(e){} }, 0);   /* REF2: music ducks under every spoken line */
   // the dynamic Swiftie sits header-left; the audio chips pulse to signal playback. r4/F1: share the
   // .playing toggle across the header chip AND the tut-card replay chip (the header is hidden in the
   // tut frame, so the in-card .tut-audio is the only visible affordance and must react to VO too).
@@ -483,9 +884,40 @@ function _tone(freqs, type, dur, vol){ const c = _ac(); if(!c) return; const t0 
   freqs.forEach((f, i)=>{ const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
     const t = t0 + i*(dur/freqs.length); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur/freqs.length); o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur/freqs.length); }); }
-const sfxTap       = ()=> _tone([520], "sine", 0.09, 0.09);
-const sfxCorrect   = ()=> _tone([660, 880, 1180], "sine", 0.42, 0.13);   // rising major arpeggio
-const sfxWrongSoft = ()=> _tone([300, 235], "triangle", 0.20, 0.08);      // gentle, never harsh
+const sfxTap       = ()=> { if(!_sfxFile("sfx_tap")) _tone([520], "sine", 0.09, 0.09); };
+/* ---- REF2: sound effects + background music (from Hindi-game-gender-identify) ----
+   effects live in assets/SFX (sfx_*.wav); one copy per moment (150 ms de-dup). The music bed (bgm_mela)
+   starts on the ▶ tap, ducks under every spoken line (hooked into setPlaying), stops for the celebration
+   and pauses when the tab is hidden. */
+function audioDir(id){ return String(id).indexOf("sfx_") === 0 ? "assets/SFX/" : "assets/Audio/"; }
+function bustAudio(u){ return (typeof _av === "function") ? _av(u) : u; }
+const BGM_VOL = 0.14, BGM_DUCK = 0.02;
+let _bgm = null, _bgmOn = false, _bgmRamp = null;
+function _bgmTarget(){ if(!_bgmOn || isMuted) return 0; return isPlaying ? BGM_DUCK : BGM_VOL; }
+function bgmUpdate(){
+  if(!_bgm) return;
+  const to = _bgmTarget();
+  if(to > 0 && _bgm.paused && !document.hidden){ const pr = _bgm.play(); if(pr && pr.catch) pr.catch(()=>{}); }
+  clearInterval(_bgmRamp);
+  const from = _bgm.volume, t0 = Date.now();
+  _bgmRamp = setInterval(()=>{
+    const k = Math.min(1, (Date.now() - t0) / 300);
+    try{ _bgm.volume = Math.max(0, Math.min(1, from + (to - from) * k)); }catch(e){}
+    if(k >= 1){ clearInterval(_bgmRamp); if(to === 0) try{ _bgm.pause(); }catch(e){} }
+  }, 30);
+}
+function bgmStart(){ try{ if(!_bgm){ _bgm = new Audio("assets/SFX/bgm_mela.wav"); _bgm.loop = true; _bgm.volume = 0; } _bgmOn = true; bgmUpdate(); }catch(e){} }
+function bgmStop(){ _bgmOn = false; bgmUpdate(); }
+document.addEventListener("visibilitychange", ()=>{ if(!_bgm) return; if(document.hidden){ try{ _bgm.pause(); }catch(e){} } else bgmUpdate(); });
+function _sfxFile(name, onEnd){
+  { const _now = Date.now(), _last = (window.__sfxLast = window.__sfxLast || {});
+    if(_last[name] && _now - _last[name] < 150) return true; _last[name] = _now; }
+  try{ const a = new Audio(audioDir(name) + name + ".wav"); a.volume = 0.7;
+       if(onEnd){ a.onended = onEnd; a.onerror = onEnd; }
+       a.play().catch(()=>{ if(onEnd) onEnd(); }); return true; }catch(e){ return false; }
+}
+const sfxCorrect   = ()=> { if(!_sfxFile("sfx_correct")) _tone([660, 880, 1180], "sine", 0.42, 0.13); };
+const sfxWrongSoft = ()=> { if(!_sfxFile("sfx_wrong"))   _tone([300, 235], "triangle", 0.20, 0.08); };
 /* a joyful star/confetti pop, centred on the play stage (upper-middle) */
 function burstStars(){ const stage = document.querySelector(".slide-stage") || document.body;
   const cx = stage.offsetWidth/2, cy = stage.offsetHeight*0.38, emo = ["⭐","✨","🌟","💫","🎉"];
@@ -538,6 +970,12 @@ function setSwMood(m){ swMood = m;
    animation:confettiFall}` in style.css remains DEAD CSS from the pre-r4 implementation: nothing
    creates those <i> elements. Left alone deliberately rather than deleted in the same bump. */
 function confettiCannon(){
+  /* correct-answer confetti, same as Hindi-game-gender-identify (H11-214): the standard FLN confetti - one burst
+     of 100 pieces over the WHOLE window, sized with the stage at 1.5x. No sound of its own: the caller plays
+     sfx_correct (the repo plays no separate confetti sound either). */
+  try{ if(window.FLNMotion && FLNMotion.confetti){
+    if(!document.getElementById("fxLayer")){ const l = document.createElement("div"); l.className = "fx-layer"; l.id = "fxLayer"; l.setAttribute("aria-hidden", "true"); document.body.appendChild(l); }
+    FLNMotion.confetti.burst({ host: "#fxLayer", phases: [], count: 100, fall: [1.6, 2.6] }); return; } }catch(e){}
   const VW = window.innerWidth || 1200, VH = window.innerHeight || 800;
   const host = document.body;
   const cols = ["#F9695E","#FDC23C","#4EBE6A","#4EA3F0","#9B7BE8","#FF8FB1"];
@@ -4809,7 +5247,17 @@ const SlideModules = {
   CELEBRATION: {
     mount(host, slide){
       // celebration SFX — own Audio element so it overlaps the spoken VO chain
-      playSfx(slide.audio && slide.audio.sfx ? slide.audio.sfx : "sfx_celebrate");
+      /* REF2 [H11-161/177]: the music steps out, the jingle plays, and the moment the praise line starts
+         Swiftie (standing still until then) plays his one-shot jump-and-talk clip; he holds its last frame. */
+      state.ownsAudio = true; try{ bgmStop(); }catch(e){}
+      { const _em = document.querySelector("#endScreen .end-mascot");
+        const _set = (u)=>{ try{ if(!_em) return; _em.style.display = ""; _em.removeAttribute("src"); void _em.offsetWidth; _em.setAttribute("src", u); }catch(e){} };
+        _set("assets/Images/last_swifty_still.webp");
+        let _spoke = false;
+        const _speak = ()=>{ if(_spoke || state.idx !== CARD.slides.indexOf(slide)) return; _spoke = true;
+          _set("assets/Images/last_swifty_end.webp?n=" + (window.__endSwN = (window.__endSwN || 0) + 1));
+          play("assets/Audio/" + (slide.audio && slide.audio.prompt) + "." + AUDIO_EXT, ()=>{}); };
+        setTimeout(_speak, 1800); _sfxFile("sfx_celebrate", _speak); }
       /* [30i] NO TEXT ON THE LAST PAGE — Yasir 2026-07-30: "there should be no sentence on the last
          page, no praising nothing. the only writings allowed on that page is inside the button, other
          than that, no other sentences, no other words."
@@ -11160,14 +11608,22 @@ function capSay(id, handlers, onEnd){
   const fireUpTo = (ms)=>{ while(fired < cues.length && cues[fired].t <= ms){ const c = cues[fired++];
     const fn = handlers && handlers[c.k]; if(fn){ try{ fn(c); }catch(e){ console.error("[cap] cue", c.k, e); } } } };
   play(src, ()=>{ if(over) return; over = true; fireUpTo(Infinity); if(onEnd) onEnd(); });
-  const a = currentAudio;
-  if(!a || !cues.length) return;
-  const tick = ()=>{ if(over || currentAudio !== a) return; fireUpTo(a.currentTime * 1000); requestAnimationFrame(tick); };
+  if(!cues.length) return;
+  // the engine may start the clip late (element) or through Web Audio (no element) - follow the clip's own clock
+  const g = _audioGen;
+  let srcStart = 0;
+  const tick = ()=>{ if(over || _audioGen !== g) return;
+    const el = currentAudio;
+    if(el && !srcStart) srcStart = -1;
+    if(!el && currentVoiceSource && !srcStart) srcStart = Date.now();
+    const ms = el ? (el.currentTime > 0 ? el.currentTime * 1000 : -1) : (srcStart > 0 ? Date.now() - srcStart : -1);
+    if(ms >= 0) fireUpTo(ms);
+    requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
 }
 function capStage(host, h){ const st = document.createElement("div"); st.className = "cap-stage"; st.style.height = h + "px"; host.appendChild(st);
   // data.flip: the whole scene is mirrored left<->right (layout AND pours) — numbers/text inside are flipped back to read normally
-  try { const sl = CARD.slides[state.idx]; if(sl && sl.data && sl.data.flip) st.classList.add("cap-flip"); } catch(e){}
+  try { const sl = CARD.slides[state.idx]; if(sl && sl.data && sl.data.flip) st.classList.add("cap-flip"); if(sl) st.dataset.slide = sl.id; } catch(e){}
   return st; }
 function capAdd(stage, v, x, y){ stage.appendChild(v.el); return v.place(x, y); }
 /* a static picture vessel (no liquid) — same place()/el contract as capVessel, for supplied art */
@@ -11178,7 +11634,8 @@ function capImgVessel(key, w, aspect, alt){
   return { el, w, h, x: 0, y: 0, place(x, y){ this.x = x; this.y = y; el.style.left = x + "px"; el.style.top = y + "px"; return this; } };
 }
 function capFlash(el, cls, ms){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(()=> el.classList.remove(cls), ms || 1400); }
-function capBadge(v, n){ let b = v.el.querySelector(".cap-badge"); if(!b){ b = document.createElement("span"); b.className = "cap-badge"; v.el.appendChild(b); }
+function capBadge(v, n){ let b = v.el.querySelector(".cap-badge"); if(!b){ b = document.createElement("span"); b.className = "cap-badge"; v.el.appendChild(b);
+    if(v.el.dataset.mid) b.style.left = (parseFloat(v.el.dataset.mid) * 100).toFixed(2) + "%"; }   // over the cup's body, not the handle
   b.textContent = String(n); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
 function capHandEl(){ const hd = document.createElement("img"); hd.className = "cap-hand"; hd.src = "assets/UI/nudge_hand_new.svg"; hd.alt = ""; return hd; }
 /* an invisible marker so the engine's capPoint() can point at any stage coordinate */
@@ -11251,18 +11708,20 @@ function capAskNumber(ctx, stage, spec, o){
   // At the REVEAL moment ("सही संख्या यह है") the incorrect cards stay on screen but are disabled.
   const hideWrong = ()=> [...col.children].forEach(x => { if(x !== rightCell){ x.classList.remove("crossed"); x.classList.add("cap-off-opt"); } });
   h2Handlers.show = ()=>{ hideWrong(); if(rightCell){ rightCell.classList.add("cap-glow"); capPoint(rightCell); } };
-  const win = ()=>{
+  const win = (cell, val)=>{
     done = true; stopNudge(); rightCell.classList.remove("cap-glow"); rightCell.classList.add("correct");
     sfxCorrect(); confettiCannon(); setSwMood("happy");
+    try{ if(window.FLNKit) FLNKit.ck(cell || rightCell, {}); }catch(e){}   // green outline + pop + sparkles on the tapped card (repo)
     SwiftPAL.emit("capacity_count_first_try", { slide_id: slide.id, phase: slide.phase, value: attempts === 0, attempts: attempts + 1,
       scaffold_level: state.scaffoldLevel, latency_ms: Date.now() - state.slideStart });
     if(isMastery){ state.masteryAttempts++; if(attempts === 0) state.masteryHits++; }
     $("hintBtn").classList.remove("show");
     const okId = attempts === 0 ? spec.ok : spec.ok + "2";   // "शाबाश!" only on a first-try correct answer
     ctx.replayFn = ()=> ctx.say(okId);
-    // o.autoNext: no Next button on this screen — after the praise it moves on by itself
-    ctx.say(okId, null, ()=>{ setSwMood("point");
-      if(o.autoNext){ ctx.after(900, ()=>{ if(ctx.alive()) completeSlide(true); }); } else capNavOn(); });
+    // Next (आगे) button only in the tutorial (T1-T4): on guided / practice screens, after the praise the
+    // game moves on by itself (o.autoNext forces it anywhere)
+    ctx.say("cap_num_" + val, null, ()=> ctx.say(okId, null, ()=>{ setSwMood("point");
+      if(o.autoNext || slide.phase !== "tutorial"){ ctx.after(900, ()=>{ if(ctx.alive()) completeSlide(true); }); } else capNavOn(); }));
   };
   spec.values.forEach(val => {
     const c = document.createElement("div"); c.className = "opt-cell cap-num";
@@ -11272,7 +11731,7 @@ function capAskNumber(ctx, stage, spec, o){
       if(done || busy || c.classList.contains("crossed")) return;
       if(onlyRight && val !== spec.answer) return;
       stopNudge(); busy = true;
-      if(val === spec.answer){ ctx.say("cap_num_" + val, null, ()=>{ busy = false; win(); }); return; }
+      if(val === spec.answer){ win(c, val); return; }
       attempts++; state.attempts = attempts; c.classList.add("crossed"); sfxWrongSoft(); setSwMood("tryagain");
       setTimeout(()=>{ if(!c.classList.contains("cap-off-opt")) c.classList.remove("crossed"); }, 900);   // red flash only; stays tappable
       SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
@@ -11473,6 +11932,8 @@ function capArtVessel(kind, o){
   const T = (str)=> String(str || "").split("{U}").join(u);
   const el = document.createElement("div"); el.className = "cap-v cap-art cap-art-" + kind;
   el.style.width = w + "px"; el.style.height = h + "px";
+  // centre of the vessel's opening (handle left out), as a fraction of its width - number badges sit over it
+  if(A.xTop){ const mid = ((A.xTop[0] + A.xTop[1]) / 2 + sx) / vw; if(Math.abs(mid - 0.5) > 0.02) el.dataset.mid = mid.toFixed(4); }
   el.innerHTML = `<svg viewBox="0 0 ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${T(A.defs)}` +
     `<clipPath id="${u}lv"><rect class="cap-lv" x="-4000" y="0" width="8000" height="8000"/></clipPath></defs>` +
     `<g transform="translate(${sx} ${sy})">${A.corkUnder ? `<g class="cap-cork">${T(A.cork)}</g>` : ""}${T(A.back)}<g class="cap-milk" clip-path="url(#${u}lv)">${T(A.milk)}</g>` +
@@ -11918,62 +12379,90 @@ Object.assign(SlideModules, {
       const panel = document.createElement("div"); panel.className = "cap-focus cap-focus-tut"; stage.appendChild(panel);
       const BASE = 348;
       // new art (ASSETE MAP "new glass.png" / "new mug.png"): glass clearly smaller than the mug, both on the shelf line
-      const glass = capAdd(stage, capImgVessel("cap_glass_new", 140, 438 / 657, "गिलास"), 270, BASE - 210);
-      const mug = capAdd(stage, capImgVessel("cap_mug_new", 316, 925 / 732, "मग"), 500, BASE - 250);
-      glass.el.classList.add("tappable"); mug.el.classList.add("tappable");
+      // both stand on the SAME base line (each placed by its own height, so their bottoms are pixel-equal)
+      const gv = capImgVessel("cap_glass_new", 140, 438 / 657, "गिलास"), mv = capImgVessel("cap_mug_new", 316, 925 / 732, "मग");
+      const glass = capAdd(stage, gv, 270, BASE - gv.h), mug = capAdd(stage, mv, 500, BASE - mv.h);
+      glass.el.classList.add("cap-t1-v"); mug.el.classList.add("cap-t1-v");
+      let tapOn = false;   // taps count only once the question VO has finished
+      const enableTap = ()=>{ if(tapOn) return; tapOn = true; glass.el.classList.add("tappable"); mug.el.classList.add("tappable"); };
       const mid = capMarker(stage, 480, 330);
       let done = false, onlyMug = false, attempts = 0, idleN = 0, busy = false;
       // inactivity (8.5 s): the hand points at the RIGHT option (the mug) and the mug glows until it is tapped
       const idle = capIdle(ctx, 8500, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
         capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); ctx.say(A.idle, null, ()=> idle.arm()); });
-      const hl = (v)=> capFlash(v.el, "cap-hl", 1500);
-      mug.el.onclick = ()=>{ if(done) return; done = true; idle.stop(); stopNudge(); mug.el.classList.remove("cap-hl-loop");
+      // word-timed glow: only the vessel being named glows; the other one's glow stops at once (never both)
+      let glowT = 0;
+      const glowOff = ()=>{ clearTimeout(glowT); glass.el.classList.remove("cap-glow-on"); mug.el.classList.remove("cap-glow-on"); };
+      const hl = (v)=>{ glowOff(); v.el.classList.add("cap-glow-on"); glowT = setTimeout(glowOff, 1500); };
+      const cues = { glass: ()=> hl(glass), mug: ()=> hl(mug), both: glowOff };
+      mug.el.onclick = ()=>{ if(done || !tapOn) return; done = true; idle.stop(); stopNudge(); mug.el.classList.remove("cap-hl-loop");
         glass.el.classList.remove("cap-pulse-loop"); mug.el.classList.add("cap-ok");
         sfxCorrect(); confettiCannon(); setSwMood("happy");
         SwiftPAL.emit("capacity_compare_first_try", { slide_id: slide.id, phase: slide.phase, value: attempts === 0, attempts: attempts + 1 });
         const okId = attempts === 0 ? A.correct : A.correct + "2";   // "शाबाश!" only on a first-try correct answer
         ctx.replayFn = ()=> ctx.say(okId);
         ctx.say(okId, null, ()=>{ setSwMood("point"); capNavOn(); }); };
-      glass.el.onclick = ()=>{ if(done || onlyMug) return; attempts++; onlyMug = true; busy = true; idle.stop(); stopNudge();
+      glass.el.onclick = ()=>{ if(done || onlyMug || !tapOn) return; attempts++; onlyMug = true; busy = true; idle.stop(); stopNudge();
         state.attempts = attempts; glass.el.classList.remove("tappable"); glass.el.classList.add("cap-pulse-loop");
         sfxWrongSoft(); setSwMood("tryagain");
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
         ctx.say(A.wrong, { mug: ()=> capPoint(mug.el) }, ()=>{ busy = false; glass.el.classList.remove("cap-pulse-loop"); capPoint(mug.el); idle.arm(); }); };
-      ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); ctx.say(A.prompt, { glass: ()=> hl(glass), mug: ()=> hl(mug) }, ()=> idle.arm()); } };
-      ctx.say(A.prompt, { glass: ()=> hl(glass), mug: ()=> hl(mug) }, ()=> idle.arm());
+      ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); glowOff(); ctx.say(A.prompt, cues, ()=>{ glowOff(); idle.arm(); }); } };
+      ctx.say(A.prompt, cues, ()=>{ glowOff(); enableTap(); idle.arm(); });
     }
   },
 
-  /* PAGE 3 — "कौन-सा तरीका सही है?"  autonomous: highlight each method with the VO, then the
-     identical-cups method is highlighted (✓) while the mixed one stays dimmed. */
+  /* T4 — "कौन-सा तरीका सही है?"  the green bowl to be measured sits on top; below it two sets of vessels:
+     three identical glasses (right) vs a glass + a plate + a cup. The VO names each set (each box lights up in
+     turn, never both), then the child taps the set to measure the bowl with. Taps open only after the VO. */
   CAP_METHOD: {
-    /* "कौन-सा तरीका सही है?" — the green bowl to be measured sits on top; below it two ways to measure it:
-       three identical glasses vs a glass + a plate + a cup. The VO explains the measuring vessels must be the
-       same, and the identical-glasses way is ticked. */
     mount(host, slide){
       const stage = capStage(host, 380), ctx = capCtx(slide, stage), A = slide.audio;
-      setNavActive(false); setSwMood("teach");
+      setNavActive(false); setSwMood("talk");
       const bowl = capImgVessel("cap_bowl", 190, 700 / 427, "कटोरा"); capAdd(stage, bowl, 405, 30);   // smaller, so nothing reaches Swiftie
       const box = (x)=>{ const b = document.createElement("div"); b.className = "cap-box"; b.style.left = x + "px"; b.style.top = "156px";
         b.style.width = "405px"; b.style.height = "184px"; stage.appendChild(b); return b; };
       const b1 = box(90), b2 = box(515);
+      b1.classList.add("cap-box-hide"); b2.classList.add("cap-box-hide");   // only the bowl shows first; the options appear with the VO
       const put = (bx, v, x)=>{ bx.appendChild(v.el); v.place(x, 184 - v.h - 30); return v; };
       const glass = ()=> capImgVessel("cap_glass", 86, 426 / 520, "गिलास");
       const g1 = [0, 1, 2].map(i => put(b1, glass(), 42 + i * 118));                       // three identical glasses
-      put(b2, glass(), 20);                                                                   // a glass,
+      const oneGlass = put(b2, glass(), 20);                                                  // a glass,
       const plate = document.createElement("div"); plate.className = "cap-v cap-v-img cap-v-cap_plate";
       plate.style.width = "142px"; plate.style.height = "60px";
       plate.innerHTML = '<img src="assets/Images/cap_plate.svg" alt="प्लेट" draggable="false">';
       b2.appendChild(plate); plate.style.left = "116px"; plate.style.top = (184 - 60 - 34) + "px";   // a plate,
-      put(b2, capImgVessel("cap_cup", 122, 420 / 354, "कप"), 268);                          // and a cup
-      const introCues = { bowl: ()=> capFlash(bowl.el, "cap-hl", 1500),
-        box1: ()=> b1.classList.add("cap-hl"), box2: ()=>{ b1.classList.remove("cap-hl"); b2.classList.add("cap-hl"); } };
-      const explainCues = { same: ()=> g1.forEach((v, i)=> setTimeout(()=> capFlash(v.el, "cap-pulse", 1400), i * 220)),
-        correct: ()=>{ b1.classList.add("cap-ok"); } };   // green glow only — no ✓ mark (user)
-      const explain = (then)=>{ b2.classList.remove("cap-hl"); b2.classList.add("cap-dim"); b1.classList.add("cap-hl");
-        ctx.say(A.explain, explainCues, then); };
-      ctx.say(A.intro, introCues, ()=> ctx.after(400, ()=> explain(()=>{
-        setSwMood("point"); capNavOn(); ctx.replayFn = ()=> explain(); })));
+      const cup = put(b2, capImgVessel("cap_cup", 122, 420 / 354, "कप"), 268);              // and a cup
+      let tapOn = false, done = false, busy = false, attempts = 0, idleN = 0, wrongOnce = false;
+      const boxOff = ()=>{ b1.classList.remove("cap-hl"); b2.classList.remove("cap-hl"); };
+      // word-timed glow: only the item being named glows (bowl / the three glasses / glass / plate / cup), one at a time
+      const items = [bowl.el, ...g1.map(v => v.el), oneGlass.el, plate, cup.el];
+      items.forEach(el => el.classList.add("cap-say-item"));
+      let glowT = 0;
+      const glowOff = ()=>{ clearTimeout(glowT); items.forEach(el => el.classList.remove("cap-say-glow")); };
+      const glow = (els)=>{ glowOff(); els.forEach(el => el.classList.add("cap-say-glow")); glowT = setTimeout(glowOff, 1800); };
+      const appear = ()=>{ b1.classList.remove("cap-box-hide"); ctx.after(200, ()=> b2.classList.remove("cap-box-hide")); };
+      const cues = { bowl: ()=> glow([bowl.el]), appear: ()=>{ glowOff(); appear(); },
+        g3: ()=> glow(g1.map(v => v.el)), glass: ()=> glow([oneGlass.el]), plate: ()=> glow([plate]), cup: ()=> glow([cup.el]), off: glowOff };
+      const enableTap = ()=>{ if(tapOn) return; tapOn = true; b1.classList.add("tappable"); b2.classList.add("tappable"); };
+      // inactivity (8.5 s): the hand points at the RIGHT set (three glasses) and it glows until tapped
+      const idle = capIdle(ctx, 8500, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
+        capPoint(b1); b1.classList.add("cap-hl-loop"); ctx.say(A.idle, null, ()=> idle.arm()); });
+      b1.onclick = ()=>{ if(done || busy || !tapOn) return; done = true; idle.stop(); stopNudge(); boxOff(); glowOff();
+        b1.classList.remove("cap-hl-loop", "tappable"); b2.classList.remove("tappable"); b1.classList.add("cap-ok"); b2.classList.add("cap-dim");
+        sfxCorrect(); confettiCannon(); setSwMood("happy");
+        SwiftPAL.emit("capacity_method_first_try", { slide_id: slide.id, phase: slide.phase, value: attempts === 0, attempts: attempts + 1 });
+        const okId = attempts === 0 ? A.correct : A.correct + "2";   // "शाबाश!" only on a first-try correct answer
+        ctx.replayFn = ()=> ctx.say(okId);
+        ctx.say(okId, null, ()=>{ setSwMood("point"); capNavOn(); }); };
+      b2.onclick = ()=>{ if(done || busy || wrongOnce || !tapOn) return; attempts++; wrongOnce = true; busy = true; idle.stop(); stopNudge(); boxOff(); glowOff();
+        state.attempts = attempts; b2.classList.remove("tappable");   // the wrong set stays fully visible (not faded)
+        sfxWrongSoft(); setSwMood("tryagain");
+        SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
+        // the VO explains why, and on "तो सही बर्तन यह है" the right set is shown (hand + highlight); the child then taps it
+        ctx.say(A.wrong, { show: ()=>{ b1.classList.add("cap-hl"); capPoint(b1); } }, ()=>{ busy = false; setSwMood("point"); capPoint(b1); idle.arm(); }); };
+      ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); boxOff(); glowOff(); ctx.say(A.prompt, wrongOnce ? null : cues, ()=>{ glowOff(); idle.arm(); }); } };
+      ctx.say(A.prompt, cues, ()=>{ glowOff(); appear(); setSwMood("point"); enableTap(); idle.arm(); });
     }
   },
 
@@ -12597,7 +13086,10 @@ Object.assign(SlideModules, {
           };
           const talk = ()=>{
             if(tok !== _gateToken){ closeGate(); return; }
-            if(title){ title.classList.remove("pg-wait"); void title.offsetWidth; title.classList.add("pg-write"); }
+            /* the title is written in exactly when Swiftie SAYS it ("चलिए, शुरू करें" …), not when she starts
+               talking: ms from the clip start, measured from the pauses in each gate clip */
+            const TEXT_AT = { tutorial: 3150, guided: 3390, practice: 800, independent: 800 };
+            if(title) setTimeout(()=>{ if(tok !== _gateToken) return; title.classList.remove("pg-wait"); void title.offsetWidth; title.classList.add("pg-write"); }, TEXT_AT[toPhase] || 0);
             if(im && G.talk) setImg(G.talk);
             /* play() starts the clip at once; the talk loop runs until its onEnd */
             play(voSrc, finish);
@@ -12636,7 +13128,7 @@ Object.assign(SlideModules, {
   document.addEventListener("click", (e)=>{
     const b = e.target && e.target.closest && e.target.closest("#sgBtn, #navBtn, #endBtn");
     if(!b || b.disabled) return;
-    sfxFile(b.id === "sgBtn" ? "sfx_play_button" : "sfx_next_button", null);
+    if(b.id === "sgBtn"){ _sfxFile("sfx_play"); bgmStart(); b.classList.add("sg-pressed"); } else _sfxFile("sfx_next");
   }, true);
 
   /* ============ CELEBRATION SWIFTIE, round 2l — lip-synced to the VO ============
@@ -13782,6 +14274,7 @@ function boot(){
   const setStartBtnReady = (ready)=>{
     const b = $("sgBtn"); if(!b) return;
     b.disabled = !ready;
+    if(ready && b.classList.contains("sg-waiting")) b.classList.add("sg-appear");   /* REF2: pops in */
     b.classList.toggle("sg-waiting", !ready);
     if(!ready) b.classList.remove("idle-pulse");
   };
@@ -13856,7 +14349,7 @@ function boot(){
        or stutters later. Each item has its own timeout and errors count as done, and a 30 s watchdog still
        guarantees the child is never stranded on the loader. The objects are kept (window._capPreloaded) so
        the browser keeps them in memory. */
-    const PRELOAD_EXTRA = ["assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
+    const PRELOAD_EXTRA = ["assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
     const urls = new Set(PRELOAD_EXTRA);
     (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
       if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.landing_hero]);
@@ -13987,3 +14480,134 @@ function buildDevNav(){
 }
 boot();
 
+/* == FLN CONFETTI (exact copy from Hindi-game-gender-identify, itself from MTG2A04_L02_S01): FLNMotion.confetti ==
+   this game sets --scale itself, so the kit's own fit() is skipped */
+window.FLN_OWN_SCALE = true;
+/* FLN confetti - standalone, exact copy of the game build (MTG2A04_L02_S01 app.js). No sound.
+   Usage: include confetti.css and this file, then call confettiCannon() - one burst over the whole window.
+   It adds <div class="fx-layer" id="fxLayer"> to the page itself if there is none. */
+
+/* ---- the two kit-core helpers the confetti uses (verbatim from "FLN ANIMATION KIT: core") ---- */
+(function(){ "use strict";
+  var M = window.FLNMotion = window.FLNMotion || {};
+  M.still = M.still || function(){
+    try{ return document.documentElement.classList.contains("no-anim") ||
+      (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+    catch(_){ return false; }
+  };
+  M.guard = M.guard || function(fn){
+    try{ fn(); }catch(e){ try{ console.warn("[animation-kit]", e && e.message); }catch(_){} }
+  };
+})();
+
+/* ===== FLN ANIMATION KIT: confetti BEGIN ===== */
+(function(){ "use strict";
+  var M = window.FLNMotion;
+  function rnd(a, b){ return a + Math.random() * (b - a); }
+
+  M.confetti = {
+    defaults: {
+      host:".stage-inner", count:80, stagger:0.35,
+      fall:[1.1,1.8], drift:45, sway:[10,34], bob:[3,7],
+      rockT:[0.6,1.2], tumbleT:[0.75,1.5], tumbleShare:0.22,
+      amp:[28,52], yaw:30, depth:[0.75,1.15], tilt:25,
+      /* weighted: star 40%, rectangle 20%, line 20%, square 20%.
+         Repeat an entry to weight it - the array is sampled uniformly. */
+      shapes:["st","st","st","st","rc","rc","ln","ln","sq","sq"],
+      /* VIBGYOR. Front/back pairs - the back is the SAME hue darkened, never a
+         different hue, or it reads as two pieces flickering instead of one turning. */
+      colors:[["#8B2FC9","#5E1C8C"],   /* violet */
+              ["#3F51B5","#27358A"],   /* indigo */
+              ["#1E88E5","#135FA6"],   /* blue   */
+              ["#22B24C","#157A34"],   /* green  */
+              ["#FFD21E","#D9A800"],   /* yellow */
+              ["#FF8A1E","#C75F00"],   /* orange */
+              ["#E5322D","#A81F1B"]],  /* red    */
+      phases:["guided","practice","mastery"]   /* [] disables phase gating */
+    },
+    burst: function(opts){
+      var o = Object.assign({}, this.defaults, opts || {});
+      M.guard(function(){
+        if(M.still()) return;
+        /* confetti ONLY on activity phases - never tutorials, demos, landing, transitions */
+        if(o.phases.length && o.phase && o.phases.indexOf(o.phase) < 0) return;
+        var host = document.querySelector(o.host); if(!host) return;
+
+        var dist = host.clientHeight + 60, maxLife = 0;
+        var wrap = document.createElement("div");
+        wrap.className = "fx-confetti";
+
+        for(var i = 0; i < o.count; i++){
+          var z     = rnd(o.depth[0], o.depth[1]);        /* depth */
+          var fall  = rnd(o.fall[0], o.fall[1]) / z;      /* nearer = bigger = faster */
+          var delay = rnd(0, o.stagger);
+          if(fall + delay > maxLife) maxLife = fall + delay;
+          var pair = o.colors[i % o.colors.length];
+          /* most pieces flutter (face stays visible); a minority go end-over-end */
+          /* Two regimes, and a real plate moves DIFFERENTLY in each:
+             flutter = zigzags hard, almost no net sideways drift;
+             tumble  = autorotation gives a steady lateral force, so it barely
+                       zigzags but drifts consistently to one side. */
+          var flutter = Math.random() > o.tumbleShare;
+          var rockT   = flutter ? rnd(o.rockT[0], o.rockT[1])
+                                : rnd(o.tumbleT[0], o.tumbleT[1]);
+          var sway    = flutter ? rnd(o.sway[0], o.sway[1]) : rnd(2, 8);
+          var drift   = flutter ? rnd(-o.drift/2.5, o.drift/2.5) : rnd(-o.drift, o.drift);
+          var bob     = flutter ? rnd(o.bob[0], o.bob[1]) : rnd(2, 4);
+
+          /* set every property once - they inherit down to .w and .f */
+          var p = document.createElement("i"); p.className = "p";
+          p.style.cssText =
+            "--x:"     + rnd(-2, 98).toFixed(1) + "%;" +
+            "--dist:"  + dist + "px;" +
+            "--fall:"  + fall.toFixed(2) + "s;" +
+            "--delay:" + delay.toFixed(2) + "s;" +
+            "--drift:" + drift.toFixed(0) + "px;" +
+            "--sway:"  + sway.toFixed(0) + "px;" +
+            "--bob:"   + bob.toFixed(1) + "px;" +
+            "--rockT:" + rockT.toFixed(2) + "s;" +
+            /* capped short of 90deg: even at max tilt the face still reads */
+            "--amp:"   + Math.round(rnd(o.amp[0], o.amp[1])) + "deg;" +
+            "--yaw:"   + Math.round(rnd(-o.yaw, o.yaw)) + "deg;" +
+            "--tilt:"  + Math.round(rnd(-o.tilt, o.tilt)) + "deg;" +
+            "--z:"     + z.toFixed(2) + ";" +
+            "--dim:"   + (0.72 + (z - o.depth[0]) /
+                          (o.depth[1] - o.depth[0]) * 0.28).toFixed(2) + ";" +
+            /* shapes stay legible by ASPECT RATIO, not size - see the shape table */
+            "--c:"     + pair[0] + ";--c2:" + pair[1] + ";";
+
+          var w = document.createElement("i"); w.className = "w";
+          var f = document.createElement("i");
+          f.className = "f " + o.shapes[Math.floor(Math.random() * o.shapes.length)] +
+                        (flutter ? "" : " tum");
+          w.appendChild(f); p.appendChild(w); wrap.appendChild(p);
+        }
+        host.appendChild(wrap);
+        /* lifetime is computed, not hard-coded - a longer fall cannot be cut off */
+        setTimeout(function(){ wrap.remove(); }, (maxLife + 0.3) * 1000);
+      });
+    },
+    /* stops a slide advancing mid-celebration. 8s safety cap. */
+    after: function(fn){
+      var started = Date.now();
+      (function check(){
+        if(!document.querySelector(".fx-confetti") || Date.now() - started > 8000){ fn(); return; }
+        setTimeout(check, 200);
+      })();
+    }
+  };
+})();
+/* ===== FLN ANIMATION KIT: confetti END ===== */
+
+/* ---- the stage scale the pieces are sized with (the game's fit(): its 1333 x 750 stage contain-fitted to the
+   window). Skip it (window.FLN_OWN_SCALE = true before this file) if your page already sets --scale. ---- */
+(function(){
+  if(window.FLN_OWN_SCALE) return;
+  function fit(){
+    var vw = (window.visualViewport ? window.visualViewport.width  : document.documentElement.clientWidth)  || window.innerWidth;
+    var vh = (window.visualViewport ? window.visualViewport.height : document.documentElement.clientHeight) || window.innerHeight;
+    document.documentElement.style.setProperty("--scale", Math.min(vw / 1333, vh / 750));
+  }
+  fit(); window.addEventListener("resize", fit);
+  if(window.visualViewport) window.visualViewport.addEventListener("resize", fit);
+})();
