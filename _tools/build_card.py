@@ -278,6 +278,8 @@ async def main():
       # gate = peek once -> talk while the gate VO sounds -> rest; end_anim = 3 sprite sheets lip-synced to
       # the celebration VO (bits = 1 char / 25 ms, from celebration_kit/make_lipsync.py on cap_well_done.mp3)
       "gate": {"img": "assets/UI/gate_peek.webp", "peek": "assets/UI/gate_peek.webp", "talk": "assets/UI/gate_talk.webp", "rest": "assets/UI/gate_rest.webp", "peek_ms": 1520, "hold_ms": 450},
+      # end screen Swiftee: standard end-animation sheets + VO lip-sync data (_tools/build_end_sprite.py)
+      "end_sprite": json.load(open(os.path.join(ROOT, "_tools", "end_sprite.json"), encoding="utf8")) if os.path.exists(os.path.join(ROOT, "_tools", "end_sprite.json")) else None,
       "slides": [dict(sl, data=dict(sl.get("data") or {}, flip=True)) if sl["id"] in ("T2", "T3", "G1", "G2", "P1") else sl for sl in SLIDES],   # these 4 scenes are mirrored (user, Oct 5)
       "assets": {"audio": audio, "audio_text": audio_text, "audio_cues": cues,
                  "image": {"cap_shop_bg": "assets/Images/cap_shop_bg.jpg", "cap_shop_order": "assets/Images/cap_shop_order.jpg", "cap_shop_front": "assets/Images/cap_shop_front.png", "cap_shop_man": "assets/Images/cap_shop_man.png", "cap_shop_woman": "assets/Images/cap_shop_woman.png", "cap_shop_boy": "assets/Images/cap_shop_boy.png", "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",

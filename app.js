@@ -5252,11 +5252,13 @@ const SlideModules = {
       state.ownsAudio = true; try{ bgmStop(); }catch(e){}
       { const _em = document.querySelector("#endScreen .end-mascot");
         const _set = (u)=>{ try{ if(!_em) return; _em.style.display = ""; _em.removeAttribute("src"); void _em.offsetWidth; _em.setAttribute("src", u); }catch(e){} };
-        _set("assets/Images/last_swifty_still.webp");
+        let _sw = null; try{ _sw = capEndSwiftee(CARD.end_sprite, _em); }catch(e){ _sw = null; }   // lip-synced standard sheets
+        if(!_sw) _set("assets/Images/last_swifty_still.webp");
         let _spoke = false;
         const _speak = ()=>{ if(_spoke || state.idx !== CARD.slides.indexOf(slide)) return; _spoke = true;
-          _set("assets/Images/last_swifty_end.webp?n=" + (window.__endSwN = (window.__endSwN || 0) + 1));
-          play("assets/Audio/" + (slide.audio && slide.audio.prompt) + "." + AUDIO_EXT, ()=>{}); };
+          if(!_sw) _set("assets/Images/last_swifty_end.webp?n=" + (window.__endSwN = (window.__endSwN || 0) + 1));
+          play("assets/Audio/" + (slide.audio && slide.audio.prompt) + "." + AUDIO_EXT, ()=>{ if(_sw) _sw.voEnd(); });
+          if(_sw) _sw.voStart(); };
         setTimeout(_speak, 1800); _sfxFile("sfx_celebrate", _speak); }
       /* [30i] NO TEXT ON THE LAST PAGE — Yasir 2026-07-30: "there should be no sentence on the last
          page, no praising nothing. the only writings allowed on that page is inside the button, other
@@ -11752,6 +11754,60 @@ function capAskNumber(ctx, stage, spec, o){
   ctx.replayFn = ()=>{ if(!busy && !done) ctx.say(spec.q); };
   ctx.say(spec.q);
 }
+/* [end screen] Swiftee from the STANDARD end-animation sheets (_tools/build_end_sprite.py -> CARD.end_sprite).
+   Still (mouth shut) until the VO starts; on the first word «शाबाश!» the arms-up cheer; then the talk sheet, whose
+   mouth follows the VO itself - CARD.end_sprite.bits says, every 25 ms of the clip, whether the voice is sounding,
+   read against the clip's OWN clock (the audio element's time), so the lips open only while the voice sounds; when
+   the VO ends he settles on a mouth-shut frame and stays still. Both sheets share one frame size, scale, foot line
+   and centre, and both stay painted (only the visible one changes), so a switch never jumps or blinks. Only frames
+   where he is fully inside the frame are used - nothing is cropped. */
+let _endSwGen = 0;
+function capEndSwiftee(E, img){
+  if(!E || !img || !img.parentNode) return null;
+  const gen = ++_endSwGen;
+  let box = document.getElementById("endSw");
+  if(!box){ box = document.createElement("div"); box.id = "endSw"; box.className = "end-sw";
+    box.innerHTML = '<div class="end-sw-art" data-k="s"></div><div class="end-sw-art" data-k="t"></div>'; img.parentNode.insertBefore(box, img); }
+  img.style.display = "none"; box.style.display = "";
+  box.classList.remove("in"); void box.offsetWidth; box.classList.add("in");
+  const S = E.shabaash, T = E.talk, L = { s: box.querySelector('[data-k="s"]'), t: box.querySelector('[data-k="t"]') };
+  [[L.s, S], [L.t, T]].forEach(([el, sh])=>{ el.style.width = E.fw + "px"; el.style.height = E.fh + "px";
+    el.style.left = (165 - E.cx) + "px"; el.style.top = (461 - E.feet) + "px";      // same feet + centre as the old 330 x 465 picture
+    el.style.backgroundImage = 'url("' + sh.src + '")'; el.style.backgroundSize = (sh.cols * 100) + "% " + (sh.rows * 100) + "%"; });
+  let cur = "";
+  const show = (sh, i)=>{ const key = (sh === S ? "s" : "t") + i; if(key === cur) return; cur = key;
+    const el = sh === S ? L.s : L.t, c = i % sh.cols, r = Math.floor(i / sh.cols);
+    el.style.backgroundPosition = (sh.cols > 1 ? c * 100 / (sh.cols - 1) : 0) + "% " + (sh.rows > 1 ? r * 100 / (sh.rows - 1) : 0) + "%";
+    L.s.style.opacity = sh === S ? "1" : "0"; L.t.style.opacity = sh === S ? "0" : "1"; box.dataset.f = key; };
+  const OPEN = new Set(T.open), bits = E.bits || "", step = E.step_ms || 25, STILL = 3;   // talk 3: standing, mouth shut
+  const loud = (t)=> bits.charAt(Math.floor(t / step)) === "1";
+  const pick = (list, t, a, b)=> list[Math.min(list.length - 1, Math.max(0, Math.floor((t - a) / Math.max(1, b - a) * list.length)))];
+  const cheer = S.pre.concat(S.up), post = S.post, W0 = Math.max(0, E.word_start - 120);   // the arms start a hair before the word
+  show(T, STILL);
+  let mode = "wait", t0 = 0, cursor = STILL, open = false, last = 0;
+  const clock = ()=>{ const el = currentAudio;
+    if(el) return el.currentTime > 0 ? el.currentTime * 1000 : -1;
+    if(currentVoiceSource){ if(!t0) t0 = performance.now(); return performance.now() - t0; }
+    return -1; };
+  const frame = ()=>{
+    if(gen !== _endSwGen || !box.isConnected || mode !== "run") return;
+    const t = clock(), now = performance.now();
+    if(t >= 0){
+      if(t < W0) show(T, STILL);
+      else if(t < E.word_end) show(S, pick(cheer, t, W0, E.word_end));
+      else if(t < E.talk_start){ const pe = Math.min(E.talk_start, E.word_end + 700); show(S, t < pe ? pick(post, t, E.word_end, pe) : post[post.length - 1]); }
+      else { const want = loud(t + 30);              // one paint ahead
+        if(want !== open || now - last > 90){ let k = 1; while(k < 36 && OPEN.has((cursor + k) % 36) !== want) k++;
+          cursor = (cursor + k) % 36; show(T, cursor); open = want; last = now; } }
+    }
+    requestAnimationFrame(frame); };
+  return {
+    voStart(){ if(mode === "wait"){ mode = "run"; requestAnimationFrame(frame); } },
+    voEnd(){ mode = "done";                             // settle: mouth shut, then stay still
+      if(cur.charAt(0) === "s"){ show(T, STILL); return; }
+      if(OPEN.has(cursor)){ let k = 1; while(k < 36 && OPEN.has((cursor + k) % 36)) k++; cursor = (cursor + k) % 36; show(T, cursor); } }
+  };
+}
 /* idle helper: after `ms` with no action, run fn (re-armed by the caller) */
 function capIdle(ctx, ms, fn){ let t = null;
   const api = { arm(){ clearTimeout(t); t = setTimeout(()=>{ if(ctx.alive()) fn(); }, ms); }, stop(){ clearTimeout(t); } };
@@ -12869,11 +12925,19 @@ Object.assign(SlideModules, {
         ctx.after(1300, ()=> Object.values(BV).forEach(b => { b.el.style.transform = atCounter(b);   // ...then the bottles settle back onto the counter
           const c = b.card, cc = zl && zl.querySelector(".cap-counter-card." + b.spec.key); if(!c || !cc) return;   // ...and their cards ride along
           const sx = cc.offsetWidth / c.offsetWidth, dx = parseFloat(cc.style.left) - parseFloat(c.style.left), dy = parseFloat(cc.style.top) - parseFloat(c.style.top);
+          // the card (glasses + their numbers) is ONE unit for the whole move: its pop-in animations are frozen in
+          // their end state, so nothing replays, hides or re-creates when it is handed over to the counter scene
+          c.querySelectorAll("*").forEach(e => { e.style.animation = "none"; });
           c.style.animation = "none"; c.style.transformOrigin = "50% 0"; c.style.transition = "transform 1.4s cubic-bezier(.45,0,.2,1)";
+          void c.offsetWidth;   // let the frozen state settle first - otherwise the move starts in the same frame and jumps instead of gliding
           c.style.transform = `translateX(-50%) translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${sx.toFixed(3)})`; }));
         ctx.after(2800, ()=>{ d.vessels.forEach(sp => { V[sp.key].el.style.visibility = ""; });
-          if(zl) zl.querySelectorAll(".cap-counter-card").forEach(cc => { cc.style.visibility = ""; });
+          if(zl) zl.querySelectorAll(".cap-counter-card").forEach(cc => cc.remove());   // only a landing guide - the carried card stays
           [...zl.children].forEach(c => scene.insertBefore(c, zl)); zl.remove(); zl = null;
+          // the same card element moves from the close-up layer to the counter, at the exact same spot (no transform on
+          // either layer by now), and stays under its bottle with its numbers until that bottle is delivered
+          Object.values(BV).forEach(b => { const c = b.card; if(!c) return; c.style.transition = "none";
+            c.classList.add("cap-shop-card", b.spec.key); c.style.zIndex = "7"; scene.appendChild(c); });
           bview.remove(); bview = null; scene.classList.remove("zooming"); busy = false; then(); }); };
       // ---- pouring view (Figma "puring view") ----
       /* measuring (Figma "puring view"): the EMPTY bottle + five glasses FULL of milk. The child taps the glasses
@@ -12951,7 +13015,7 @@ Object.assign(SlideModules, {
          their hands (chest height, in front of the body), they give a little catch-dip, say thanks, and walk out
          of the frame still holding it (the bottle becomes part of the customer's body, so it moves with them). */
       const deliver = (v, ci, dx, dy)=>{ delivered.add(v.spec.key); v.el.classList.remove("draggable", "cap-hl-loop", "dragging"); custGlow(ci, false);
-        const r = custRect(ci), chip = scene.querySelector(".cap-chip." + v.spec.key); if(chip) chip.style.opacity = "0";
+        const r = custRect(ci), chip = scene.querySelector(".cap-shop-card." + v.spec.key + ", .cap-chip." + v.spec.key); if(chip) chip.style.opacity = "0";
         const bub = scene.querySelectorAll(".cap-bubble")[ci]; if(bub) bub.classList.add("done");
         SwiftPAL.emit("shop_deliver", { slide_id: slide.id, vessel: v.spec.key, customer: NAMES[ci] });
         busy = true; sfxTap();
@@ -14352,7 +14416,7 @@ function boot(){
     const PRELOAD_EXTRA = ["assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
     const urls = new Set(PRELOAD_EXTRA);
     (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
-      if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.landing_hero]);
+      if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.end_sprite, CARD.landing_hero]);
     const keep = window._capPreloaded = [];
     const one = (u)=> new Promise(res => { let done = false; const fin = ()=>{ if(!done){ done = true; res(); } };
       setTimeout(fin, 12000);                                       // a slow / missing file never blocks the start
