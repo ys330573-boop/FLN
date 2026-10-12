@@ -735,6 +735,8 @@ function setPlaying(on){
   // .playing toggle across the header chip AND the tut-card replay chip (the header is hidden in the
   // tut frame, so the in-card .tut-audio is the only visible affordance and must react to VO too).
   isPlaying=on;
+  try{ if(document.body.classList.contains("is-start")){ const m = document.querySelector(".start-gate .sg-mascot");   // title: Swiftee animates only while the VO plays
+    const want = "assets/UI/new_landing_swiftee_" + (on ? "anim" : "still") + ".webp"; if(m && m.getAttribute("src") !== want) m.setAttribute("src", want); } }catch(e){}
   if(on) _voStart = Date.now();   // drag VO-gate 4s safety: stamp when a VO began so a stalled clip can't soft-lock the tiles
   document.querySelectorAll(".audio-chip, .tut-audio, .sg-vo").forEach(c => c.classList.toggle("playing", on && !isMuted));
   /* [30g] VO LOCK — UNTAPPABLE, ZERO VISUAL. Yasir 2026-07-30: "cards untappable when VO being
@@ -11699,7 +11701,7 @@ function capPour(ctx, src, dst, o){
 function capAskNumber(ctx, stage, spec, o){
   const slide = ctx.slide, isMastery = slide.phase === "practice";
   if(slide.ask_prompt_hi) $("promptText").textContent = slide.ask_prompt_hi;
-  const col = document.createElement("div"); col.className = "cap-opts" + (o.row ? " row" : "");
+  const col = document.createElement("div"); col.className = "cap-opts cap-opts-seq" + (o.row ? " row" : "");
   col.style.left = (o.x || 850) + "px"; col.style.top = (o.y || 70) + "px";
   let attempts = 0, done = false, busy = false, onlyRight = false, rightCell = null;
   const countEls = o.countEls || [];
@@ -11752,7 +11754,10 @@ function capAskNumber(ctx, stage, spec, o){
   $("hintBtn").onclick = ()=>{ if(done || busy) return; state.hintUsed = true; SwiftPAL.emit("hint_shown", { slide_id: slide.id, manual: true });
     busy = true; ctx.say(attempts >= 2 ? spec.h2 : spec.h1, attempts >= 2 ? h2Handlers : null, ()=>{ busy = false; }); };
   ctx.replayFn = ()=>{ if(!busy && !done) ctx.say(spec.q); };
-  ctx.say(spec.q);
+  // options come in ONE BY ONE, each with a soft pop (checklist); the question is asked once they are all there
+  const cells = [...col.children], GAP = 380;
+  cells.forEach((c, i)=> ctx.after(150 + i * GAP, ()=>{ c.classList.add("cap-opt-in"); try{ capSfxPop(true); }catch(e){} }));
+  ctx.after(150 + cells.length * GAP + 150, ()=>{ if(!done && !busy) ctx.say(spec.q); });   // not if the child already tapped a card
 }
 /* [end screen] Swiftee from the STANDARD end-animation sheets (_tools/build_end_sprite.py -> CARD.end_sprite).
    Still (mouth shut) until the VO starts; on the first word «शाबाश!» the arms-up cheer; then the talk sheet, whose
@@ -14413,7 +14418,7 @@ function boot(){
        or stutters later. Each item has its own timeout and errors count as done, and a 30 s watchdog still
        guarantees the child is never stranded on the loader. The objects are kept (window._capPreloaded) so
        the browser keeps them in memory. */
-    const PRELOAD_EXTRA = ["assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
+    const PRELOAD_EXTRA = ["assets/UI/new_landing_swiftee_still.webp", "assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
     const urls = new Set(PRELOAD_EXTRA);
     (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
       if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.end_sprite, CARD.landing_hero]);

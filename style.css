@@ -4722,3 +4722,9 @@ html.no-anim body.is-start .sg-mascot,html.no-anim body.is-start .sg-vo{animatio
 .end-screen .end-sw.in{animation:endSwIn .5s cubic-bezier(.22,1,.36,1) both;}
 @keyframes endSwIn{from{opacity:0;transform:translateY(18px) scale(.96);}to{opacity:1;transform:none;}}
 .end-screen .end-sw-art{position:absolute;background-repeat:no-repeat;will-change:background-position;}
+/* number-card options come in one by one (each with a pop): the row itself no longer slides in as one piece */
+.cap-opts.cap-opts-seq{animation:none;}
+.cap-opts.cap-opts-seq .opt-cell{opacity:0;transform:translateY(14px) scale(.7);pointer-events:none;}
+.cap-opts.cap-opts-seq .opt-cell.cap-opt-in{opacity:1;transform:none;pointer-events:auto;transition:opacity .22s ease,transform .38s cubic-bezier(.34,1.56,.64,1);}
+/* title speaker button 70 px (checklist), same centre as the 58 px one */
+.start-gate .sg-card .sg-vo{width:70px !important;height:70px !important;left:75px !important;bottom:-20px !important;}
