@@ -74,36 +74,40 @@ LINES = {
   "cap_p7_q": ("इस जार में कितने कप तेल है? सही संख्या पर टैप करिए।", SWIFTEE, []),
   "cap_p7_ok": ("शाबाश! इस जार से चार कप पूरे भर गए।", SWIFTEE, []),
   "cap_p7_h1": ("दोबारा गिनिए कि कितने कप पूरे भरे हैं।", SWIFTEE, []),
-  "cap_p7_h2": ("एक, दो, तीन, चार। कुल चार कप भरे हैं। सही संख्या यह है।", SWIFTEE,
-                [("एक", "n1"), ("दो", "n2"), ("तीन", "n3"), ("चार", "n4"), ("सही संख्या", "show")]),
+  "cap_p7_h2": ("एक, दो, तीन, चार। कुल चार कप भरे हैं।", SWIFTEE,
+                [("एक", "n1"), ("दो", "n2"), ("तीन", "n3"), ("चार", "n4")]),
 
   # PAGE 8 — cups of milk into a saucepan
+  "cap_p7_h3": ("सही संख्या यह है। इस पर टैप करिए।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
   "cap_p8_a": ("यहाँ दस कप दूध से पूरे भरे हुए हैं, और एक छोटा भगोना पूरा खाली है। कपों का दूध एक-एक करके भगोने में डालिए, और देखिए कि भगोना कितने कप से भरता है।",
                SWIFTEE, [("दस कप", "cups"), ("एक छोटा भगोना", "pan")]),
   "cap_p8_b": ("अब आप करिए। बचे हुए कपों का दूध भगोने में डालिए।", SWIFTEE, []),
   "cap_p8_q": ("यह भगोना कितने कप दूध से पूरा भर गया? सही संख्या पर टैप करिए।", SWIFTEE, []),
   "cap_p8_ok": ("शाबाश! यह भगोना आठ कप दूध से पूरा भर गया।", SWIFTEE, []),
   "cap_p8_h1": ("दोबारा गिनिए कि कितने कप खाली हुए हैं।", SWIFTEE, []),
-  "cap_p8_h2": ("एक, दो, तीन, चार, पाँच, छह, सात, आठ। कुल आठ कप खाली हुए हैं। सही संख्या यह है।", SWIFTEE,
-                [(N[i], "n%d" % i) for i in range(1, 9)] + [("सही संख्या", "show")]),
+  "cap_p8_h2": ("एक, दो, तीन, चार, पाँच, छह, सात, आठ। कुल आठ कप खाली हुए हैं।", SWIFTEE,
+                [(N[i], "n%d" % i) for i in range(1, 9)]),
 
   # PAGE 9 — tap the bottle, it fills the glasses
+  "cap_p8_h3": ("सही संख्या यह है। इस पर टैप करिए।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
   "cap_p9_a": ("यहाँ एक बोतल पानी से पूरी भरी हुई है, और चार खाली गिलास रखे हुए हैं। बोतल में कितने गिलास पानी की मात्रा है, यह जानने के लिए बोतल से सारा पानी इन खाली गिलासों में डालना होगा। अब बोतल पर टैप करिए।",
                SWIFTEE, [("एक बोतल", "bottle"), ("चार खाली गिलास", "glasses")]),
   "cap_p9_q": ("इस बोतल में पानी की मात्रा कितने गिलास के बराबर है? सही संख्या पर टैप करिए।", SWIFTEE, []),
   "cap_p9_ok": ("शाबाश! इस बोतल में पानी की मात्रा कुल तीन गिलास के बराबर है।", SWIFTEE, []),
   "cap_p9_h1": ("दोबारा देखिए कि कितने गिलास पूरे भरे हैं।", SWIFTEE, []),
-  "cap_p9_h2": ("एक, दो, तीन। कुल तीन गिलास भरे हैं। सही संख्या यह है।", SWIFTEE,
-                [("एक", "n1"), ("दो", "n2"), ("तीन", "n3"), ("सही संख्या", "show")]),
+  "cap_p9_h2": ("एक, दो, तीन। कुल तीन गिलास भरे हैं।", SWIFTEE,
+                [("एक", "n1"), ("दो", "n2"), ("तीन", "n3")]),
 
   # PAGE 10 — mugs of oil into an empty jug
+  "cap_p9_h3": ("सही संख्या यह है। इस पर टैप करिए।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
   "cap_p10_a": ("यहाँ एक खाली जग है, और छह छोटे मग हैं, जो तेल से पूरे भरे हुए हैं। मगों का तेल एक-एक करके जग में डालिए, और देखिए कितने मग से यह जग पूरा भरता है।",
                 SWIFTEE, [("एक खाली जग", "jug"), ("छह छोटे मग", "mugs")]),
   "cap_p10_q": ("यह जग कितने मग तेल से पूरा भरा है? सही संख्या पर टैप करिए।", SWIFTEE, []),
   "cap_p10_ok": ("शाबाश! यह जग छह मग तेल से पूरा भर गया।", SWIFTEE, []),
   "cap_p10_h1": ("दोबारा गिनिए कि कितने मग खाली हुए हैं।", SWIFTEE, []),
-  "cap_p10_h2": ("एक, दो, तीन, चार, पाँच, छह। कुल छह मग खाली हुए हैं। सही संख्या यह है।", SWIFTEE,
-                 [(N[i], "n%d" % i) for i in range(1, 7)] + [("सही संख्या", "show")]),
+  "cap_p10_h2": ("एक, दो, तीन, चार, पाँच, छह। कुल छह मग खाली हुए हैं।", SWIFTEE,
+                 [(N[i], "n%d" % i) for i in range(1, 7)]),
+  "cap_p10_h3": ("सही संख्या यह है। इस पर टैप करिए।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
 
   # PAGE 11 — the village milk shop
   "cap_p11_a": ("सुबह का समय है। गाँव में दूधवाले की दुकान खुल गई है। तभी तीन लोग दूध लेने दुकान पर आते हैं।", SWIFTEE, [("तीन लोग", "people")]),
@@ -121,6 +125,7 @@ LINES = {
   "cap_p11_w2_2": ("इस बोतल में दो गिलास दूध है। यह उन्हें दीजिए, जिन्हें दो गिलास दूध चाहिए।", SWIFTEE, [("यह उन्हें", "show")]),
   "cap_p11_w2_3": ("इस बोतल में तीन गिलास दूध है। यह उन्हें दीजिए, जिन्हें तीन गिलास दूध चाहिए।", SWIFTEE, [("यह उन्हें", "show")]),
   "cap_p11_w2_4": ("इस बोतल में चार गिलास दूध है। यह उन्हें दीजिए, जिन्हें चार गिलास दूध चाहिए।", SWIFTEE, [("यह उन्हें", "show")]),
+  "cap_p11_w3": ("यह बोतल इन्हें दीजिए।", SWIFTEE, [("इन्हें", "show")]),   # 3rd wrong drop: the right customer is shown
   "cap_p11_t1": ("धन्यवाद!", MAN, []),
   "cap_p11_t2": ("धन्यवाद!", WOMAN, []),
   "cap_p11_t3": ("धन्यवाद!", BOY, []),
@@ -140,7 +145,7 @@ for i in range(1, 11):
 def ask(page, values, answer):
     return {"values": values, "answer": answer,
             "q": "cap_p%s_q" % page, "ok": "cap_p%s_ok" % page,
-            "h1": "cap_p%s_h1" % page, "h2": "cap_p%s_h2" % page}
+            "h1": "cap_p%s_h1" % page, "h2": "cap_p%s_h2" % page, "h3": "cap_p%s_h3" % page}
 
 SLIDES = [
   {"id": "T1", "phase": "tutorial", "eis": "iconic", "type": "CAP_COMPARE_PICK",
@@ -180,7 +185,7 @@ SLIDES = [
    "prompt_hi": "कितने गिलास भरें?", "ask_prompt_hi": "भरी हुई बोतल सही ग्राहक को दीजिए।",
    "audio": {"intro": "cap_p11_a", "customers": ["cap_p11_c1", "cap_p11_c2", "cap_p11_c3"],
              "tap_all": "cap_p11_b", "tap_vessel": "cap_p11_tap", "q": "cap_p11_q", "ok": "cap_p11_ok",
-             "w1": "cap_p11_w1", "w2": {"2": "cap_p11_w2_2", "3": "cap_p11_w2_3", "4": "cap_p11_w2_4"},
+             "w1": "cap_p11_w1", "w2": {"2": "cap_p11_w2_2", "3": "cap_p11_w2_3", "4": "cap_p11_w2_4"}, "w3": "cap_p11_w3",
              "thanks": ["cap_p11_t1", "cap_p11_t2", "cap_p11_t3"]},
    "data": {"target": 4, "liquid": "milk", "idle_ms": 7000,
             # Figma "order view": three milk bottles on the counter, big / middle / small (left → right)
@@ -284,7 +289,7 @@ async def main():
       "assets": {"audio": audio, "audio_text": audio_text, "audio_cues": cues,
                  "image": {"cap_shop_bg": "assets/Images/cap_shop_bg.jpg", "cap_shop_order": "assets/Images/cap_shop_order.jpg", "cap_shop_front": "assets/Images/cap_shop_front.png", "cap_shop_man": "assets/Images/cap_shop_man.png", "cap_shop_woman": "assets/Images/cap_shop_woman.png", "cap_shop_boy": "assets/Images/cap_shop_boy.png", "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
                            "cap_landing_strip": "assets/Images/cap_landing_strip.png", "cap_landing_pour": "assets/Images/cap_landing_pour.jpg", "cap_cover": "assets/Images/cap_cover.jpg", "cap_cover_wide": "assets/Images/cap_cover_wide.jpg", "cap_cover_v2": "assets/Images/cap_cover_v2.jpg",
-                           "cap_glass": "assets/Images/cap_glass.png", "cap_bowl": "assets/Images/cap_bowl.png", "cap_plate": "assets/Images/cap_plate.svg", "cap_glass_new": "assets/Images/cap_glass_new.png", "cap_mug_new": "assets/Images/cap_mug_new.png", "cap_mug": "assets/Images/cap_mug.png", "cap_cup": "assets/Images/cap_cup.png"}},
+                           "cap_glass": "assets/Images/cap_glass.png", "cap_bowl": "assets/Images/cap_bowl.png", "cap_plate": "assets/Images/cap_plate.svg", "cap_glass_new": "assets/Images/cap_glass_new.png", "cap_mug_new": "assets/Images/cap_mug_new.png", "cap_glass_t1": "assets/Images/cap_glass_t1.svg", "cap_mug_t1": "assets/Images/cap_mug_t1.svg", "cap_mug": "assets/Images/cap_mug.png", "cap_cup": "assets/Images/cap_cup.png"}},
     }
     js = json.dumps(card, ensure_ascii=False, indent=2)
     open(os.path.join(ROOT, "card.json"), "w", encoding="utf8").write(js)
