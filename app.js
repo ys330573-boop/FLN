@@ -729,6 +729,31 @@ function _loadVoiceBuffer(src){
 let isMuted = false;
 function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAudio();
   document.querySelectorAll(".audio-chip").forEach(c => c.classList.toggle("muted", m)); }
+/* title screen: the cover title pops in as the greeting starts and pops again on "कितना पानी है" (8.97 s into
+   cap_landing), on the clip's own clock; a speaker replay does it again. Never left hidden (fallback 4 s). */
+(function(){
+  const POP_MS = 8900; let shown = false, popped = false, srcT0 = 0, wasPlaying = false;
+  const T = ()=> document.querySelector(".start-gate .sg-cover-title");
+  const show = ()=>{ const t = T(); if(t && !shown){ shown = true; t.classList.add("in"); } };
+  const tick = ()=>{
+    if(!document.body.classList.contains("is-start") && shown) return;            // left the title screen
+    const t = T();
+    if(t && document.body.classList.contains("is-start")){
+      if(typeof isPlaying !== "undefined" && isPlaying && !wasPlaying){ popped = false; srcT0 = 0; }   // greeting (re)starts
+      wasPlaying = (typeof isPlaying !== "undefined") && isPlaying;
+      if(wasPlaying){
+        const el = (typeof currentAudio !== "undefined") ? currentAudio : null;
+        let ms = -1;
+        if(el){ if(el.currentTime > 0) ms = el.currentTime * 1000; }
+        else if(typeof currentVoiceSource !== "undefined" && currentVoiceSource){ if(!srcT0) srcT0 = performance.now(); ms = performance.now() - srcT0; }
+        if(ms >= 0) show();
+        if(ms >= POP_MS - 60 && !popped && shown){ popped = true; t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop"); }
+      }
+    }
+    requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  window.addEventListener("load", ()=> setTimeout(show, 4000));
+})();
 function setPlaying(on){
   setTimeout(()=>{ try{ bgmUpdate(); }catch(e){} }, 0);   /* REF2: music ducks under every spoken line */
   // the dynamic Swiftie sits header-left; the audio chips pulse to signal playback. r4/F1: share the
@@ -12001,6 +12026,13 @@ function capArtVessel(kind, o){
     `<clipPath id="${u}lv"><rect class="cap-lv" x="-4000" y="0" width="8000" height="8000"/></clipPath></defs>` +
     `<g transform="translate(${sx} ${sy})">${A.corkUnder ? `<g class="cap-cork">${T(A.cork)}</g>` : ""}${T(A.back)}<g class="cap-milk" clip-path="url(#${u}lv)">${T(A.milk)}</g>` +
     `<g class="cap-surf">${T(A.surf)}</g>${T(A.front)}${A.corkUnder ? "" : `<g class="cap-cork">${T(A.cork)}</g>`}</g></svg>`;   // corkUnder: the cork sits IN the neck (glass drawn over it)
+  /* shop milk bottles: the glass lip ring flared out far more on the big bottle (6 px a side vs 3.5 on the small) -
+     its sides are trimmed to the neck width + 5% a side, the SAME proportion on all three; the body is untouched */
+  const NECK = { shopb4: [71.25, 590, 179.88], shopb3: [49.25, 590, 360.88], shopb2: [38.75, 590, 535.38] }[kind];   // neck width, ring bottom, neck centre (art units, measured)
+  if(NECK && o.art === CAP_SHOP_ART){ const ncx = NECK[2], half = NECK[0] * 0.55, yb = NECK[1], cid = u + "ring";   // art units (the clip lives inside the shifted group)
+    el.querySelector("svg > defs").insertAdjacentHTML("beforeend", `<clipPath id="${cid}" clipPathUnits="userSpaceOnUse">` +
+      `<rect x="-5000" y="${yb}" width="10000" height="10000"/><rect x="${(ncx - half).toFixed(2)}" y="-5000" width="${(half * 2).toFixed(2)}" height="${(5000 + yb + 1).toFixed(2)}" rx="${(half * 0.12).toFixed(2)}"/></clipPath>`);
+    el.querySelector("svg > g").setAttribute("clip-path", `url(#${cid})`); }
   const lv = el.querySelector(".cap-lv"), milk = el.querySelector(".cap-milk"), surf = el.querySelector(".cap-surf");
   const H = A.yBot - A.yTop, cx = (A.xTop[0] + A.xTop[1]) / 2, wTop = A.xTop[1] - A.xTop[0], wBot = A.xBot[1] - A.xBot[0];
   const O = [cx, A.yBot];   // rotation reference for the clip plane (any fixed point works)
@@ -12452,7 +12484,7 @@ Object.assign(SlideModules, {
       // both stand on the SAME base line (each placed by its own height, so their bottoms are pixel-equal)
       // ASSETE MAP "water glass.svg" + "small mug.svg" (empty), the mug clearly bigger; each placed by where its
       // base ends (yBot), so both bases stand on the same line (BASE) - their soft floor shadows fall below it
-      const gv = capArtVessel("wglass", { w: 165, level: 0, liquid: "water" }), mv = capArtVessel("smallmug", { w: 250, level: 0, liquid: "water" });
+      const gv = capArtVessel("wglass", { w: 165, level: 0, liquid: "water" }), mv = capArtVessel("smallmug", { w: 280, level: 0, liquid: "water" });
       // empty + clean: both get the same pale glass tint inside their body (the mug's body is otherwise see-through - it is
       // the window its oil shows through - and the glass's grey inner shading made it look murky)
       const tint = (v, art, dropGrey)=>{ const g = v.el.querySelector("svg > g"); if(!g) return;
@@ -12463,11 +12495,13 @@ Object.assign(SlideModules, {
       tint(gv, "wglass", true); tint(mv, "smallmug", false);
       const FOOT = { wglass: 0.994, smallmug: 0.97 };      // where each picture's base really ends (measured; the shadow below is extra)
       const footY = (v, art)=> BASE - v.h * FOOT[art];
-      const glass = capAdd(stage, gv, 265, footY(gv, "wglass")), mug = capAdd(stage, mv, 485, footY(mv, "smallmug"));
+      const glass = capAdd(stage, gv, 250, footY(gv, "wglass")), mug = capAdd(stage, mv, 470, footY(mv, "smallmug"));
       glass.el.classList.add("cap-t1-v"); mug.el.classList.add("cap-t1-v");
-      let tapOn = false;   // taps count only once the question VO has finished
+      let tapOn = false;
+      // gentle "tap me" pulse while the child has not tapped yet (stops on a tap; after a wrong try only the mug pulses)
+      const wait = (on, only)=>{ [glass, mug].forEach(v => v.el.classList.toggle("cap-t1-wait", on && (!only || v === only))); };   // taps count only once the question VO has finished
       const enableTap = ()=>{ if(tapOn) return; tapOn = true; glass.el.classList.add("tappable"); mug.el.classList.add("tappable");
-        [glass, mug].forEach(v => capFlash(v.el, "cap-t1-pulse", 1900)); };   // VO done: both give a small pulse (now tappable)
+        wait(true); };   // VO done: both pulse gently until the child taps one   // VO done: both give a small pulse (now tappable)
       const mid = capMarker(stage, 480, 330);
       let done = false, onlyMug = false, attempts = 0, idleN = 0, busy = false;
       // inactivity (8.5 s): the hand points at the RIGHT option (the mug) and the mug glows until it is tapped
@@ -12478,18 +12512,18 @@ Object.assign(SlideModules, {
       const glowOff = ()=>{ clearTimeout(glowT); glass.el.classList.remove("cap-glow-on"); mug.el.classList.remove("cap-glow-on"); };
       const hl = (v)=>{ glowOff(); v.el.classList.add("cap-glow-on"); glowT = setTimeout(glowOff, 1500); };
       const cues = { glass: ()=> hl(glass), mug: ()=> hl(mug), both: glowOff };
-      mug.el.onclick = ()=>{ if(done || !tapOn) return; done = true; idle.stop(); stopNudge(); mug.el.classList.remove("cap-hl-loop");
+      mug.el.onclick = ()=>{ if(done || !tapOn) return; done = true; idle.stop(); stopNudge(); wait(false); mug.el.classList.remove("cap-hl-loop");
         glass.el.classList.remove("cap-pulse-loop"); mug.el.classList.add("cap-ok");
         sfxCorrect(); confettiCannon(); setSwMood("happy");
         SwiftPAL.emit("capacity_compare_first_try", { slide_id: slide.id, phase: slide.phase, value: attempts === 0, attempts: attempts + 1 });
         const okId = attempts === 0 ? A.correct : A.correct + "2";   // "शाबाश!" only on a first-try correct answer
         ctx.replayFn = ()=> ctx.say(okId);
         ctx.say(okId, null, ()=>{ setSwMood("point"); capNavOn(); }); };
-      glass.el.onclick = ()=>{ if(done || onlyMug || !tapOn) return; attempts++; onlyMug = true; busy = true; idle.stop(); stopNudge();
+      glass.el.onclick = ()=>{ if(done || onlyMug || !tapOn) return; attempts++; onlyMug = true; busy = true; idle.stop(); stopNudge(); wait(false);
         state.attempts = attempts; glass.el.classList.remove("tappable"); glass.el.classList.add("cap-pulse-loop");
         sfxWrongSoft(); setSwMood("tryagain");
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
-        ctx.say(A.wrong, { mug: ()=> capPoint(mug.el) }, ()=>{ busy = false; glass.el.classList.remove("cap-pulse-loop"); capPoint(mug.el); idle.arm(); }); };
+        ctx.say(A.wrong, { mug: ()=> capPoint(mug.el) }, ()=>{ busy = false; glass.el.classList.remove("cap-pulse-loop"); wait(true, mug); capPoint(mug.el); idle.arm(); }); };
       ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); glowOff(); ctx.say(A.prompt, cues, ()=>{ glowOff(); idle.arm(); }); } };
       ctx.say(A.prompt, cues, ()=>{ glowOff(); enableTap(); idle.arm(); });
     }
@@ -12546,6 +12580,39 @@ Object.assign(SlideModules, {
         ctx.say(A.wrong, { show: ()=>{ b1.classList.add("cap-hl"); capPoint(b1); } }, ()=>{ busy = false; setSwMood("point"); capPoint(b1); idle.arm(); }); };
       ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); boxOff(); glowOff(); ctx.say(A.prompt, wrongOnce ? null : cues, ()=>{ glowOff(); idle.arm(); }); } };
       ctx.say(A.prompt, cues, ()=>{ glowOff(); appear(); setSwMood("point"); enableTap(); idle.arm(); });
+    }
+  },
+
+  /* T4 — "इस जग में पानी कितना आएगा?"  the jug to be measured (placed as on T3) and, on the same shelf, four
+     identical glasses with a cup between them. Watch-only, synced to the VO: the jug glows on "इस जग में…", all
+     the measuring vessels glow on "एक जैसे बर्तनों…", and on "इसलिए इसमें यह कप…" the cup glows, then is dimmed
+     and crossed out (soft grey-blue cross, never red). Then आगे. */
+  CAP_SAME_UNITS: {
+    mount(host, slide){
+      const stage = capStage(host, 400), ctx = capCtx(slide, stage), A = slide.audio, d = slide.data || {};
+      setNavActive(false); setSwMood("teach");
+      const panel = document.createElement("div"); panel.className = "cap-focus cap-focus-tut"; stage.appendChild(panel);
+      const shelf = document.createElement("div"); shelf.className = "cap-shelf cap-shelf-tut"; stage.appendChild(shelf);
+      const BASE = 348;
+      const jug = capArtVessel("jug", { w: 140, level: 0, liquid: "water" }); capAdd(stage, jug, 140, BASE - jug.h);   // as T3
+      const items = []; let cup = null; const n = (d.glasses || 4) + 1;
+      for(let i = 0; i < n; i++){
+        if(i === (d.cup_at ?? 2)){ cup = capArtVessel("teacup", { w: 88, level: 0, liquid: "water" }); cup.el.classList.add("cap-t4-cup");   // ASSETE MAP "cup.svg"
+          items.push(capAdd(stage, cup, 330 + i * 110 - 14, BASE - cup.h)); }
+        else { const g = capArtVessel("glassWater", { w: 60, level: 0, liquid: "water" }); items.push(capAdd(stage, g, 330 + i * 110, BASE - g.h)); }
+      }
+      const all = [jug, ...items], off = ()=> all.forEach(v => v.el.classList.remove("cap-say-glow"));
+      const glow = (list)=>{ off(); list.forEach(v => v.el.classList.add("cap-say-glow")); };
+      const cues = {
+        jug: ()=> glow([jug]),
+        same: ()=> glow(items),
+        cup: ()=>{ glow([cup]); ctx.after(900, ()=>{ off(); cup.el.classList.add("cap-wrong-item");
+          if(!cup.el.querySelector(".cap-x")){ const x = document.createElement("span"); x.className = "cap-x"; x.textContent = "✕";
+            if(cup.el.dataset.mid) x.style.left = (parseFloat(cup.el.dataset.mid) * 100).toFixed(1) + "%";   // over the body, not the handle
+            x.style.top = "56%"; cup.el.appendChild(x); } }); } };
+      const play = (first)=> ctx.say(A.intro, first ? cues : null, ()=>{ off(); setSwMood("point"); capNavOn(); });
+      ctx.replayFn = ()=> play(false);
+      play(true);
     }
   },
 
@@ -14455,7 +14522,7 @@ function boot(){
        or stutters later. Each item has its own timeout and errors count as done, and a 30 s watchdog still
        guarantees the child is never stranded on the loader. The objects are kept (window._capPreloaded) so
        the browser keeps them in memory. */
-    const PRELOAD_EXTRA = ["assets/UI/new_landing_swiftee_still.webp", "assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
+    const PRELOAD_EXTRA = ["assets/Images/cap_cover_v3.jpg", "assets/Images/cap_cover_title.webp", "assets/UI/new_landing_swiftee_still.webp", "assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
     const urls = new Set(PRELOAD_EXTRA);
     (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
       if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.end_sprite, CARD.landing_hero]);

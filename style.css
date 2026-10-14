@@ -4099,7 +4099,7 @@ html:has(.cap-scene.full), body:has(.cap-scene.full){
 .start-gate .sg-card{background:#FCCDB3 url("assets/Images/cap_cover.jpg") center -14px/96% auto no-repeat;}
 .start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:8px;}   /* on the empty shelf front, below the objects */
 /* wide banner-style cover (like the reference title screens): ~2.4 : 1 card, the cover picture fills it */
-.start-gate .sg-card{width:1072px;height:446px;background:#FCCDB3 url("assets/Images/cap_cover_v2.jpg") center/cover no-repeat;}   /* cover page: ASSETE MAP "Group 25.png" */
+.start-gate .sg-card{width:1072px;height:446px;background:#F5C46A url("assets/Images/cap_cover_v3.jpg") center/cover no-repeat;}   /* cover page: ASSETE MAP "cover page.svg" (background layer) */
 .start-gate .sg-card .sg-btn,.start-gate .sg-card .sg-btn.sg-waiting{bottom:10px;width:104px;height:104px;}
 /* new wide cover (no painted title): the game's title is shown again, big and centred on the wall, like the
    reference cover (navy with a thick white outline) */
@@ -4730,8 +4730,8 @@ html.no-anim body.is-start .sg-mascot,html.no-anim body.is-start .sg-vo{animatio
 .start-gate .sg-card .sg-vo{width:70px !important;height:70px !important;left:75px !important;bottom:-20px !important;}
 /* T1: when the question VO ends, the glass and mug give a small pulse (twice), growing from their base so they
    stay on the shelf line */
-.cap-v.cap-t1-v.cap-t1-pulse img,.cap-v.cap-t1-v.cap-t1-pulse > svg{transform-origin:50% 92%;animation:capT1Pulse .85s ease-in-out 2;}
-@keyframes capT1Pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+.cap-v.cap-t1-v.cap-t1-pulse img,.cap-v.cap-t1-v.cap-t1-pulse > svg{transform-origin:50% 96%;animation:capT1Pulse .8s ease-in-out 3;}
+@keyframes capT1Pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
 /* all panel boxes: warm cream panel + soft tan border (asked: like the cream mug-pouring panel) - the T4 option
    boxes too; their yellow / green highlight borders still win (more specific) */
 .cap-focus,.cap-focus.cap-focus-cool{background:radial-gradient(120% 95% at 50% 35%,#FFFBF3 0%,#FEF6E9 60%,#FCF1DF 100%);border-color:#F0E2C6;box-shadow:0 18px 40px rgba(120,80,20,.10);}
@@ -4745,3 +4745,29 @@ html.no-anim body.is-start .sg-mascot,html.no-anim body.is-start .sg-vo{animatio
 .cap-scene.fig .cap-coin.gone{opacity:0;transform:translateY(-14px) scale(.85);}
 @keyframes capCoinDrop{0%{transform:translateY(calc(var(--fall) * -1)) rotateX(60deg);opacity:0;}15%{opacity:1;}
   80%{transform:translateY(0) rotateX(0);}90%{transform:translateY(-8px);}100%{transform:translateY(0);}}
+/* T1: after the question VO, the glass and mug pulse gently (from their base) until the child taps one */
+.cap-v.cap-t1-v.cap-t1-wait > svg,.cap-v.cap-t1-v.cap-t1-wait img{transform-origin:50% 96%;animation:capT1Wait 1.6s ease-in-out infinite;}
+@keyframes capT1Wait{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+/* T4: the cup that is not the same as the glasses - dimmed, with a soft grey-blue cross (never red) */
+.cap-v.cap-wrong-item{opacity:.45;filter:grayscale(.6);transition:opacity .4s ease,filter .4s ease;}
+/* the cross sits in the middle of the cup's body (data-mid = body centre, handle left out); its own pop keyframes
+   (capPop also shifts by -50%, which made the cross jump when the pop ended) */
+.cap-v .cap-x{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:#7A8BA8;color:#fff;
+  font:900 22px/40px sans-serif;text-align:center;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.2);z-index:3;
+  animation:capXIn .4s cubic-bezier(.34,1.5,.6,1) both;}
+@keyframes capXIn{from{transform:scale(.3);opacity:0;}to{transform:scale(1);opacity:1;}}
+/* T4 is a mirrored scene: the cup is turned back so its handle is on the right, as drawn */
+.cap-stage.cap-flip .cap-v.cap-t4-cup{scale:-1 1;}
+/* T4: whatever the VO names glows AND pulses gently (from its base) while it is being talked about */
+.cap-stage .cap-v.cap-say-glow > svg,.cap-stage .cap-v.cap-say-glow > img{transform-origin:50% 96%;animation:capSayPulse .9s ease-in-out infinite;}
+@keyframes capSayPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+/* cover title (ASSETE MAP "cover page.svg", its title layer): a frame with the cover picture's own shape, laid like
+   the background (cover, centred), so the title sits exactly where the design puts it. It pops in as the greeting
+   starts and pops again on the words "कितना पानी है" */
+.start-gate .sg-card .sg-cover-frame{position:absolute;left:0;width:100%;aspect-ratio:1916/821;top:50%;transform:translateY(-50%);pointer-events:none;z-index:1;}
+.start-gate .sg-card .sg-cover-title{position:absolute;left:6.362%;top:4.766%;width:42.106%;height:auto;transform-origin:50% 60%;opacity:0;transform:scale(.55);}
+.start-gate .sg-card .sg-cover-title.in{animation:sgTitleIn .6s cubic-bezier(.34,1.56,.64,1) both;}
+.start-gate .sg-card .sg-cover-title.in.pop{animation:sgTitlePop .7s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes sgTitleIn{0%{opacity:0;transform:scale(.55);}60%{opacity:1;}100%{opacity:1;transform:scale(1);}}
+@keyframes sgTitlePop{0%{opacity:1;transform:scale(1);}35%{transform:scale(1.13) rotate(-1.5deg);}65%{transform:scale(.97) rotate(.8deg);}100%{opacity:1;transform:scale(1);}}
+html.no-anim .start-gate .sg-card .sg-cover-title{animation:none !important;opacity:1;transform:none;}

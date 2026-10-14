@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SwiftPAL · MTG2A04_L03_S01 · कितना पानी है?</title>
-<link rel="stylesheet" href="style.css?v=202610131624">
+<link rel="stylesheet" href="style.css?v=202610141420">
 </head>
 <body class="is-start">
 <div class="start-bg" aria-hidden="true"></div>
@@ -71,6 +71,7 @@
   <!-- TAP-TO-START — uses provided title-screen art -->
   <div class="start-gate" id="startGate">
     <div class="sg-card">
+      <div class="sg-cover-frame" aria-hidden="true"><img class="sg-cover-title" src="assets/Images/cap_cover_title.webp" alt=""></div>   <!-- cover title layer (ASSETE MAP "cover page.svg"): pops with the greeting -->
       <img class="sg-mascot" src="assets/UI/new_landing_swiftee_still.webp" alt="Swiftee"
            onerror="this.style.display='none'">
       <div class="sg-content">
@@ -128,7 +129,8 @@
   "theme": "toybox",
   "landing_hero": {
     "kind": "image",
-    "src": "assets/Images/cap_cover_v2.jpg"
+    "src": "assets/Images/cap_cover_v3.jpg",
+    "title": "assets/Images/cap_cover_title.webp"
   },
   "title": {
     "hi": "कितना पानी है?",
@@ -256,7 +258,7 @@
       "phase": "tutorial",
       "eis": "iconic",
       "type": "CAP_COMPARE_PICK",
-      "prompt_hi": "ज़्यादा पानी किसमें, गिलास या मग?",
+      "prompt_hi": "ज़्यादा पानी किसमें?",
       "audio": {
         "prompt": "cap_p2_q",
         "idle": "cap_p2_idle",
@@ -304,15 +306,16 @@
       "id": "T4",
       "phase": "tutorial",
       "eis": "iconic",
-      "type": "CAP_METHOD",
-      "prompt_hi": "कौन-सा तरीका सही है?",
+      "type": "CAP_SAME_UNITS",
+      "prompt_hi": "इस जग में पानी कितना आएगा?",
       "audio": {
-        "prompt": "cap_p3_q",
-        "idle": "cap_p3_idle",
-        "correct": "cap_p3_ok",
-        "wrong": "cap_p3_wrong"
+        "intro": "cap_p3_t"
       },
-      "data": {}
+      "data": {
+        "glasses": 4,
+        "cup_at": 2,
+        "flip": true
+      }
     },
     {
       "id": "G1",
@@ -532,10 +535,7 @@
       "cap_p2_idle": "assets/Audio/cap_p2_idle.mp3",
       "cap_p2_ok": "assets/Audio/cap_p2_ok.mp3",
       "cap_p2_wrong": "assets/Audio/cap_p2_wrong.mp3",
-      "cap_p3_q": "assets/Audio/cap_p3_q.mp3",
-      "cap_p3_idle": "assets/Audio/cap_p3_idle.mp3",
-      "cap_p3_ok": "assets/Audio/cap_p3_ok.mp3",
-      "cap_p3_wrong": "assets/Audio/cap_p3_wrong.mp3",
+      "cap_p3_t": "assets/Audio/cap_p3_t.mp3",
       "cap_p4_a": "assets/Audio/cap_p4_a.mp3",
       "cap_p4_b": "assets/Audio/cap_p4_b.mp3",
       "cap_p5_a": "assets/Audio/cap_p5_a.mp3",
@@ -587,7 +587,6 @@
       "cap_p11_t3": "assets/Audio/cap_p11_t3.mp3",
       "cap_well_done": "assets/Audio/cap_well_done.mp3",
       "cap_p2_ok2": "assets/Audio/cap_p2_ok2.mp3",
-      "cap_p3_ok2": "assets/Audio/cap_p3_ok2.mp3",
       "cap_p7_ok2": "assets/Audio/cap_p7_ok2.mp3",
       "cap_p8_ok2": "assets/Audio/cap_p8_ok2.mp3",
       "cap_p9_ok2": "assets/Audio/cap_p9_ok2.mp3",
@@ -623,10 +622,7 @@
       "cap_p2_idle": "ज़्यादा पानी किसमें आएगा, गिलास में या मग में? सही बर्तन पर टैप करिए।",
       "cap_p2_ok": "शाबाश! गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।",
       "cap_p2_wrong": "गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।",
-      "cap_p3_q": "यहाँ एक कटोरा दिया हुआ है। अगर हमें इस कटोरे की मात्रा पता करनी हो, तो हमें किस बर्तन का उपयोग करना चाहिए? तीन एक जैसे गिलास, या एक गिलास, एक प्लेट, एक कप। इस कटोरे की मात्रा मापने के लिए, सही बर्तनों पर टैप करिए।",
-      "cap_p3_idle": "इस कटोरे की मात्रा मापने के लिए, सही बर्तनों पर टैप करिए।",
-      "cap_p3_ok": "शाबाश! मात्रा को सही तरीके से मापने के लिए एक जैसे बर्तनों का उपयोग करना चाहिए। इसलिए तीन एक जैसे गिलास सही हैं।",
-      "cap_p3_wrong": "जब भी हम किसी बर्तन में पानी या किसी चीज़ की मात्रा को मापते हैं, तो मापने के लिए इस्तेमाल होने वाले बर्तन एक जैसे होने चाहिए। तभी हम मात्रा को सही तरीके से माप सकते हैं। इसलिए तीन एक जैसे गिलास सही है। तो सही बर्तन यह है।",
+      "cap_p3_t": "आइए, इसको समझते हैं। इस जग में पानी कितना आएगा, यह जानने के लिए हमें एक जैसे बर्तनों की ज़रूरत होती है। इसलिए इसमें यह कप ठीक नहीं है।",
       "cap_p4_a": "अब हम सीखते हैं, इस बोतल में दूध की मात्रा कितने गिलास है? यहाँ एक बोतल पूरी खाली है, और चार एक जैसे गिलास में दूध है। इन गिलासों का सारा दूध एक-एक करके बोतल में डालते हैं, और देखते हैं कि यह बोतल कितने गिलास से भरती है।",
       "cap_p4_b": "यह बोतल चार गिलास से पूरी भर गई। तो इस बोतल में दूध की मात्रा चार एक जैसे गिलास के बराबर है।",
       "cap_p5_a": "अब हम सीखते हैं, जग में पानी की मात्रा कितने गिलास है? यहाँ एक जग में पूरा पानी भरा हुआ है। इसका सारा पानी इन गिलासों में भरते हैं, और देखते हैं, कितने गिलास भरते हैं।",
@@ -678,7 +674,6 @@
       "cap_p11_t3": "धन्यवाद!",
       "cap_well_done": "शाबाश! आपने सीख लिया है कि बर्तन की मात्रा कितनी है।",
       "cap_p2_ok2": "गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।",
-      "cap_p3_ok2": "मात्रा को सही तरीके से मापने के लिए एक जैसे बर्तनों का उपयोग करना चाहिए। इसलिए तीन एक जैसे गिलास सही हैं।",
       "cap_p7_ok2": "इस जार से चार कप पूरे भर गए।",
       "cap_p8_ok2": "यह भगोना आठ कप दूध से पूरा भर गया।",
       "cap_p9_ok2": "इस बोतल में पानी की मात्रा कुल तीन गिलास के बराबर है।",
@@ -724,40 +719,18 @@
           "k": "mug"
         }
       ],
-      "cap_p3_q": [
+      "cap_p3_t": [
         {
-          "t": 545,
-          "k": "bowl"
+          "t": 3234,
+          "k": "jug"
         },
         {
-          "t": 6878,
-          "k": "appear"
+          "t": 7330,
+          "k": "same"
         },
         {
-          "t": 10109,
-          "k": "g3"
-        },
-        {
-          "t": 12476,
-          "k": "glass"
-        },
-        {
-          "t": 13646,
-          "k": "plate"
-        },
-        {
-          "t": 14670,
+          "t": 10814,
           "k": "cup"
-        },
-        {
-          "t": 16426,
-          "k": "off"
-        }
-      ],
-      "cap_p3_wrong": [
-        {
-          "t": 19298,
-          "k": "show"
         }
       ],
       "cap_p4_a": [
@@ -997,6 +970,6 @@
 </script>
 
 <!-- ============ ENGINE ============ -->
-<script src="app.js?v=202610131624"></script>
+<script src="app.js?v=202610141420"></script>
 </body>
 </html>

@@ -44,16 +44,9 @@ LINES = {
   "cap_p2_ok": ("शाबाश! गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।", SWIFTEE, []),
   "cap_p2_wrong": ("गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।", SWIFTEE, [("और मग", "mug")]),
 
-  # PAGE 3 (T4) — which vessels measure the bowl: tap the right set
-  "cap_p3_q": ("यहाँ एक कटोरा दिया हुआ है। अगर हमें इस कटोरे की मात्रा पता करनी हो, तो हमें किस बर्तन का उपयोग करना चाहिए? "
-               "तीन एक जैसे गिलास, या एक गिलास, एक प्लेट, एक कप। इस कटोरे की मात्रा मापने के लिए, सही बर्तनों पर टैप करिए।",
-               SWIFTEE, [("एक कटोरा", "bowl"), ("किस बर्तन", "appear"), ("तीन एक जैसे गिलास", "g3"), ("एक गिलास", "glass"),
-                         ("एक प्लेट", "plate"), ("एक कप", "cup"), ("इस कटोरे की मात्रा मापने", "off")]),
-  "cap_p3_idle": ("इस कटोरे की मात्रा मापने के लिए, सही बर्तनों पर टैप करिए।", SWIFTEE, []),
-  "cap_p3_ok": ("शाबाश! मात्रा को सही तरीके से मापने के लिए एक जैसे बर्तनों का उपयोग करना चाहिए। इसलिए तीन एक जैसे गिलास सही हैं।", SWIFTEE, []),
-  "cap_p3_wrong": ("जब भी हम किसी बर्तन में पानी या किसी चीज़ की मात्रा को मापते हैं, तो मापने के लिए इस्तेमाल होने वाले बर्तन एक जैसे होने चाहिए। "
-                   "तभी हम मात्रा को सही तरीके से माप सकते हैं। इसलिए तीन एक जैसे गिलास सही है। तो सही बर्तन यह है।",
-                   SWIFTEE, [("सही बर्तन यह है", "show")]),
+  # PAGE 3 (T4) — the jug to be measured + 4 identical glasses and a cup: the measuring vessels must be the same
+  "cap_p3_t": ("आइए, इसको समझते हैं। इस जग में पानी कितना आएगा, यह जानने के लिए हमें एक जैसे बर्तनों की ज़रूरत होती है। इसलिए इसमें यह कप ठीक नहीं है।",
+               SWIFTEE, [("इस जग में", "jug"), ("एक जैसे बर्तनों", "same"), ("इसलिए इसमें", "cup")]),
 
   # PAGE 4 — glasses of milk into an empty bottle
   "cap_p4_a": ("अब हम सीखते हैं, इस बोतल में दूध की मात्रा कितने गिलास है? यहाँ एक बोतल पूरी खाली है, और चार एक जैसे गिलास में दूध है। "
@@ -149,7 +142,7 @@ def ask(page, values, answer):
 
 SLIDES = [
   {"id": "T1", "phase": "tutorial", "eis": "iconic", "type": "CAP_COMPARE_PICK",
-   "prompt_hi": "ज़्यादा पानी किसमें, गिलास या मग?",
+   "prompt_hi": "ज़्यादा पानी किसमें?",
    "audio": {"prompt": "cap_p2_q", "idle": "cap_p2_idle", "correct": "cap_p2_ok", "wrong": "cap_p2_wrong"},
    "data": {"idle_ms": 7000}},
   {"id": "T2", "phase": "tutorial", "eis": "iconic", "type": "CAP_POUR_IN_DEMO",
@@ -160,9 +153,9 @@ SLIDES = [
    "prompt_hi": "कितने गिलास पानी?",
    "audio": {"intro": "cap_p5_a", "conclude": "cap_p5_b"},
    "data": {"count": 4, "glasses": 6, "liquid": "water"}},
-  {"id": "T4", "phase": "tutorial", "eis": "iconic", "type": "CAP_METHOD",
-   "prompt_hi": "कौन-सा तरीका सही है?",
-   "audio": {"prompt": "cap_p3_q", "idle": "cap_p3_idle", "correct": "cap_p3_ok", "wrong": "cap_p3_wrong"}, "data": {}},
+  {"id": "T4", "phase": "tutorial", "eis": "iconic", "type": "CAP_SAME_UNITS",
+   "prompt_hi": "इस जग में पानी कितना आएगा?",
+   "audio": {"intro": "cap_p3_t"}, "data": {"glasses": 4, "cup_at": 2}},
   {"id": "G1", "phase": "guided", "eis": "enactive", "type": "CAP_JAR_DRAG",
    "prompt_hi": "जार का पूरा तेल कप में डालिए।", "ask_prompt_hi": "इस जार में कितने कप तेल है?",
    "audio": {"intro": "cap_p7_a", "your_turn": "cap_p7_b"},
@@ -268,7 +261,7 @@ async def main():
       "version": "0.2",
       "skill_code": "MTG2A04_L03_S01", "lo_code": "MTG2A04_L03", "grade": "G2", "attribute": "A04",
       "skill_type": "CORE", "part_label": "", "theme": "toybox",
-      "landing_hero": {"kind": "image", "src": "assets/Images/cap_cover_v2.jpg"},   # cover page: ASSETE MAP "Group 25.png"   # cover page (ASSETE MAP)   # supplied landing picture (ASSETE MAP, Oct 1)   # (animation-v2 art was never added: folder is empty)
+      "landing_hero": {"kind": "image", "src": "assets/Images/cap_cover_v3.jpg", "title": "assets/Images/cap_cover_title.webp"},   # cover: ASSETE MAP "cover page.svg" (background + separate title layer)   # cover page: ASSETE MAP "Group 25.png"   # cover page (ASSETE MAP)   # supplied landing picture (ASSETE MAP, Oct 1)   # (animation-v2 art was never added: folder is empty)
       "title": {"hi": "कितना पानी है?", "en": "Measuring capacity in non-standard units"},
       "subtitle_hi": "भरिए · गिनिए · बताइए",
       "skill_description_hi": "किसी बर्तन की मात्रा (धारिता) एक जैसे छोटे बर्तन से मापता है - बार-बार वही गिलास/कप भरकर गिनता है और बताता है कि बर्तन में कितने गिलास/कप समाते हैं।",
@@ -285,7 +278,7 @@ async def main():
       "gate": {"img": "assets/UI/gate_peek.webp", "peek": "assets/UI/gate_peek.webp", "talk": "assets/UI/gate_talk.webp", "rest": "assets/UI/gate_rest.webp", "peek_ms": 1520, "hold_ms": 450},
       # end screen Swiftee: standard end-animation sheets + VO lip-sync data (_tools/build_end_sprite.py)
       "end_sprite": json.load(open(os.path.join(ROOT, "_tools", "end_sprite.json"), encoding="utf8")) if os.path.exists(os.path.join(ROOT, "_tools", "end_sprite.json")) else None,
-      "slides": [dict(sl, data=dict(sl.get("data") or {}, flip=True)) if sl["id"] in ("T2", "T3", "G1", "G2", "P1") else sl for sl in SLIDES],   # these 4 scenes are mirrored (user, Oct 5)
+      "slides": [dict(sl, data=dict(sl.get("data") or {}, flip=True)) if sl["id"] in ("T2", "T3", "T4", "G1", "G2", "P1") else sl for sl in SLIDES],   # these 4 scenes are mirrored (user, Oct 5)
       "assets": {"audio": audio, "audio_text": audio_text, "audio_cues": cues,
                  "image": {"cap_shop_bg": "assets/Images/cap_shop_bg.jpg", "cap_shop_order": "assets/Images/cap_shop_order.jpg", "cap_shop_front": "assets/Images/cap_shop_front.png", "cap_shop_man": "assets/Images/cap_shop_man.png", "cap_shop_woman": "assets/Images/cap_shop_woman.png", "cap_shop_boy": "assets/Images/cap_shop_boy.png", "cap_shop_pour": "assets/Images/cap_shop_pour.jpg",
                            "cap_landing_strip": "assets/Images/cap_landing_strip.png", "cap_landing_pour": "assets/Images/cap_landing_pour.jpg", "cap_cover": "assets/Images/cap_cover.jpg", "cap_cover_wide": "assets/Images/cap_cover_wide.jpg", "cap_cover_v2": "assets/Images/cap_cover_v2.jpg",
