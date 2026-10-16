@@ -11736,7 +11736,8 @@ function capAskNumber(ctx, stage, spec, o){
   // incorrect options are never removed. A wrong tap only flashes red, then the card is tappable again.
   // At the REVEAL moment ("सही संख्या यह है") the incorrect cards stay on screen but are disabled.
   const hideWrong = ()=> [...col.children].forEach(x => { if(x !== rightCell){ x.classList.remove("crossed"); x.classList.add("cap-off-opt"); } });
-  h2Handlers.show = ()=>{ hideWrong(); if(rightCell){ rightCell.classList.add("cap-glow"); capPoint(rightCell); } };
+  const revealHand = slide.phase !== "practice";   // P1 / P2 (practice): the answer is shown by its glow only - no hand nudge
+  h2Handlers.show = ()=>{ hideWrong(); if(rightCell){ rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); } };
   const win = (cell, val)=>{
     done = true; stopNudge(); rightCell.classList.remove("cap-glow"); rightCell.classList.add("correct");
     sfxCorrect(); confettiCannon(); setSwMood("happy");
@@ -11772,7 +11773,7 @@ function capAskNumber(ctx, stage, spec, o){
           ctx.say(spec.h2, h2Handlers, ()=>{ busy = false; }); }
         else { state.scaffoldLevel = 3; onlyRight = true;                       // 3rd wrong: the answer is shown, wrong cards disabled
           SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts });
-          ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ busy = false; hideWrong(); rightCell.classList.add("cap-glow"); capPoint(rightCell); }); }
+          ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ busy = false; hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); }); }
       });
     };
     col.appendChild(c);
@@ -12601,16 +12602,26 @@ Object.assign(SlideModules, {
           items.push(capAdd(stage, cup, 330 + i * 110 - 14, BASE - cup.h)); }
         else { const g = capArtVessel("glassWater", { w: 60, level: 0, liquid: "water" }); items.push(capAdd(stage, g, 330 + i * 110, BASE - g.h)); }
       }
-      const all = [jug, ...items], off = ()=> all.forEach(v => v.el.classList.remove("cap-say-glow"));
+      const glasses = items.filter(v => v !== cup), all = [jug, ...items];
+      const off = ()=> all.forEach(v => v.el.classList.remove("cap-say-glow"));
       const glow = (list)=>{ off(); list.forEach(v => v.el.classList.add("cap-say-glow")); };
+      const keep = ()=> glasses.forEach(v => v.el.classList.add("cap-keep-glow"));   // the glasses stay lit: the right measuring units
+      const crossCup = ()=>{ cup.el.classList.add("cap-wrong-item");
+        if(!cup.el.querySelector(".cap-x")){ const x = document.createElement("span"); x.className = "cap-x cap-x-red"; x.textContent = "✕";
+          if(cup.el.dataset.mid) x.style.left = (parseFloat(cup.el.dataset.mid) * 100).toFixed(1) + "%";   // over the body, not the handle
+          x.style.top = "56%"; cup.el.appendChild(x); } };
+      /* synced to the VO: jug on "इस जग की मात्रा जानने…"; the 4 glasses on "यहाँ ये गिलास…" (then they stay lit);
+         the cup on "लेकिन यह कप अलग है" (it glows, then is dimmed + crossed and stays so); the glasses again on
+         "हम इस जग की मात्रा गिलासों से…"; the crossed cup once more on "कप से नहीं" */
       const cues = {
         jug: ()=> glow([jug]),
-        same: ()=> glow(items),
-        cup: ()=>{ glow([cup]); ctx.after(900, ()=>{ off(); cup.el.classList.add("cap-wrong-item");
-          if(!cup.el.querySelector(".cap-x")){ const x = document.createElement("span"); x.className = "cap-x"; x.textContent = "✕";
-            if(cup.el.dataset.mid) x.style.left = (parseFloat(cup.el.dataset.mid) * 100).toFixed(1) + "%";   // over the body, not the handle
-            x.style.top = "56%"; cup.el.appendChild(x); } }); } };
-      const play = (first)=> ctx.say(A.intro, first ? cues : null, ()=>{ off(); setSwMood("point"); capNavOn(); });
+        glasses: ()=>{ glow(glasses); keep(); },
+        cup: ()=>{ off(); crossCup(); cup.el.classList.add("cap-say-red");          // on "लेकिन यह कप अलग है": red ✕ + red glow at once...
+          ctx.after(1000, ()=> cup.el.classList.remove("cap-say-red")); },           // ...glow 1 s; then the cup stays dimmed with the red ✕
+        glasses2: ()=>{ glow(glasses); keep(); },
+        cup2: ()=>{ off(); crossCup(); const x = cup.el.querySelector(".cap-x"); if(x){ x.classList.remove("cap-x-nudge"); void x.offsetWidth; x.classList.add("cap-x-nudge"); } } };
+      const play = (first)=> ctx.say(A.intro, first ? cues : null, ()=>{ off(); keep(); crossCup(); const x = cup.el.querySelector(".cap-x"); if(x) x.classList.add("cap-x-off");   // VO over: the cross turns disabled
+        setSwMood("point"); capNavOn(); });
       ctx.replayFn = ()=> play(false);
       play(true);
     }
@@ -12795,9 +12806,11 @@ Object.assign(SlideModules, {
         ctx.after(400, ()=> capAskNumber(ctx, stage, d.ask, { row: true, x: 290, y: 382, countEls: glasses.slice(0, N) })); };
       // one glass at a time: lift, pour, set down. The fuller the bottle, the less it tips.
       const TILT = [[58, 84], [84, 106], [106, 128]];
-      const pour = (i)=>{ if(i >= N){ ctx.after(200, ()=>{ bottle.cork(true); ctx.after(900, ask); }); return; }
-        capRealPour(ctx, bottle, glasses[i], { dir: 1, high: true, arc: 0, ceil: 50, chime: true, srcTo: 1 - (i + 1) / N, dstFrom: 0, dstTo: 1, ms: 1500, tilt: TILT[i] || TILT[2],
-          onDone: ()=>{ capFlash(glasses[i].el, "cap-hl", 900); ctx.after(300, ()=> pour(i + 1)); } }); };
+      // one continuous pour: the bottle stays in the air and moves glass to glass (no trip home in between);
+      // after the last glass it goes back to its place, then the cap goes on
+      const pour = (i)=>{ if(i >= N){ capArtHome(ctx, bottle, ()=> ctx.after(200, ()=>{ bottle.cork(true); ctx.after(900, ask); })); return; }
+        capRealPour(ctx, bottle, glasses[i], { dir: 1, high: true, arc: 0, ceil: 50, chime: true, stay: true, srcTo: 1 - (i + 1) / N, dstFrom: 0, dstTo: 1, ms: 1500, tilt: TILT[i] || TILT[2],
+          onDone: ()=>{ capFlash(glasses[i].el, "cap-hl", 900); ctx.after(150, ()=> pour(i + 1)); } }); };
       bottle.el.onclick = ()=>{ if(!open || used) return; used = true; idle.stop(); stopNudge(); sfxTap();
         bottle.el.classList.remove("tappable"); SwiftPAL.emit("count_tap", { slide_id: slide.id, phase: slide.phase });
         bottle.cork(false); ctx.after(1000, ()=> pour(0)); };
@@ -13963,6 +13976,8 @@ function clearHost(){
 
 function mountSlide(idx){
   state.idx = idx;
+  // P3 (the milk shop) only: no header - the text banner, its text, the speaker button and Swiftee are hidden
+  try { document.body.classList.toggle("cap-no-header", ((CARD.slides[idx] || {}).id) === "P3"); } catch(e){}
   state.slideStart = Date.now();
   state.attempts = 0; state.selectedKey = null; state.locked = false;
   state.hintUsed = false; state.nudgeUsed = false; state.scaffoldLevel = 0; state.hintActive = false; state.helpShown = false;

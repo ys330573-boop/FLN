@@ -33,12 +33,12 @@ def dur(path):
 SECTION = {"tutorial": "Teaching", "guided": "Guided practice", "practice": "Independent practice"}
 PURPOSE = {"prompt": "Question / instruction", "intro": "Instruction (screen opens)", "q": "Question", "idle": "Inactivity reminder",
            "correct": "Correct answer", "ok": "Correct answer", "wrong": "Wrong answer - explanation", "h1": "Wrong answer 1 - hint",
-           "h2": "Wrong answer 2 - counting hint", "your_turn": "Your turn", "conclude": "Result", "explain": "Explanation",
+           "h2": "Wrong answer 2 - counting hint", "h3": "Wrong answer 3 - the answer is shown", "your_turn": "Your turn", "conclude": "Result", "explain": "Explanation",
            # P3 shop
            "customers": "Customer gives the order", "tap_all": "Tap the three bottles", "tap_vessel": "Tap the glasses to pour",
            "result": "Bottle filled - how many glasses", "thanks": "Customer says thank you",
-           "w1": "Wrong customer 1 - hint", "2": "Wrong customer 2 - the 2-glass bottle's right customer",
-           "3": "Wrong customer 2 - the 3-glass bottle's right customer", "4": "Wrong customer 2 - the 4-glass bottle's right customer"}
+           "w1": "Wrong customer 1 - hint", "w3": "Wrong customer 3 - the right customer is shown", "2": "Wrong customer 2 (voice hint) - the 2-glass bottle's right customer",
+           "3": "Wrong customer 2 (voice hint) - the 3-glass bottle's right customer", "4": "Wrong customer 2 (voice hint) - the 4-glass bottle's right customer"}
 
 rows = []; seen = set()
 def add(section, screen, purpose, vid, file=None, note=""):

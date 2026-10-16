@@ -4732,10 +4732,10 @@ html.no-anim body.is-start .sg-mascot,html.no-anim body.is-start .sg-vo{animatio
    stay on the shelf line */
 .cap-v.cap-t1-v.cap-t1-pulse img,.cap-v.cap-t1-v.cap-t1-pulse > svg{transform-origin:50% 96%;animation:capT1Pulse .8s ease-in-out 3;}
 @keyframes capT1Pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
-/* all panel boxes: warm cream panel + soft tan border (asked: like the cream mug-pouring panel) - the T4 option
+/* all panel boxes: warm cream panel (one step deeper, so it reads solid behind the white vessels) + soft tan border (asked: like the cream mug-pouring panel) - the T4 option
    boxes too; their yellow / green highlight borders still win (more specific) */
-.cap-focus,.cap-focus.cap-focus-cool{background:radial-gradient(120% 95% at 50% 35%,#FFFBF3 0%,#FEF6E9 60%,#FCF1DF 100%);border-color:#F0E2C6;box-shadow:0 18px 40px rgba(120,80,20,.10);}
-.cap-box{background:radial-gradient(120% 95% at 50% 35%,#FFFBF3 0%,#FEF6E9 60%,#FCF1DF 100%);border-color:#F0E2C6;box-shadow:0 18px 40px rgba(120,80,20,.10);}
+.cap-focus,.cap-focus.cap-focus-cool{background:radial-gradient(120% 95% at 50% 35%,#FCEFD8 0%,#F8E5C3 60%,#F2D9AF 100%);border-color:#E3C894;box-shadow:0 18px 40px rgba(120,80,20,.14);}
+.cap-box{background:radial-gradient(120% 95% at 50% 35%,#FCEFD8 0%,#F8E5C3 60%,#F2D9AF 100%);border-color:#E3C894;box-shadow:0 18px 40px rgba(120,80,20,.14);}
 /* shop: the coins a customer pays with (gold, lying on the counter); drop + bounce in, fade out */
 .cap-scene.fig .cap-coin{position:absolute;width:64px;height:40px;z-index:8;border-radius:50%;pointer-events:none;
   background:radial-gradient(ellipse at 38% 35%,#FFF4B0 0%,#FFD84A 38%,#F2B51C 72%,#D99511 100%);
@@ -4771,3 +4771,26 @@ html.no-anim body.is-start .sg-mascot,html.no-anim body.is-start .sg-vo{animatio
 @keyframes sgTitleIn{0%{opacity:0;transform:scale(.55);}60%{opacity:1;}100%{opacity:1;transform:scale(1);}}
 @keyframes sgTitlePop{0%{opacity:1;transform:scale(1);}35%{transform:scale(1.13) rotate(-1.5deg);}65%{transform:scale(.97) rotate(.8deg);}100%{opacity:1;transform:scale(1);}}
 html.no-anim .start-gate .sg-card .sg-cover-title{animation:none !important;opacity:1;transform:none;}
+/* T4: the glasses stay softly lit (green) as the right measuring units; the cup's cross gives a little shake on "कप से नहीं" */
+.cap-v.cap-keep-glow{filter:drop-shadow(0 0 8px rgba(46,190,90,.55)) drop-shadow(0 0 2px rgba(255,255,255,.9));}
+.cap-v.cap-keep-glow.cap-say-glow{filter:drop-shadow(0 0 10px rgba(255,196,0,.75)) drop-shadow(0 0 3px rgba(255,255,255,.9));}
+.cap-v .cap-x.cap-x-nudge{animation:capXNudge .6s ease-in-out both;}
+@keyframes capXNudge{0%,100%{transform:rotate(0) scale(1);}25%{transform:rotate(-12deg) scale(1.15);}50%{transform:rotate(10deg) scale(1.15);}75%{transform:rotate(-6deg) scale(1.05);}}
+/* T4: the odd one out (the cup) glows a soft red for a moment before it is dimmed + crossed */
+.cap-v.cap-say-red{filter:drop-shadow(0 0 9px rgba(230,70,70,.65)) drop-shadow(0 0 3px rgba(255,255,255,.9));}
+.cap-stage .cap-v.cap-say-red > svg{transform-origin:50% 96%;animation:capSayPulse .55s ease-in-out infinite;}
+/* T4 cup: red glow comes on with "लेकिन यह कप अलग है" and STAYS (with the cross); dimmed less so the glow still shows */
+.cap-v.cap-say-red{filter:drop-shadow(0 0 12px rgba(230,50,50,.85)) drop-shadow(0 0 4px rgba(230,50,50,.7)) !important;}
+.cap-v.cap-wrong-item.cap-red-keep{opacity:.8 !important;filter:grayscale(.3) drop-shadow(0 0 10px rgba(230,50,50,.75)) drop-shadow(0 0 3px rgba(230,50,50,.6)) !important;}
+.cap-v.cap-red-keep > svg{animation:none !important;}
+/* T4: the cup's cross is RED and stays at full strength; only the cup itself is dimmed */
+.cap-v .cap-x.cap-x-red{background:#E5484D;box-shadow:0 3px 10px rgba(229,72,77,.45);}
+.cap-v.cap-wrong-item:has(.cap-x-red){opacity:1 !important;filter:none !important;}
+.cap-v.cap-wrong-item:has(.cap-x-red) > svg{opacity:.45;filter:grayscale(.6);transition:opacity .4s ease,filter .4s ease;}
+.cap-v.cap-wrong-item.cap-say-red:has(.cap-x-red){filter:drop-shadow(0 0 12px rgba(230,50,50,.85)) drop-shadow(0 0 4px rgba(230,50,50,.7)) !important;}
+.cap-v.cap-wrong-item.cap-say-red:has(.cap-x-red) > svg{opacity:1;filter:none;}
+/* T4: when the VO ends the cup's cross turns DISABLED - grey, lower opacity, no shadow */
+.cap-v .cap-x{transition:background-color .5s ease,opacity .5s ease,box-shadow .5s ease;}
+.cap-v .cap-x.cap-x-red.cap-x-off{background:#A7B0BE;color:#F4F6F9;opacity:.55;box-shadow:none;animation:none;transform:none;}
+/* P3 only: no header row (banner + text + speaker) and no Swiftee circle */
+body.cap-no-header .header-row,body.cap-no-header #swBuddy{display:none !important;}

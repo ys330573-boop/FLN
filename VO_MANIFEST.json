@@ -1,7 +1,7 @@
 {
  "skill_code": "MTG2A04_L03_S01",
- "total_clips": 74,
- "total_seconds": 525.6,
+ "total_clips": 75,
+ "total_seconds": 459.5,
  "clips": [
   {
    "Section": "Title screen",
@@ -31,7 +31,7 @@
   },
   {
    "Section": "Teaching",
-   "Screen": "T1 - ज़्यादा पानी किसमें, गिलास या मग?",
+   "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Question / instruction",
    "VO ID": "cap_p2_q",
    "File": "assets/Audio/cap_p2_q.mp3",
@@ -44,7 +44,7 @@
   },
   {
    "Section": "Teaching",
-   "Screen": "T1 - ज़्यादा पानी किसमें, गिलास या मग?",
+   "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Inactivity reminder",
    "VO ID": "cap_p2_idle",
    "File": "assets/Audio/cap_p2_idle.mp3",
@@ -57,7 +57,7 @@
   },
   {
    "Section": "Teaching",
-   "Screen": "T1 - ज़्यादा पानी किसमें, गिलास या मग?",
+   "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Correct answer",
    "VO ID": "cap_p2_ok",
    "File": "assets/Audio/cap_p2_ok.mp3",
@@ -70,7 +70,7 @@
   },
   {
    "Section": "Teaching",
-   "Screen": "T1 - ज़्यादा पानी किसमें, गिलास या मग?",
+   "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
    "VO ID": "cap_p2_ok2",
    "File": "assets/Audio/cap_p2_ok2.mp3",
@@ -83,7 +83,7 @@
   },
   {
    "Section": "Teaching",
-   "Screen": "T1 - ज़्यादा पानी किसमें, गिलास या मग?",
+   "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Wrong answer - explanation",
    "VO ID": "cap_p2_wrong",
    "File": "assets/Audio/cap_p2_wrong.mp3",
@@ -148,68 +148,16 @@
   },
   {
    "Section": "Teaching",
-   "Screen": "T4 - कौन-सा तरीका सही है?",
-   "When it plays": "Question / instruction",
-   "VO ID": "cap_p3_q",
-   "File": "assets/Audio/cap_p3_q.mp3",
+   "Screen": "T4 - ध्यान रहें।",
+   "When it plays": "Instruction (screen opens)",
+   "VO ID": "cap_p3_t",
+   "File": "assets/Audio/cap_p3_t.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "यहाँ एक कटोरा दिया हुआ है। अगर हमें इस कटोरे की मात्रा पता करनी हो, तो हमें किस बर्तन का उपयोग करना चाहिए? तीन एक जैसे गिलास, या एक गिलास, एक प्लेट, एक कप। इस कटोरे की मात्रा मापने के लिए, सही बर्तनों पर टैप करिए।",
-   "Duration (s)": 22.2,
-   "Highlight cues": "bowl @ 0.55s; appear @ 6.88s; g3 @ 10.11s; glass @ 12.48s; plate @ 13.65s; cup @ 14.67s; off @ 16.43s",
+   "Hindi script": "ध्यान रहें। मात्रा मापने के लिए हम हमेशा एक जैसे बर्तनों का उपयोग करते है। लेकिन यह कप अलग है।",
+   "Duration (s)": 10.56,
+   "Highlight cues": "glasses @ 4.43s; cup @ 7.92s",
    "Note": "",
    "#": 12
-  },
-  {
-   "Section": "Teaching",
-   "Screen": "T4 - कौन-सा तरीका सही है?",
-   "When it plays": "Inactivity reminder",
-   "VO ID": "cap_p3_idle",
-   "File": "assets/Audio/cap_p3_idle.mp3",
-   "Speaker": "Swiftee",
-   "Hindi script": "इस कटोरे की मात्रा मापने के लिए, सही बर्तनों पर टैप करिए।",
-   "Duration (s)": 5.81,
-   "Highlight cues": "",
-   "Note": "",
-   "#": 13
-  },
-  {
-   "Section": "Teaching",
-   "Screen": "T4 - कौन-सा तरीका सही है?",
-   "When it plays": "Correct answer",
-   "VO ID": "cap_p3_ok",
-   "File": "assets/Audio/cap_p3_ok.mp3",
-   "Speaker": "Swiftee",
-   "Hindi script": "शाबाश! मात्रा को सही तरीके से मापने के लिए एक जैसे बर्तनों का उपयोग करना चाहिए। इसलिए तीन एक जैसे गिलास सही हैं।",
-   "Duration (s)": 12.46,
-   "Highlight cues": "",
-   "Note": "",
-   "#": 14
-  },
-  {
-   "Section": "Teaching",
-   "Screen": "T4 - कौन-सा तरीका सही है?",
-   "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "VO ID": "cap_p3_ok2",
-   "File": "assets/Audio/cap_p3_ok2.mp3",
-   "Speaker": "Swiftee",
-   "Hindi script": "मात्रा को सही तरीके से मापने के लिए एक जैसे बर्तनों का उपयोग करना चाहिए। इसलिए तीन एक जैसे गिलास सही हैं।",
-   "Duration (s)": 10.56,
-   "Highlight cues": "",
-   "Note": "",
-   "#": 15
-  },
-  {
-   "Section": "Teaching",
-   "Screen": "T4 - कौन-सा तरीका सही है?",
-   "When it plays": "Wrong answer - explanation",
-   "VO ID": "cap_p3_wrong",
-   "File": "assets/Audio/cap_p3_wrong.mp3",
-   "Speaker": "Swiftee",
-   "Hindi script": "जब भी हम किसी बर्तन में पानी या किसी चीज़ की मात्रा को मापते हैं, तो मापने के लिए इस्तेमाल होने वाले बर्तन एक जैसे होने चाहिए। तभी हम मात्रा को सही तरीके से माप सकते हैं। इसलिए तीन एक जैसे गिलास सही है। तो सही बर्तन यह है।",
-   "Duration (s)": 21.62,
-   "Highlight cues": "show @ 19.30s",
-   "Note": "",
-   "#": 16
   },
   {
    "Section": "Transition",
@@ -222,7 +170,7 @@
    "Duration (s)": 4.97,
    "Highlight cues": "",
    "Note": "The game plays this older clip directly by file name; the script line cap_pt_guided in build_card.py (\"बहुत बढ़िया! अब हम साथ मिलकर शुरू करते हैं। चलिए, साथ में करें!\") is NOT what is heard.",
-   "#": 17
+   "#": 13
   },
   {
    "Section": "Guided practice",
@@ -235,7 +183,7 @@
    "Duration (s)": 12.91,
    "Highlight cues": "demo @ 7.73s",
    "Note": "",
-   "#": 18
+   "#": 14
   },
   {
    "Section": "Guided practice",
@@ -248,7 +196,7 @@
    "Duration (s)": 6.79,
    "Highlight cues": "",
    "Note": "",
-   "#": 19
+   "#": 15
   },
   {
    "Section": "Guided practice",
@@ -261,7 +209,7 @@
    "Duration (s)": 6.29,
    "Highlight cues": "",
    "Note": "",
-   "#": 20
+   "#": 16
   },
   {
    "Section": "Guided practice",
@@ -274,7 +222,7 @@
    "Duration (s)": 5.66,
    "Highlight cues": "",
    "Note": "",
-   "#": 21
+   "#": 17
   },
   {
    "Section": "Guided practice",
@@ -287,7 +235,7 @@
    "Duration (s)": 3.77,
    "Highlight cues": "",
    "Note": "",
-   "#": 22
+   "#": 18
   },
   {
    "Section": "Guided practice",
@@ -296,11 +244,11 @@
    "VO ID": "cap_p7_h1",
    "File": "assets/Audio/cap_p7_h1.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "दोबारा गिनिए कि कितने कप पूरे भरे हैं।",
-   "Duration (s)": 4.2,
+   "Hindi script": "फिर से गिनिए।",
+   "Duration (s)": 2.16,
    "Highlight cues": "",
    "Note": "",
-   "#": 23
+   "#": 19
   },
   {
    "Section": "Guided practice",
@@ -309,11 +257,24 @@
    "VO ID": "cap_p7_h2",
    "File": "assets/Audio/cap_p7_h2.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "एक, दो, तीन, चार। कुल चार कप भरे हैं। सही संख्या यह है।",
-   "Duration (s)": 9.07,
-   "Highlight cues": "n1 @ 0.04s; n2 @ 0.80s; n3 @ 1.49s; n4 @ 2.31s; show @ 6.43s",
+   "Hindi script": "एक, दो, तीन, चार। कुल चार कप भरे हुए हैं।",
+   "Duration (s)": 6.84,
+   "Highlight cues": "n1 @ 0.04s; n2 @ 0.80s; n3 @ 1.49s; n4 @ 2.31s",
    "Note": "",
-   "#": 24
+   "#": 20
+  },
+  {
+   "Section": "Guided practice",
+   "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
+   "When it plays": "Wrong answer 3 - the answer is shown",
+   "VO ID": "cap_p7_h3",
+   "File": "assets/Audio/cap_p7_h3.mp3",
+   "Speaker": "Swiftee",
+   "Hindi script": "सही संख्या यह है।",
+   "Duration (s)": 2.69,
+   "Highlight cues": "show @ 0.04s",
+   "Note": "",
+   "#": 21
   },
   {
    "Section": "Guided practice",
@@ -326,7 +287,7 @@
    "Duration (s)": 14.45,
    "Highlight cues": "cups @ 0.55s; pan @ 3.75s",
    "Note": "",
-   "#": 25
+   "#": 22
   },
   {
    "Section": "Guided practice",
@@ -339,7 +300,7 @@
    "Duration (s)": 6.19,
    "Highlight cues": "",
    "Note": "",
-   "#": 26
+   "#": 23
   },
   {
    "Section": "Guided practice",
@@ -352,7 +313,7 @@
    "Duration (s)": 7.61,
    "Highlight cues": "",
    "Note": "",
-   "#": 27
+   "#": 24
   },
   {
    "Section": "Guided practice",
@@ -365,7 +326,7 @@
    "Duration (s)": 6.31,
    "Highlight cues": "",
    "Note": "",
-   "#": 28
+   "#": 25
   },
   {
    "Section": "Guided practice",
@@ -378,7 +339,7 @@
    "Duration (s)": 4.42,
    "Highlight cues": "",
    "Note": "",
-   "#": 29
+   "#": 26
   },
   {
    "Section": "Guided practice",
@@ -387,11 +348,11 @@
    "VO ID": "cap_p8_h1",
    "File": "assets/Audio/cap_p8_h1.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "दोबारा गिनिए कि कितने कप खाली हुए हैं।",
-   "Duration (s)": 4.18,
+   "Hindi script": "दोबारा गिनिए।",
+   "Duration (s)": 2.38,
    "Highlight cues": "",
    "Note": "",
-   "#": 30
+   "#": 27
   },
   {
    "Section": "Guided practice",
@@ -400,11 +361,24 @@
    "VO ID": "cap_p8_h2",
    "File": "assets/Audio/cap_p8_h2.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "एक, दो, तीन, चार, पाँच, छह, सात, आठ। कुल आठ कप खाली हुए हैं। सही संख्या यह है।",
-   "Duration (s)": 12.38,
-   "Highlight cues": "n1 @ 0.04s; n2 @ 0.76s; n3 @ 1.45s; n4 @ 2.21s; n5 @ 2.98s; n6 @ 3.87s; n7 @ 4.49s; n8 @ 5.30s; show @ 9.74s",
+   "Hindi script": "एक, दो, तीन, चार, पाँच, छह, सात, आठ। कुल आठ कप खाली हुए हैं।",
+   "Duration (s)": 9.82,
+   "Highlight cues": "n1 @ 0.04s; n2 @ 0.76s; n3 @ 1.45s; n4 @ 2.21s; n5 @ 2.98s; n6 @ 3.87s; n7 @ 4.49s; n8 @ 5.30s",
    "Note": "",
-   "#": 31
+   "#": 28
+  },
+  {
+   "Section": "Guided practice",
+   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "When it plays": "Wrong answer 3 - the answer is shown",
+   "VO ID": "cap_p8_h3",
+   "File": "assets/Audio/cap_p8_h3.mp3",
+   "Speaker": "Swiftee",
+   "Hindi script": "सही संख्या यह है।",
+   "Duration (s)": 2.69,
+   "Highlight cues": "show @ 0.04s",
+   "Note": "",
+   "#": 29
   },
   {
    "Section": "Transition",
@@ -417,7 +391,7 @@
    "Duration (s)": 1.69,
    "Highlight cues": "",
    "Note": "The game plays this older clip directly by file name; the script line cap_pt_practice in build_card.py (\"वाह! अब आपकी बारी।\") is NOT what is heard.",
-   "#": 32
+   "#": 30
   },
   {
    "Section": "Independent practice",
@@ -430,7 +404,7 @@
    "Duration (s)": 19.32,
    "Highlight cues": "bottle @ 0.61s; glasses @ 3.92s",
    "Note": "",
-   "#": 33
+   "#": 31
   },
   {
    "Section": "Independent practice",
@@ -443,7 +417,7 @@
    "Duration (s)": 8.09,
    "Highlight cues": "",
    "Note": "",
-   "#": 34
+   "#": 32
   },
   {
    "Section": "Independent practice",
@@ -456,7 +430,7 @@
    "Duration (s)": 7.15,
    "Highlight cues": "",
    "Note": "",
-   "#": 35
+   "#": 33
   },
   {
    "Section": "Independent practice",
@@ -469,7 +443,7 @@
    "Duration (s)": 5.23,
    "Highlight cues": "",
    "Note": "",
-   "#": 36
+   "#": 34
   },
   {
    "Section": "Independent practice",
@@ -478,11 +452,11 @@
    "VO ID": "cap_p9_h1",
    "File": "assets/Audio/cap_p9_h1.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "दोबारा देखिए कि कितने गिलास पूरे भरे हैं।",
-   "Duration (s)": 4.61,
+   "Hindi script": "दोबारा गिनिए।",
+   "Duration (s)": 2.38,
    "Highlight cues": "",
    "Note": "",
-   "#": 37
+   "#": 35
   },
   {
    "Section": "Independent practice",
@@ -491,11 +465,24 @@
    "VO ID": "cap_p9_h2",
    "File": "assets/Audio/cap_p9_h2.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "एक, दो, तीन। कुल तीन गिलास भरे हैं। सही संख्या यह है।",
-   "Duration (s)": 8.4,
-   "Highlight cues": "n1 @ 0.04s; n2 @ 0.77s; n3 @ 1.48s; show @ 5.76s",
+   "Hindi script": "एक, दो, तीन। कुल तीन गिलास भरे हैं।",
+   "Duration (s)": 5.83,
+   "Highlight cues": "n1 @ 0.04s; n2 @ 0.77s; n3 @ 1.48s",
    "Note": "",
-   "#": 38
+   "#": 36
+  },
+  {
+   "Section": "Independent practice",
+   "Screen": "P1 - बोतल पर टैप करिए।",
+   "When it plays": "Wrong answer 3 - the answer is shown",
+   "VO ID": "cap_p9_h3",
+   "File": "assets/Audio/cap_p9_h3.mp3",
+   "Speaker": "Swiftee",
+   "Hindi script": "सही संख्या यह है।",
+   "Duration (s)": 2.69,
+   "Highlight cues": "show @ 0.04s",
+   "Note": "",
+   "#": 37
   },
   {
    "Section": "Independent practice",
@@ -508,7 +495,7 @@
    "Duration (s)": 14.78,
    "Highlight cues": "jug @ 0.53s; mugs @ 2.30s",
    "Note": "",
-   "#": 39
+   "#": 38
   },
   {
    "Section": "Independent practice",
@@ -521,7 +508,7 @@
    "Duration (s)": 7.18,
    "Highlight cues": "",
    "Note": "",
-   "#": 40
+   "#": 39
   },
   {
    "Section": "Independent practice",
@@ -534,7 +521,7 @@
    "Duration (s)": 5.88,
    "Highlight cues": "",
    "Note": "",
-   "#": 41
+   "#": 40
   },
   {
    "Section": "Independent practice",
@@ -547,7 +534,7 @@
    "Duration (s)": 3.96,
    "Highlight cues": "",
    "Note": "",
-   "#": 42
+   "#": 41
   },
   {
    "Section": "Independent practice",
@@ -556,11 +543,11 @@
    "VO ID": "cap_p10_h1",
    "File": "assets/Audio/cap_p10_h1.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "दोबारा गिनिए कि कितने मग खाली हुए हैं।",
-   "Duration (s)": 4.2,
+   "Hindi script": "दोबारा गिनिए।",
+   "Duration (s)": 2.38,
    "Highlight cues": "",
    "Note": "",
-   "#": 43
+   "#": 42
   },
   {
    "Section": "Independent practice",
@@ -569,9 +556,22 @@
    "VO ID": "cap_p10_h2",
    "File": "assets/Audio/cap_p10_h2.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "एक, दो, तीन, चार, पाँच, छह। कुल छह मग खाली हुए हैं। सही संख्या यह है।",
-   "Duration (s)": 10.82,
-   "Highlight cues": "n1 @ 0.04s; n2 @ 0.76s; n3 @ 1.45s; n4 @ 2.26s; n5 @ 3.04s; n6 @ 3.96s; show @ 8.19s",
+   "Hindi script": "एक, दो, तीन, चार, पाँच, छह। कुल छह मग खाली हुए हैं।",
+   "Duration (s)": 8.26,
+   "Highlight cues": "n1 @ 0.04s; n2 @ 0.76s; n3 @ 1.45s; n4 @ 2.26s; n5 @ 3.04s; n6 @ 3.96s",
+   "Note": "",
+   "#": 43
+  },
+  {
+   "Section": "Independent practice",
+   "Screen": "P2 - मगों का तेल जग में डालिए।",
+   "When it plays": "Wrong answer 3 - the answer is shown",
+   "VO ID": "cap_p10_h3",
+   "File": "assets/Audio/cap_p10_h3.mp3",
+   "Speaker": "Swiftee",
+   "Hindi script": "सही संख्या यह है।",
+   "Duration (s)": 2.69,
+   "Highlight cues": "show @ 0.04s",
    "Note": "",
    "#": 44
   },
@@ -708,7 +708,7 @@
   {
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
-   "When it plays": "Wrong customer 2 - the 2-glass bottle's right customer",
+   "When it plays": "Wrong customer 2 (voice hint) - the 2-glass bottle's right customer",
    "VO ID": "cap_p11_w2_2",
    "File": "assets/Audio/cap_p11_w2_2.mp3",
    "Speaker": "Swiftee",
@@ -721,7 +721,7 @@
   {
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
-   "When it plays": "Wrong customer 2 - the 3-glass bottle's right customer",
+   "When it plays": "Wrong customer 2 (voice hint) - the 3-glass bottle's right customer",
    "VO ID": "cap_p11_w2_3",
    "File": "assets/Audio/cap_p11_w2_3.mp3",
    "Speaker": "Swiftee",
@@ -734,7 +734,7 @@
   {
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
-   "When it plays": "Wrong customer 2 - the 4-glass bottle's right customer",
+   "When it plays": "Wrong customer 2 (voice hint) - the 4-glass bottle's right customer",
    "VO ID": "cap_p11_w2_4",
    "File": "assets/Audio/cap_p11_w2_4.mp3",
    "Speaker": "Swiftee",
@@ -747,6 +747,19 @@
   {
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
+   "When it plays": "Wrong customer 3 - the right customer is shown",
+   "VO ID": "cap_p11_w3",
+   "File": "assets/Audio/cap_p11_w3.mp3",
+   "Speaker": "Swiftee",
+   "Hindi script": "यह बोतल इन्हें दीजिए।",
+   "Duration (s)": 3.0,
+   "Highlight cues": "show @ 0.94s",
+   "Note": "",
+   "#": 58
+  },
+  {
+   "Section": "Independent practice",
+   "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer says thank you",
    "VO ID": "cap_p11_t1",
    "File": "assets/Audio/cap_p11_t1.mp3",
@@ -755,7 +768,7 @@
    "Duration (s)": 2.09,
    "Highlight cues": "",
    "Note": "",
-   "#": 58
+   "#": 59
   },
   {
    "Section": "Independent practice",
@@ -768,7 +781,7 @@
    "Duration (s)": 2.09,
    "Highlight cues": "",
    "Note": "",
-   "#": 59
+   "#": 60
   },
   {
    "Section": "Independent practice",
@@ -781,7 +794,7 @@
    "Duration (s)": 2.09,
    "Highlight cues": "",
    "Note": "",
-   "#": 60
+   "#": 61
   },
   {
    "Section": "Independent practice",
@@ -794,7 +807,7 @@
    "Duration (s)": 4.54,
    "Highlight cues": "",
    "Note": "",
-   "#": 61
+   "#": 62
   },
   {
    "Section": "Independent practice",
@@ -807,7 +820,7 @@
    "Duration (s)": 4.9,
    "Highlight cues": "",
    "Note": "",
-   "#": 62
+   "#": 63
   },
   {
    "Section": "Independent practice",
@@ -820,7 +833,7 @@
    "Duration (s)": 4.44,
    "Highlight cues": "",
    "Note": "",
-   "#": 63
+   "#": 64
   },
   {
    "Section": "End screen",
@@ -833,7 +846,7 @@
    "Duration (s)": 6.58,
    "Highlight cues": "",
    "Note": "",
-   "#": 64
+   "#": 65
   },
   {
    "Section": "All number questions",
@@ -846,7 +859,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 65
+   "#": 66
   },
   {
    "Section": "All number questions",
@@ -859,7 +872,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 66
+   "#": 67
   },
   {
    "Section": "All number questions",
@@ -872,7 +885,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 67
+   "#": 68
   },
   {
    "Section": "All number questions",
@@ -885,7 +898,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 68
+   "#": 69
   },
   {
    "Section": "All number questions",
@@ -898,7 +911,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 69
+   "#": 70
   },
   {
    "Section": "All number questions",
@@ -911,7 +924,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 70
+   "#": 71
   },
   {
    "Section": "All number questions",
@@ -924,7 +937,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 71
+   "#": 72
   },
   {
    "Section": "All number questions",
@@ -937,7 +950,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 72
+   "#": 73
   },
   {
    "Section": "All number questions",
@@ -950,7 +963,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 73
+   "#": 74
   },
   {
    "Section": "All number questions",
@@ -963,7 +976,7 @@
    "Duration (s)": 1.87,
    "Highlight cues": "",
    "Note": "",
-   "#": 74
+   "#": 75
   }
  ],
  "audio_files_not_used_by_the_game": [
@@ -972,6 +985,11 @@
   "cap_p11_m_mug.mp3",
   "cap_p3_a.mp3",
   "cap_p3_b.mp3",
+  "cap_p3_idle.mp3",
+  "cap_p3_ok.mp3",
+  "cap_p3_ok2.mp3",
+  "cap_p3_q.mp3",
+  "cap_p3_wrong.mp3",
   "cap_pt_guided.mp3",
   "cap_pt_practice.mp3",
   "cap_pt_tutorial.mp3",
