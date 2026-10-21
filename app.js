@@ -837,7 +837,7 @@ function _chainMs(srcs, gapMs){
    no reason to fetch it again and the reviewer keeps hearing the previous take. __AUDIO_V is
    stamped by the builder from the CONTENT of the audio folder, so it changes exactly when a clip
    changes and not otherwise - a fresh URL on every build would defeat caching for no reason. */
-var __AUDIO_V = "5a9eaadfbe";
+var __AUDIO_V = "ba6c5b0f24";
 function _av(src){
   if(typeof src !== "string" || src.indexOf("assets/Audio/") < 0) return src;
   return src.indexOf("?") >= 0 ? src : src + "?v=" + __AUDIO_V;
@@ -11739,6 +11739,13 @@ function capAskNumber(ctx, stage, spec, o){
   const hideWrong = ()=> [...col.children].forEach(x => { if(x !== rightCell){ x.classList.remove("crossed"); x.classList.add("cap-off-opt"); } });
   const revealHand = slide.phase !== "practice";   // P1 / P2 (practice): the answer is shown by its glow only - no hand nudge
   h2Handlers.show = ()=>{ hideWrong(); if(rightCell){ rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); } };
+  /* inactivity (7 s, checklist): the cards give a gentle bounce one by one and Swiftee repeats the question (it never
+     points at the answer); once the answer has been shown (3rd wrong) the right card is pointed at again instead */
+  let idleN = 0;
+  const idle = capIdle(ctx, 7000, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
+    if(onlyRight){ rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); idle.arm(); return; }
+    [...col.children].forEach((x, i)=> ctx.after(i * 160, ()=>{ x.classList.remove("cap-opt-nudge"); void x.offsetWidth; x.classList.add("cap-opt-nudge"); }));
+    ctx.say(spec.q, null, ()=>{ if(!done && !busy) idle.arm(); }); });   // a tap during the reminder still counts
   const win = (cell, val)=>{
     done = true; stopNudge(); rightCell.classList.remove("cap-glow"); rightCell.classList.add("correct");
     sfxCorrect(); confettiCannon(); setSwMood("happy");
@@ -11761,7 +11768,7 @@ function capAskNumber(ctx, stage, spec, o){
     c.onclick = ()=>{
       if(done || busy || c.classList.contains("crossed")) return;
       if(onlyRight && val !== spec.answer) return;
-      stopNudge(); busy = true;
+      stopNudge(); idle.stop(); busy = true;
       if(val === spec.answer){ win(c, val); return; }
       attempts++; state.attempts = attempts; c.classList.add("crossed"); sfxWrongSoft(); setSwMood("tryagain");
       setTimeout(()=>{ if(!c.classList.contains("cap-off-opt")) c.classList.remove("crossed"); }, 900);   // red flash only; stays tappable
@@ -11769,12 +11776,12 @@ function capAskNumber(ctx, stage, spec, o){
       $("hintBtn").classList.add("show");
       ctx.say("cap_num_" + val, null, ()=>{
         if(attempts === 1){ state.scaffoldLevel = Math.max(state.scaffoldLevel, 2);
-          ctx.say(spec.h1, null, ()=>{ busy = false; }); }
+          ctx.say(spec.h1, null, ()=>{ busy = false; idle.arm(); }); }
         else if(attempts === 2 && spec.h3){ state.scaffoldLevel = 3;           // 2nd wrong: strong hint (count along), all cards still open
-          ctx.say(spec.h2, h2Handlers, ()=>{ busy = false; }); }
+          ctx.say(spec.h2, h2Handlers, ()=>{ busy = false; idle.arm(); }); }
         else { state.scaffoldLevel = 3; onlyRight = true;                       // 3rd wrong: the answer is shown, wrong cards disabled
           SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts });
-          ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ busy = false; hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); }); }
+          ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ busy = false; hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); idle.arm(); }); }
       });
     };
     col.appendChild(c);
@@ -11782,11 +11789,11 @@ function capAskNumber(ctx, stage, spec, o){
   stage.appendChild(col);
   $("hintBtn").onclick = ()=>{ if(done || busy) return; state.hintUsed = true; SwiftPAL.emit("hint_shown", { slide_id: slide.id, manual: true });
     busy = true; ctx.say(attempts >= 2 ? spec.h2 : spec.h1, attempts >= 2 ? h2Handlers : null, ()=>{ busy = false; }); };
-  ctx.replayFn = ()=>{ if(!busy && !done) ctx.say(spec.q); };
+  ctx.replayFn = ()=>{ if(!busy && !done){ idle.stop(); ctx.say(spec.q, null, ()=> idle.arm()); } };
   // options come in ONE BY ONE, each with a soft pop (checklist); the question is asked once they are all there
   const cells = [...col.children], GAP = 380;
   cells.forEach((c, i)=> ctx.after(150 + i * GAP, ()=>{ c.classList.add("cap-opt-in"); try{ capSfxPop(true); }catch(e){} }));
-  ctx.after(150 + cells.length * GAP + 150, ()=>{ if(!done && !busy) ctx.say(spec.q); });   // not if the child already tapped a card
+  ctx.after(150 + cells.length * GAP + 150, ()=>{ if(!done && !busy) ctx.say(spec.q, null, ()=>{ if(!done && !busy) idle.arm(); }); });   // not if the child already tapped a card
 }
 /* [end screen] Swiftee from the STANDARD end-animation sheets (_tools/build_end_sprite.py -> CARD.end_sprite).
    Still (mouth shut) until the VO starts; on the first word «शाबाश!» the arms-up cheer; then the talk sheet, whose
@@ -12506,8 +12513,8 @@ Object.assign(SlideModules, {
         wait(true); };   // VO done: both pulse gently until the child taps one   // VO done: both give a small pulse (now tappable)
       const mid = capMarker(stage, 480, 330);
       let done = false, onlyMug = false, attempts = 0, idleN = 0, busy = false;
-      // inactivity (8.5 s): the hand points at the RIGHT option (the mug) and the mug glows until it is tapped
-      const idle = capIdle(ctx, 8500, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
+      // inactivity (7 s): the hand points at the RIGHT option (the mug) and the mug glows until it is tapped
+      const idle = capIdle(ctx, 7000, ()=>{ if(done || busy || idleN >= 3) return; idleN++;
         capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); ctx.say(A.idle, null, ()=> idle.arm()); });
       // word-timed glow: only the vessel being named glows; the other one's glow stops at once (never both)
       let glowT = 0;
@@ -12622,6 +12629,9 @@ Object.assign(SlideModules, {
         glasses2: ()=>{ glow(glasses); keep(); },
         cup2: ()=>{ off(); crossCup(); const x = cup.el.querySelector(".cap-x"); if(x){ x.classList.remove("cap-x-nudge"); void x.offsetWidth; x.classList.add("cap-x-nudge"); } } };
       const play = (first)=> ctx.say(A.intro, first ? cues : null, ()=>{ off(); keep(); crossCup(); const x = cup.el.querySelector(".cap-x"); if(x) x.classList.add("cap-x-off");   // VO over: the cross turns disabled
+        // VO over: the 4 glasses (the right measuring units) give a little wiggle, with the wiggle SFX
+        glasses.forEach((v, k)=> ctx.after(k * 90, ()=>{ v.el.classList.remove("cap-wiggle"); void v.el.offsetWidth; v.el.classList.add("cap-wiggle"); }));
+        try{ const w = new Audio("assets/SFX/sfx_wiggle.mp3"); w.volume = 0.8; w.play().catch(()=>{}); }catch(e){}
         setSwMood("point"); capNavOn(); });
       ctx.replayFn = ()=> play(false);
       play(true);
@@ -12679,9 +12689,10 @@ Object.assign(SlideModules, {
         ctx.after(600, ()=> ctx.say(A.conclude, null, ()=>{ setSwMood("point"); capNavOn(); ctx.replayFn = ()=> ctx.say(A.conclude); })); };
       // one glass at a time: pick the jug up, pour, set it back down. The fuller the jug, the less it tips.
       const TILT = [[16, 38], [38, 58], [58, 76], [76, 92]];
-      const pour = (i)=>{ if(i >= N){ ctx.after(300, finish); return; }
-        capRealPour(ctx, jug, glasses[i], { dir: 1, high: true, ceil: 46, chime: true, srcTo: 1 - (i + 1) / N, dstFrom: 0, dstTo: 1, ms: 1800, tilt: TILT[i] || TILT[3],
-          onDone: ()=>{ capFlash(glasses[i].el, "cap-hl", 1000); capBadge(glasses[i], i + 1); ctx.after(350, ()=> pour(i + 1)); } }); };
+      // one continuous pour: the jug stays in the air and moves glass to glass; it goes back only after the last one
+      const pour = (i)=>{ if(i >= N){ capArtHome(ctx, jug, ()=> ctx.after(300, finish)); return; }
+        capRealPour(ctx, jug, glasses[i], { dir: 1, high: true, ceil: 46, chime: true, stay: true, srcTo: 1 - (i + 1) / N, dstFrom: 0, dstTo: 1, ms: 1800, tilt: TILT[i] || TILT[3],
+          onDone: ()=>{ capFlash(glasses[i].el, "cap-hl", 1000); capBadge(glasses[i], i + 1); ctx.after(150, ()=> pour(i + 1)); } }); };
       ctx.say(A.intro, cues, ()=> ctx.after(300, ()=> pour(0)));
     }
   },
@@ -14541,7 +14552,7 @@ function boot(){
        or stutters later. Each item has its own timeout and errors count as done, and a 30 s watchdog still
        guarantees the child is never stranded on the loader. The objects are kept (window._capPreloaded) so
        the browser keeps them in memory. */
-    const PRELOAD_EXTRA = ["assets/Images/cap_cover_v3.jpg", "assets/Images/cap_cover_title.webp", "assets/UI/new_landing_swiftee_still.webp", "assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
+    const PRELOAD_EXTRA = ["assets/SFX/sfx_wiggle.mp3", "assets/Images/cap_cover_v3.jpg", "assets/Images/cap_cover_title.webp", "assets/UI/new_landing_swiftee_still.webp", "assets/swiftpal_buttons/btn-play-round.svg", "assets/swiftpal_buttons/btn-play-round-waiting.svg", "assets/Images/last_swifty_still.webp", "assets/Images/last_swifty_end.webp", "assets/SFX/sfx_correct.wav", "assets/SFX/sfx_wrong.wav", "assets/SFX/sfx_burst.wav", "assets/SFX/sfx_celebrate.wav", "assets/SFX/sfx_play.wav", "assets/SFX/sfx_next.wav", "assets/SFX/sfx_tap.wav", "assets/SFX/bgm_mela.wav", "assets/Images/play_btn.svg", "assets/Images/play_btn_disabled.svg", "assets/UI/startnew_bg.webp", "assets/UI/startnew_bg_plain.webp", "assets/UI/end_screen.webp", "assets/UI/bgdeco_spark.svg", "assets/UI/bgdeco_star.svg", "assets/UI/bgdeco_star_o.svg", "assets/Audio/sfx_pour.mp3", "assets/Images/cap_shelf.svg", "assets/Images/cap_shop_front.png", "assets/Images/cap_shop_order.jpg", "assets/Images/cap_shop_pour.jpg", "assets/Images/cap_utensils_sprite.png", "assets/UI/end_screen.webp", "assets/UI/hint.png", "assets/UI/hint_active.png", "assets/UI/loader.gif", "assets/UI/mascot.webp", "assets/UI/new_landing_swiftee_anim.webp", "assets/UI/nudge_hand_new.svg", "assets/UI/peeking.webp", "assets/UI/start_card.webp", "assets/UI/start_mascot.webp", "assets/UI/startnew_bg.webp", "assets/UI/sw_anim_rest.png", "assets/UI/sw_head_talking.webp", "assets/UI/sw_lg_celebrating_anim.webp"];
     const urls = new Set(PRELOAD_EXTRA);
     (function walk(x){ if(!x) return; if(typeof x === "string"){ if(/\.(png|jpe?g|webp|gif|svg|mp3|ogg|m4a)$/i.test(x)) urls.add(x); return; }
       if(Array.isArray(x)) x.forEach(walk); else if(typeof x === "object") Object.values(x).forEach(walk); })([CARD.assets, CARD.gate, CARD.end_anim, CARD.end_sprite, CARD.landing_hero]);

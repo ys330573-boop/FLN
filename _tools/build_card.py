@@ -66,7 +66,7 @@ LINES = {
 
   # PAGE 8 — cups of milk into a saucepan
   "cap_p7_h3": ("सही संख्या यह है।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
-  "cap_p8_a": ("यहाँ दस भरे कप और एक खाली बड़ा जार है। दूध डालकर देखिए, यह जार कितने कप से भरता है।", SWIFTEE, [("दस भरे कप", "cups"), ("एक खाली बड़ा जार", "pan")]),
+  "cap_p8_a": ("दूध डालकर देखिए, यह जार कितने कप से भरता है।", SWIFTEE, [("यह जार", "pan"), ("कप", "cups")]),
   "cap_p8_b": ("अब बाकी कपों का दूध जार में डालिए।", SWIFTEE, []),
   "cap_p8_q": ("यह जार कितने कप दूध से भरा? सही संख्या चुनिए।", SWIFTEE, []),
   "cap_p8_ok": ("शाबाश! यह जार आठ कप दूध से पूरा भर गया।", SWIFTEE, []),
@@ -76,7 +76,7 @@ LINES = {
 
   # PAGE 9 — tap the bottle, it fills the glasses
   "cap_p8_h3": ("सही संख्या यह है।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
-  "cap_p9_a": ("यह बोतल पानी से पूरी भरी हुई है और चार गिलास खाली हैं। बोतल का पूरा पानी गिलासों में भरने के लिए बोतल पर टैप करिए।", SWIFTEE, [("यह बोतल", "bottle"), ("चार गिलास खाली", "glasses")]),
+  "cap_p9_a": ("बोतल का पूरा पानी गिलासों में भरने के लिए बोतल पर टैप करिए।", SWIFTEE, [("बोतल का", "bottle"), ("गिलासों में", "glasses")]),
   "cap_p9_q": ("बोतल में कितने गिलास पानी है? सही संख्या चुनिए।", SWIFTEE, []),
   "cap_p9_ok": ("शाबाश! इस बोतल में तीन गिलास पानी है।", SWIFTEE, []),
   "cap_p9_h1": ("फिर से गिनिए।", SWIFTEE, []),
@@ -85,7 +85,7 @@ LINES = {
 
   # PAGE 10 — mugs of oil into an empty jug
   "cap_p9_h3": ("सही संख्या यह है।", SWIFTEE, [("सही संख्या", "show")]),   # 3rd wrong: the answer is shown
-  "cap_p10_a": ("यहाँ एक खाली जग और छह भरे हुए मग हैं। इन मगों का सारा तेल जग में डालिए। जग कितने मग से पूरा भरता है।", SWIFTEE, [("एक खाली जग", "jug"), ("छह भरे हुए मग", "mugs")]),
+  "cap_p10_a": ("इन मगों का सारा तेल जग में डालिए।", SWIFTEE, [("इन मगों", "mugs"), ("जग में", "jug")]),
   "cap_p10_q": ("यह जग कितने मग तेल से भर गया? सही संख्या चुनिए।", SWIFTEE, []),
   "cap_p10_ok": ("शाबाश! यह जग छह मग से भर गया।", SWIFTEE, []),
   "cap_p10_h1": ("फिर से गिनिए।", SWIFTEE, []),
@@ -152,7 +152,7 @@ SLIDES = [
    "audio": {"intro": "cap_p7_a", "your_turn": "cap_p7_b"},
    "data": {"capacity": 4, "cups": 6, "liquid": "oil", "idle_ms": 7000, "ask": ask(7, [1, 4, 6], 4)}},
   {"id": "G2", "phase": "guided", "eis": "enactive", "type": "CAP_TAP_POUR",
-   "prompt_hi": "कपों का दूध भगोने में डालिए।", "ask_prompt_hi": "यह भगोना कितने कप दूध से पूरा भर गया?",
+   "prompt_hi": "कपों का दूध जार में डालिए।", "ask_prompt_hi": "यह जार कितने कप दूध से भरा?",
    "audio": {"intro": "cap_p8_a", "your_turn": "cap_p8_b"},
    "data": {"layout": "pan", "capacity": 8, "sources": 10, "liquid": "milk", "demo": True, "idle_ms": 7000,
             "ask": ask(8, [1, 2, 8], 8)}},

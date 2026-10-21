@@ -1,7 +1,7 @@
 {
  "skill_code": "MTG2A04_L03_S01",
  "total_clips": 75,
- "total_seconds": 302.6,
+ "total_seconds": 288.0,
  "clips": [
   {
    "Section": "Title screen",
@@ -278,20 +278,20 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Instruction (screen opens)",
    "VO ID": "cap_p8_a",
    "File": "assets/Audio/cap_p8_a.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "यहाँ दस भरे कप और एक खाली बड़ा जार है। दूध डालकर देखिए, यह जार कितने कप से भरता है।",
-   "Duration (s)": 7.92,
-   "Highlight cues": "cups @ 0.60s; pan @ 2.26s",
+   "Hindi script": "दूध डालकर देखिए, यह जार कितने कप से भरता है।",
+   "Duration (s)": 4.04,
+   "Highlight cues": "pan @ 1.84s; cups @ 2.76s",
    "Note": "",
    "#": 22
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Your turn",
    "VO ID": "cap_p8_b",
    "File": "assets/Audio/cap_p8_b.mp3",
@@ -304,7 +304,7 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Question",
    "VO ID": "cap_p8_q",
    "File": "assets/Audio/cap_p8_q.mp3",
@@ -317,7 +317,7 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Correct answer",
    "VO ID": "cap_p8_ok",
    "File": "assets/Audio/cap_p8_ok.mp3",
@@ -330,7 +330,7 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
    "VO ID": "cap_p8_ok2",
    "File": "assets/Audio/cap_p8_ok2.mp3",
@@ -343,7 +343,7 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Wrong answer 1 - hint",
    "VO ID": "cap_p8_h1",
    "File": "assets/Audio/cap_p8_h1.mp3",
@@ -356,7 +356,7 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Wrong answer 2 - counting hint",
    "VO ID": "cap_p8_h2",
    "File": "assets/Audio/cap_p8_h2.mp3",
@@ -369,7 +369,7 @@
   },
   {
    "Section": "Guided practice",
-   "Screen": "G2 - कपों का दूध भगोने में डालिए।",
+   "Screen": "G2 - कपों का दूध जार में डालिए।",
    "When it plays": "Wrong answer 3 - the answer is shown",
    "VO ID": "cap_p8_h3",
    "File": "assets/Audio/cap_p8_h3.mp3",
@@ -400,9 +400,9 @@
    "VO ID": "cap_p9_a",
    "File": "assets/Audio/cap_p9_a.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "यह बोतल पानी से पूरी भरी हुई है और चार गिलास खाली हैं। बोतल का पूरा पानी गिलासों में भरने के लिए बोतल पर टैप करिए।",
-   "Duration (s)": 9.08,
-   "Highlight cues": "bottle @ 0.00s; glasses @ 3.02s",
+   "Hindi script": "बोतल का पूरा पानी गिलासों में भरने के लिए बोतल पर टैप करिए।",
+   "Duration (s)": 4.52,
+   "Highlight cues": "bottle @ 0.00s; glasses @ 1.56s",
    "Note": "",
    "#": 31
   },
@@ -491,9 +491,9 @@
    "VO ID": "cap_p10_a",
    "File": "assets/Audio/cap_p10_a.mp3",
    "Speaker": "Swiftee",
-   "Hindi script": "यहाँ एक खाली जग और छह भरे हुए मग हैं। इन मगों का सारा तेल जग में डालिए। जग कितने मग से पूरा भरता है।",
-   "Duration (s)": 9.08,
-   "Highlight cues": "jug @ 0.66s; mugs @ 1.99s",
+   "Hindi script": "इन मगों का सारा तेल जग में डालिए।",
+   "Duration (s)": 3.0,
+   "Highlight cues": "mugs @ 0.00s; jug @ 1.78s",
    "Note": "",
    "#": 38
   },
