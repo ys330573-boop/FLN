@@ -1,9 +1,8 @@
 {
  "skill_code": "MTG2A04_L03_S01",
- "title": "कितना पानी है?",
  "language": "hi-IN",
  "total_files": 75,
- "save_to": "assets/Audio/<File name> (replace the file with the same name)",
+ "save_to": "voiceovers/<File name>, then run python _tools/apply_voiceovers.py",
  "clips": [
   {
    "#": 1,
@@ -15,9 +14,9 @@
    "Section": "Title screen",
    "Screen": "Title (cover)",
    "When it plays": "Greeting - plays when the title screen opens",
-   "Current length (s)": 11.02,
-   "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 7.56,
+   "Notes": "Word-timed highlights: title @ 6.30s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 2,
@@ -29,9 +28,9 @@
    "Section": "Transition",
    "Screen": "Teaching transition",
    "When it plays": "Swiftee transition screen",
-   "Current length (s)": 4.57,
-   "Notes": "Transition screen. The on-screen title is written in exactly when Swiftee says the last phrase (चलिए, शुरू करें! / चलिए, साथ में करें! / अब आपकी बारी।).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 4.8,
+   "Notes": "Transition screen.",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 3,
@@ -39,13 +38,13 @@
    "VO ID": "cap_p2_q",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ एक गिलास और एक मग दिया हुआ है। इन दोनों में ज़्यादा पानी किसमें आएगा, गिलास में या मग में? सही बर्तन पर टैप करिए।",
+   "Script (Hindi)": "यहाँ एक गिलास और एक मग दिया हुआ है। इनमें से ज़्यादा पानी किसमें आएगा? सही बर्तन पर टैप करिए।",
    "Section": "Teaching",
    "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Question / instruction",
-   "Current length (s)": 12.24,
-   "Notes": "Word-timed highlights in the game: glass @ 0.82s; mug @ 1.83s; both @ 3.95s; glass @ 6.80s; mug @ 7.69s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 7.8,
+   "Notes": "Word-timed highlights: glass @ 0.70s; mug @ 1.96s; both @ 3.46s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 4,
@@ -53,13 +52,13 @@
    "VO ID": "cap_p2_idle",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "ज़्यादा पानी किसमें आएगा, गिलास में या मग में? सही बर्तन पर टैप करिए।",
+   "Script (Hindi)": "ज़्यादा पानी वाले बर्तन पर टैप करिए।",
    "Section": "Teaching",
    "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Inactivity reminder",
-   "Current length (s)": 7.68,
+   "Current length (s)": 3.0,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 5,
@@ -71,9 +70,9 @@
    "Section": "Teaching",
    "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Correct answer",
-   "Current length (s)": 7.49,
+   "Current length (s)": 6.24,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 6,
@@ -85,9 +84,9 @@
    "Section": "Teaching",
    "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "Current length (s)": 5.57,
+   "Current length (s)": 4.56,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 7,
@@ -99,9 +98,9 @@
    "Section": "Teaching",
    "Screen": "T1 - ज़्यादा पानी किसमें?",
    "When it plays": "Wrong answer - explanation",
-   "Current length (s)": 7.34,
-   "Notes": "Word-timed highlights in the game: mug @ 2.19s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 6.48,
+   "Notes": "Word-timed highlights: mug @ 1.96s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 8,
@@ -109,13 +108,13 @@
    "VO ID": "cap_p4_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "अब हम सीखते हैं, इस बोतल में दूध की मात्रा कितने गिलास है? यहाँ एक बोतल पूरी खाली है, और चार एक जैसे गिलास में दूध है। इन गिलासों का सारा दूध एक-एक करके बोतल में डालते हैं, और देखते हैं कि यह बोतल कितने गिलास से भरती है।",
+   "Script (Hindi)": "यहाँ एक खाली बोतल और चार एक जैसे दूध के गिलास हैं। दूध को बोतल में डालकर देखते हैं, यह कितने गिलास से भरती है।",
    "Section": "Teaching",
    "Screen": "T2 - कितने गिलास दूध?",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 21.07,
-   "Notes": "Word-timed highlights in the game: bottle @ 1.74s; glasses @ 8.54s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 9.48,
+   "Notes": "Word-timed highlights: bottle @ 0.72s; glasses @ 2.36s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 9,
@@ -123,13 +122,13 @@
    "VO ID": "cap_p4_b",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह बोतल चार गिलास से पूरी भर गई। तो इस बोतल में दूध की मात्रा चार एक जैसे गिलास के बराबर है।",
+   "Script (Hindi)": "यह बोतल चार गिलास से पूरी भर गई। इस बोतल की मात्रा चार गिलास के बराबर है।",
    "Section": "Teaching",
    "Screen": "T2 - कितने गिलास दूध?",
    "When it plays": "Result",
-   "Current length (s)": 10.25,
+   "Current length (s)": 6.16,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 10,
@@ -137,13 +136,13 @@
    "VO ID": "cap_p5_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "अब हम सीखते हैं, जग में पानी की मात्रा कितने गिलास है? यहाँ एक जग में पूरा पानी भरा हुआ है। इसका सारा पानी इन गिलासों में भरते हैं, और देखते हैं, कितने गिलास भरते हैं।",
+   "Script (Hindi)": "यह जग पानी से पूरा भरा हुआ है। इसका सारा पानी गिलासों में डालकर देखते हैं कि कितने गिलास भरते हैं।",
    "Section": "Teaching",
    "Screen": "T3 - कितने गिलास पानी?",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 16.56,
-   "Notes": "Word-timed highlights in the game: glasses @ 3.38s; jug @ 5.92s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 7.48,
+   "Notes": "Word-timed highlights: jug @ 0.00s; glasses @ 4.04s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 11,
@@ -151,13 +150,13 @@
    "VO ID": "cap_p5_b",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ एक जग से चार गिलास पूरे भर गए। तो जग में पानी की मात्रा चार गिलास के बराबर है।",
+   "Script (Hindi)": "इस जग से चार गिलास पूरे भर गए। इसकी मात्रा चार गिलास के बराबर है।",
    "Section": "Teaching",
    "Screen": "T3 - कितने गिलास पानी?",
    "When it plays": "Result",
-   "Current length (s)": 9.12,
+   "Current length (s)": 5.64,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 12,
@@ -169,9 +168,9 @@
    "Section": "Teaching",
    "Screen": "T4 - ध्यान रहें।",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 10.56,
-   "Notes": "Word-timed highlights in the game: glasses @ 4.43s; cup @ 7.92s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 8.48,
+   "Notes": "Word-timed highlights: glasses @ 3.72s; cup @ 6.24s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 13,
@@ -183,9 +182,9 @@
    "Section": "Transition",
    "Screen": "Guided practice transition",
    "When it plays": "Swiftee transition screen",
-   "Current length (s)": 4.97,
-   "Notes": "Transition screen. The on-screen title is written in exactly when Swiftee says the last phrase (चलिए, शुरू करें! / चलिए, साथ में करें! / अब आपकी बारी।).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 5.28,
+   "Notes": "Transition screen.",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 14,
@@ -193,13 +192,13 @@
    "VO ID": "cap_p7_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ एक जार, तेल से पूरा भरा हुआ है, और कुछ एक जैसे खाली कप रखे हुए हैं। जार को ऐसे ले जाकर इन कपों को तेल से पूरा भरिए।",
+   "Script (Hindi)": "यह जार तेल से पूरा भरा हुआ है। इस जार का पूरा तेल इन कपों में भरिए।",
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 12.91,
-   "Notes": "Word-timed highlights in the game: demo @ 7.73s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 6.52,
+   "Notes": "Word-timed highlights: demo @ 2.92s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 15,
@@ -207,13 +206,13 @@
    "VO ID": "cap_p7_b",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "अब आप करिए। जार में बचा हुआ तेल इन बचे हुए कपों में डालिए।",
+   "Script (Hindi)": "अब आप बचा हुआ तेल बाकी कपों में डालिए।",
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Your turn",
-   "Current length (s)": 6.79,
+   "Current length (s)": 3.52,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 16,
@@ -221,13 +220,13 @@
    "VO ID": "cap_p7_q",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस जार में कितने कप तेल है? सही संख्या पर टैप करिए।",
+   "Script (Hindi)": "इस जार में कितने कप तेल है? सही संख्या चुनिए।",
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Question",
-   "Current length (s)": 6.29,
+   "Current length (s)": 4.04,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 17,
@@ -235,13 +234,13 @@
    "VO ID": "cap_p7_ok",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "शाबाश! इस जार से चार कप पूरे भर गए।",
+   "Script (Hindi)": "शाबाश! जार से चार कप भर गए।",
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Correct answer",
-   "Current length (s)": 5.66,
+   "Current length (s)": 3.56,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 18,
@@ -249,13 +248,13 @@
    "VO ID": "cap_p7_ok2",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस जार से चार कप पूरे भर गए।",
+   "Script (Hindi)": "जार से चार कप भर गए।",
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "Current length (s)": 3.77,
+   "Current length (s)": 2.64,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 19,
@@ -267,9 +266,9 @@
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Wrong answer 1 - hint",
-   "Current length (s)": 2.16,
+   "Current length (s)": 1.52,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 20,
@@ -281,9 +280,9 @@
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Wrong answer 2 - counting hint",
-   "Current length (s)": 6.84,
-   "Notes": "Word-timed highlights in the game: n1 @ 0.04s; n2 @ 0.80s; n3 @ 1.49s; n4 @ 2.31s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 6.04,
+   "Notes": "Word-timed highlights: n1 @ 0.00s; n2 @ 0.96s; n3 @ 1.86s; n4 @ 2.84s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 21,
@@ -295,9 +294,9 @@
    "Section": "Guided practice",
    "Screen": "G1 - जार का पूरा तेल कप में डालिए।",
    "When it plays": "Wrong answer 3 - the answer is shown",
-   "Current length (s)": 2.69,
-   "Notes": "Word-timed highlights in the game: show @ 0.04s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 2.12,
+   "Notes": "Word-timed highlights: show @ 0.00s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 22,
@@ -305,13 +304,13 @@
    "VO ID": "cap_p8_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ दस कप दूध से पूरे भरे हुए हैं, और एक छोटा भगोना पूरा खाली है। कपों का दूध एक-एक करके भगोने में डालिए, और देखिए कि भगोना कितने कप से भरता है।",
+   "Script (Hindi)": "यहाँ दस भरे कप और एक खाली बड़ा जार है। दूध डालकर देखिए, यह जार कितने कप से भरता है।",
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 14.45,
-   "Notes": "Word-timed highlights in the game: cups @ 0.55s; pan @ 3.75s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 7.92,
+   "Notes": "Word-timed highlights: cups @ 0.60s; pan @ 2.26s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 23,
@@ -319,13 +318,13 @@
    "VO ID": "cap_p8_b",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "अब आप करिए। बचे हुए कपों का दूध भगोने में डालिए।",
+   "Script (Hindi)": "अब बाकी कपों का दूध जार में डालिए।",
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Your turn",
-   "Current length (s)": 6.19,
+   "Current length (s)": 3.48,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 24,
@@ -333,13 +332,13 @@
    "VO ID": "cap_p8_q",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह भगोना कितने कप दूध से पूरा भर गया? सही संख्या पर टैप करिए।",
+   "Script (Hindi)": "यह जार कितने कप दूध से भरा? सही संख्या चुनिए।",
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Question",
-   "Current length (s)": 7.61,
+   "Current length (s)": 4.28,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 25,
@@ -347,13 +346,13 @@
    "VO ID": "cap_p8_ok",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "शाबाश! यह भगोना आठ कप दूध से पूरा भर गया।",
+   "Script (Hindi)": "शाबाश! यह जार आठ कप दूध से पूरा भर गया।",
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Correct answer",
-   "Current length (s)": 6.31,
+   "Current length (s)": 4.48,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 26,
@@ -361,13 +360,13 @@
    "VO ID": "cap_p8_ok2",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह भगोना आठ कप दूध से पूरा भर गया।",
+   "Script (Hindi)": "यह जार आठ कप दूध से पूरा भर गया।",
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "Current length (s)": 4.42,
+   "Current length (s)": 3.28,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 27,
@@ -375,13 +374,13 @@
    "VO ID": "cap_p8_h1",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "दोबारा गिनिए।",
+   "Script (Hindi)": "फिर से गिनिए।",
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Wrong answer 1 - hint",
-   "Current length (s)": 2.38,
+   "Current length (s)": 1.4,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 28,
@@ -393,9 +392,9 @@
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Wrong answer 2 - counting hint",
-   "Current length (s)": 9.82,
-   "Notes": "Word-timed highlights in the game: n1 @ 0.04s; n2 @ 0.76s; n3 @ 1.45s; n4 @ 2.21s; n5 @ 2.98s; n6 @ 3.87s; n7 @ 4.49s; n8 @ 5.30s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 10.6,
+   "Notes": "Word-timed highlights: n1 @ 0.00s; n2 @ 0.94s; n3 @ 1.91s; n4 @ 3.20s; n5 @ 4.34s; n6 @ 5.55s; n7 @ 6.28s; n8 @ 7.39s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 29,
@@ -407,9 +406,9 @@
    "Section": "Guided practice",
    "Screen": "G2 - कपों का दूध भगोने में डालिए।",
    "When it plays": "Wrong answer 3 - the answer is shown",
-   "Current length (s)": 2.69,
-   "Notes": "Word-timed highlights in the game: show @ 0.04s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 2.0,
+   "Notes": "Word-timed highlights: show @ 0.00s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 30,
@@ -421,9 +420,9 @@
    "Section": "Transition",
    "Screen": "Independent practice transition",
    "When it plays": "Swiftee transition screen",
-   "Current length (s)": 1.69,
-   "Notes": "Transition screen. The on-screen title is written in exactly when Swiftee says the last phrase (चलिए, शुरू करें! / चलिए, साथ में करें! / अब आपकी बारी।).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 2.52,
+   "Notes": "Transition screen.",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 31,
@@ -431,13 +430,13 @@
    "VO ID": "cap_p9_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ एक बोतल पानी से पूरी भरी हुई है, और चार खाली गिलास रखे हुए हैं। बोतल में कितने गिलास पानी की मात्रा है, यह जानने के लिए बोतल से सारा पानी इन खाली गिलासों में डालना होगा। अब बोतल पर टैप करिए।",
+   "Script (Hindi)": "यह बोतल पानी से पूरी भरी हुई है और चार गिलास खाली हैं। बोतल का पूरा पानी गिलासों में भरने के लिए बोतल पर टैप करिए।",
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 19.32,
-   "Notes": "Word-timed highlights in the game: bottle @ 0.61s; glasses @ 3.92s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 9.08,
+   "Notes": "Word-timed highlights: bottle @ 0.00s; glasses @ 3.02s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 32,
@@ -445,13 +444,13 @@
    "VO ID": "cap_p9_q",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस बोतल में पानी की मात्रा कितने गिलास के बराबर है? सही संख्या पर टैप करिए।",
+   "Script (Hindi)": "बोतल में कितने गिलास पानी है? सही संख्या चुनिए।",
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Question",
-   "Current length (s)": 8.09,
+   "Current length (s)": 4.36,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 33,
@@ -459,13 +458,13 @@
    "VO ID": "cap_p9_ok",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "शाबाश! इस बोतल में पानी की मात्रा कुल तीन गिलास के बराबर है।",
+   "Script (Hindi)": "शाबाश! इस बोतल में तीन गिलास पानी है।",
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Correct answer",
-   "Current length (s)": 7.15,
+   "Current length (s)": 4.76,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 34,
@@ -473,13 +472,13 @@
    "VO ID": "cap_p9_ok2",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस बोतल में पानी की मात्रा कुल तीन गिलास के बराबर है।",
+   "Script (Hindi)": "इस बोतल में तीन गिलास पानी है।",
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "Current length (s)": 5.23,
+   "Current length (s)": 2.8,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 35,
@@ -487,13 +486,13 @@
    "VO ID": "cap_p9_h1",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "दोबारा गिनिए।",
+   "Script (Hindi)": "फिर से गिनिए।",
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Wrong answer 1 - hint",
-   "Current length (s)": 2.38,
+   "Current length (s)": 1.6,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 36,
@@ -505,9 +504,9 @@
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Wrong answer 2 - counting hint",
-   "Current length (s)": 5.83,
-   "Notes": "Word-timed highlights in the game: n1 @ 0.04s; n2 @ 0.77s; n3 @ 1.48s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 5.32,
+   "Notes": "Word-timed highlights: n1 @ 0.00s; n2 @ 1.10s; n3 @ 2.08s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 37,
@@ -519,9 +518,9 @@
    "Section": "Independent practice",
    "Screen": "P1 - बोतल पर टैप करिए।",
    "When it plays": "Wrong answer 3 - the answer is shown",
-   "Current length (s)": 2.69,
-   "Notes": "Word-timed highlights in the game: show @ 0.04s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 2.12,
+   "Notes": "Word-timed highlights: show @ 0.00s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 38,
@@ -529,13 +528,13 @@
    "VO ID": "cap_p10_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ एक खाली जग है, और छह छोटे मग हैं, जो तेल से पूरे भरे हुए हैं। मगों का तेल एक-एक करके जग में डालिए, और देखिए कितने मग से यह जग पूरा भरता है।",
+   "Script (Hindi)": "यहाँ एक खाली जग और छह भरे हुए मग हैं। इन मगों का सारा तेल जग में डालिए। जग कितने मग से पूरा भरता है।",
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 14.78,
-   "Notes": "Word-timed highlights in the game: jug @ 0.53s; mugs @ 2.30s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 9.08,
+   "Notes": "Word-timed highlights: jug @ 0.66s; mugs @ 1.99s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 39,
@@ -543,13 +542,13 @@
    "VO ID": "cap_p10_q",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह जग कितने मग तेल से पूरा भरा है? सही संख्या पर टैप करिए।",
+   "Script (Hindi)": "यह जग कितने मग तेल से भर गया? सही संख्या चुनिए।",
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Question",
-   "Current length (s)": 7.18,
+   "Current length (s)": 4.84,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 40,
@@ -557,13 +556,13 @@
    "VO ID": "cap_p10_ok",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "शाबाश! यह जग छह मग तेल से पूरा भर गया।",
+   "Script (Hindi)": "शाबाश! यह जग छह मग से भर गया।",
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Correct answer",
-   "Current length (s)": 5.88,
+   "Current length (s)": 3.96,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 41,
@@ -571,13 +570,13 @@
    "VO ID": "cap_p10_ok2",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह जग छह मग तेल से पूरा भर गया।",
+   "Script (Hindi)": "यह जग छह मग से भर गया।",
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "Current length (s)": 3.96,
+   "Current length (s)": 3.04,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 42,
@@ -585,13 +584,13 @@
    "VO ID": "cap_p10_h1",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "दोबारा गिनिए।",
+   "Script (Hindi)": "फिर से गिनिए।",
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Wrong answer 1 - hint",
-   "Current length (s)": 2.38,
+   "Current length (s)": 1.6,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 43,
@@ -603,9 +602,9 @@
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Wrong answer 2 - counting hint",
-   "Current length (s)": 8.26,
-   "Notes": "Word-timed highlights in the game: n1 @ 0.04s; n2 @ 0.76s; n3 @ 1.45s; n4 @ 2.26s; n5 @ 3.04s; n6 @ 3.96s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 7.84,
+   "Notes": "Word-timed highlights: n1 @ 0.00s; n2 @ 0.86s; n3 @ 1.98s; n4 @ 2.98s; n5 @ 4.14s; n6 @ 5.04s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 44,
@@ -617,9 +616,9 @@
    "Section": "Independent practice",
    "Screen": "P2 - मगों का तेल जग में डालिए।",
    "When it plays": "Wrong answer 3 - the answer is shown",
-   "Current length (s)": 2.69,
-   "Notes": "Word-timed highlights in the game: show @ 0.04s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 2.0,
+   "Notes": "Word-timed highlights: show @ 0.00s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 45,
@@ -627,13 +626,13 @@
    "VO ID": "cap_p11_a",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "सुबह का समय है। गाँव में दूधवाले की दुकान खुल गई है। तभी तीन लोग दूध लेने दुकान पर आते हैं।",
+   "Script (Hindi)": "सुबह का समय है। गाँव में दूधवाले की दुकान खुल गई है। तभी कुछ लोग दूध लेने दुकान पर आते हैं।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Instruction (screen opens)",
-   "Current length (s)": 10.42,
-   "Notes": "Word-timed highlights in the game: people @ 6.79s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 7.32,
+   "Notes": "Word-timed highlights: people @ 4.88s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 46,
@@ -645,9 +644,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer gives the order",
-   "Current length (s)": 3.34,
+   "Current length (s)": 2.96,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 47,
@@ -659,9 +658,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer gives the order",
-   "Current length (s)": 3.26,
+   "Current length (s)": 2.56,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 48,
@@ -673,9 +672,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer gives the order",
-   "Current length (s)": 3.17,
+   "Current length (s)": 2.64,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 49,
@@ -683,13 +682,13 @@
    "VO ID": "cap_p11_b",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यहाँ तीनों बर्तनों पर एक-एक करके टैप करिए, और फिर इनकी मात्रा मापते हैं।",
+   "Script (Hindi)": "तीनों बर्तनों पर एक-एक करके टैप करिए और इनकी मात्रा मापिए।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Tap the three bottles",
-   "Current length (s)": 6.72,
-   "Notes": "Word-timed highlights in the game: vessels @ 0.57s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 5.84,
+   "Notes": "Word-timed highlights: vessels @ 0.00s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 50,
@@ -697,13 +696,13 @@
    "VO ID": "cap_p11_tap",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "अब दूध के गिलासों पर एक-एक करके टैप करिए, और दूध को बोतल में डालिए।",
+   "Script (Hindi)": "गिलासों पर टैप करके दूध बोतल में डालिए।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Tap the glasses to pour",
-   "Current length (s)": 6.65,
+   "Current length (s)": 3.64,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 51,
@@ -711,13 +710,13 @@
    "VO ID": "cap_p11_q",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "अब भरी हुई बोतलों को खींचकर उस ग्राहक तक ले जाइए, जिसे उतना दूध चाहिए।",
+   "Script (Hindi)": "भरी बोतल को सही ग्राहक तक खींचकर ले जाइए।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Question",
-   "Current length (s)": 7.27,
+   "Current length (s)": 3.88,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 52,
@@ -725,13 +724,13 @@
    "VO ID": "cap_p11_ok",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "शाबाश! सभी ग्राहकों को सही बोतल मिल गई।",
+   "Script (Hindi)": "शाबाश! सभी को सही बोतल मिल गई।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Correct answer",
-   "Current length (s)": 5.66,
+   "Current length (s)": 3.52,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 53,
@@ -739,13 +738,13 @@
    "VO ID": "cap_p11_ok2",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "सभी ग्राहकों को सही बोतल मिल गई।",
+   "Script (Hindi)": "सभी को सही बोतल मिल गई।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Correct after a wrong try (no «शाबाश!»)",
-   "Current length (s)": 3.77,
+   "Current length (s)": 2.4,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 54,
@@ -753,13 +752,13 @@
    "VO ID": "cap_p11_w1",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "दोबारा सोचिए। इस बोतल में कितने गिलास दूध है, और किसे उतना दूध चाहिए?",
+   "Script (Hindi)": "फिर से सोचिए। बोतल में कितने गिलास दूध है और किसे उतना चाहिए?",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Wrong customer 1 - hint",
-   "Current length (s)": 8.35,
+   "Current length (s)": 5.52,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 55,
@@ -767,13 +766,13 @@
    "VO ID": "cap_p11_w2_2",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस बोतल में दो गिलास दूध है। यह उन्हें दीजिए, जिन्हें दो गिलास दूध चाहिए।",
+   "Script (Hindi)": "इसमें दो गिलास दूध है, इसे दो गिलास वाले ग्राहक को दीजिए।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Wrong customer 2 (voice hint) - the 2-glass bottle's right customer",
-   "Current length (s)": 8.3,
-   "Notes": "Word-timed highlights in the game: show @ 3.39s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 5.12,
+   "Notes": "Word-timed highlights: show @ 1.88s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 56,
@@ -781,13 +780,13 @@
    "VO ID": "cap_p11_w2_3",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस बोतल में तीन गिलास दूध है। यह उन्हें दीजिए, जिन्हें तीन गिलास दूध चाहिए।",
+   "Script (Hindi)": "इसमें तीन गिलास दूध है, इसे तीन गिलास वाले ग्राहक को दीजिए।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Wrong customer 2 (voice hint) - the 3-glass bottle's right customer",
-   "Current length (s)": 8.52,
-   "Notes": "Word-timed highlights in the game: show @ 3.50s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 4.84,
+   "Notes": "Word-timed highlights: show @ 2.30s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 57,
@@ -795,13 +794,13 @@
    "VO ID": "cap_p11_w2_4",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "इस बोतल में चार गिलास दूध है। यह उन्हें दीजिए, जिन्हें चार गिलास दूध चाहिए।",
+   "Script (Hindi)": "इसमें चार गिलास दूध है, इसे चार गिलास वाले ग्राहक को दीजिए।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Wrong customer 2 (voice hint) - the 4-glass bottle's right customer",
-   "Current length (s)": 8.69,
-   "Notes": "Word-timed highlights in the game: show @ 3.67s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 4.68,
+   "Notes": "Word-timed highlights: show @ 2.16s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 58,
@@ -813,9 +812,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Wrong customer 3 - the right customer is shown",
-   "Current length (s)": 3.0,
-   "Notes": "Word-timed highlights in the game: show @ 0.94s (re-time if the new recording differs).",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Current length (s)": 2.36,
+   "Notes": "Word-timed highlights: show @ 0.96s",
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 59,
@@ -827,9 +826,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer says thank you",
-   "Current length (s)": 2.09,
+   "Current length (s)": 1.32,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 60,
@@ -841,9 +840,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer says thank you",
-   "Current length (s)": 2.09,
+   "Current length (s)": 1.4,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 61,
@@ -855,9 +854,9 @@
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Customer says thank you",
-   "Current length (s)": 2.09,
+   "Current length (s)": 1.36,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 62,
@@ -865,13 +864,13 @@
    "VO ID": "cap_p11_m_big",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह बड़ी बोतल चार गिलास दूध से भर गई।",
+   "Script (Hindi)": "यह बोतल चार गिलास दूध से भर गई।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Bottle filled - how many glasses",
-   "Current length (s)": 4.54,
+   "Current length (s)": 3.16,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 63,
@@ -879,13 +878,13 @@
    "VO ID": "cap_p11_m_mid",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह बीच वाली बोतल तीन गिलास दूध से भर गई।",
+   "Script (Hindi)": "यह वाली बोतल तीन गिलास दूध से भर गई।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Bottle filled - how many glasses",
-   "Current length (s)": 4.9,
+   "Current length (s)": 3.32,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 64,
@@ -893,13 +892,13 @@
    "VO ID": "cap_p11_m_small",
    "Speaker": "Swiftee",
    "Voice direction": "Swiftee (friendly young bird mascot) - warm, cheerful, clear, slow-ish pace for Grade 2 children",
-   "Script (Hindi)": "यह छोटी बोतल दो गिलास दूध से भर गई।",
+   "Script (Hindi)": "यह वाली बोतल दो गिलास दूध से भर गई।",
    "Section": "Independent practice",
    "Screen": "P3 - कितने गिलास भरें?",
    "When it plays": "Bottle filled - how many glasses",
-   "Current length (s)": 4.44,
+   "Current length (s)": 3.52,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 65,
@@ -911,9 +910,9 @@
    "Section": "End screen",
    "Screen": "Celebration",
    "When it plays": "Praise - plays after the celebration jingle (Swiftee lip-syncs to it)",
-   "Current length (s)": 6.58,
+   "Current length (s)": 4.68,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 66,
@@ -925,9 +924,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 1 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.16,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 67,
@@ -939,9 +938,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 2 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.04,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 68,
@@ -953,9 +952,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 3 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.04,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 69,
@@ -967,9 +966,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 4 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.12,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 70,
@@ -981,9 +980,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 5 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.28,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 71,
@@ -995,9 +994,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 6 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.04,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 72,
@@ -1009,9 +1008,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 7 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.28,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 73,
@@ -1023,9 +1022,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 8 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.08,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 74,
@@ -1037,9 +1036,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 9 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.08,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   },
   {
    "#": 75,
@@ -1051,9 +1050,9 @@
    "Section": "All number questions",
    "Screen": "Number cards / counting",
    "When it plays": "Spoken when the number 10 card is tapped or counted",
-   "Current length (s)": 1.87,
+   "Current length (s)": 1.12,
    "Notes": "",
-   "Format": "MP3, mono, 44.1 kHz, peak about -1 dBFS, no music/silence padding over 150 ms"
+   "Format": "MP3, mono, 44.1 kHz"
   }
  ]
 }

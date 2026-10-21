@@ -4794,3 +4794,5 @@ html.no-anim .start-gate .sg-card .sg-cover-title{animation:none !important;opac
 .cap-v .cap-x.cap-x-red.cap-x-off{background:#A7B0BE;color:#F4F6F9;opacity:.55;box-shadow:none;animation:none;transform:none;}
 /* P3 only: no header row (banner + text + speaker) and no Swiftee circle */
 body.cap-no-header .header-row,body.cap-no-header #swBuddy{display:none !important;}
+/* hand nudge a little bigger (+20%), grown around its fingertip (top, 44% across) so it still points at exactly the same spot */
+.nudge-hand{scale:1.2;transform-origin:44% 0%;}

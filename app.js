@@ -732,7 +732,8 @@ function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAu
 /* title screen: the cover title pops in as the greeting starts and pops again on "कितना पानी है" (8.97 s into
    cap_landing), on the clip's own clock; a speaker replay does it again. Never left hidden (fallback 4 s). */
 (function(){
-  const POP_MS = 8900; let shown = false, popped = false, srcT0 = 0, wasPlaying = false;
+  let POP_MS = null; let shown = false, popped = false, srcT0 = 0, wasPlaying = false;
+  const popAt = ()=>{ if(POP_MS == null){ try{ const c = (((CARD.assets || {}).audio_cues || {}).cap_landing || []).find(q => q.k === "title"); POP_MS = c ? c.t + 60 : 8900; }catch(e){ POP_MS = 8900; } } return POP_MS; };   // the "title" word cue of the greeting
   const T = ()=> document.querySelector(".start-gate .sg-cover-title");
   const show = ()=>{ const t = T(); if(t && !shown){ shown = true; t.classList.add("in"); } };
   const tick = ()=>{
@@ -747,7 +748,7 @@ function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAu
         if(el){ if(el.currentTime > 0) ms = el.currentTime * 1000; }
         else if(typeof currentVoiceSource !== "undefined" && currentVoiceSource){ if(!srcT0) srcT0 = performance.now(); ms = performance.now() - srcT0; }
         if(ms >= 0) show();
-        if(ms >= POP_MS - 60 && !popped && shown){ popped = true; t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop"); }
+        if(ms >= popAt() - 60 && !popped && shown){ popped = true; t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop"); }
       }
     }
     requestAnimationFrame(tick); };
@@ -836,7 +837,7 @@ function _chainMs(srcs, gapMs){
    no reason to fetch it again and the reviewer keeps hearing the previous take. __AUDIO_V is
    stamped by the builder from the CONTENT of the audio folder, so it changes exactly when a clip
    changes and not otherwise - a fresh URL on every build would defeat caching for no reason. */
-var __AUDIO_V = "872b0aa95f";
+var __AUDIO_V = "5a9eaadfbe";
 function _av(src){
   if(typeof src !== "string" || src.indexOf("assets/Audio/") < 0) return src;
   return src.indexOf("?") >= 0 ? src : src + "?v=" + __AUDIO_V;
@@ -13274,8 +13275,11 @@ Object.assign(SlideModules, {
             if(tok !== _gateToken){ closeGate(); return; }
             /* the title is written in exactly when Swiftie SAYS it ("चलिए, शुरू करें" …), not when she starts
                talking: ms from the clip start, measured from the pauses in each gate clip */
+            // from the voice data (word cue "title" of the gate clip), so it follows whichever recording is in place
             const TEXT_AT = { tutorial: 3150, guided: 3390, practice: 800, independent: 800 };
-            if(title) setTimeout(()=>{ if(tok !== _gateToken) return; title.classList.remove("pg-wait"); void title.offsetWidth; title.classList.add("pg-write"); }, TEXT_AT[toPhase] || 0);
+            const cueAt = (()=>{ try{ const id = "cap_pt_" + (toPhase === "independent" ? "practice" : toPhase);
+              const c = (((CARD.assets || {}).audio_cues || {})[id] || []).find(q => q.k === "title"); return c ? c.t : null; }catch(e){ return null; } })();
+            if(title) setTimeout(()=>{ if(tok !== _gateToken) return; title.classList.remove("pg-wait"); void title.offsetWidth; title.classList.add("pg-write"); }, cueAt != null ? cueAt : (TEXT_AT[toPhase] || 0));
             if(im && G.talk) setImg(G.talk);
             /* play() starts the clip at once; the talk loop runs until its onEnd */
             play(voSrc, finish);
