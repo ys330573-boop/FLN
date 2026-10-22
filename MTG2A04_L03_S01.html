@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>SwiftPAL · MTG2A04_L03_S01 · कितना पानी है?</title>
-<link rel="stylesheet" href="style.css?v=202610211830">
+<link rel="stylesheet" href="style.css?v=202610221300">
 </head>
 <body class="is-start">
 <div class="start-bg" aria-hidden="true"></div>
@@ -43,6 +43,7 @@
     <div class="slide-stage">
       <div class="slide-host" id="slideHost"></div>
       <div class="nudge-hand" id="nudgeHand">
+        <span class="nh-tapfx" aria-hidden="true"><i class="fx-ro"></i><i class="fx-ri"></i><i class="fx-sp"></i></span>   <!-- tap ripple (as MTG2A01_L04_S01): breaks out of the fingertip as it touches -->
         <img src="assets/UI/nudge_hand_new.svg" alt="">
       </div>
     </div>
@@ -127,6 +128,9 @@
   "skill_type": "CORE",
   "part_label": "",
   "theme": "toybox",
+  "phase_gate_at": {
+    "practice": "P3"
+  },
   "landing_hero": {
     "kind": "image",
     "src": "assets/Images/cap_cover_v3.jpg",
@@ -622,7 +626,7 @@
       "cap_p2_idle": "ज़्यादा पानी वाले बर्तन पर टैप करिए।",
       "cap_p2_ok": "शाबाश! गिलास और मग में से, मग में पानी की मात्रा ज़्यादा होगी।",
       "cap_p2_wrong": "गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।",
-      "cap_p3_t": "ध्यान रहें। मात्रा मापने के लिए हम हमेशा एक जैसे बर्तनों का उपयोग करते है। लेकिन यह कप अलग है।",
+      "cap_p3_t": "ध्यान रहें। मात्रा मापने के लिए हम हमेशा एक जैसे बर्तनों का उपयोग करते है।",
       "cap_p4_a": "यहाँ एक खाली बोतल और चार एक जैसे दूध के गिलास हैं। दूध को बोतल में डालकर देखते हैं, यह कितने गिलास से भरती है।",
       "cap_p4_b": "यह बोतल चार गिलास से पूरी भर गई। इस बोतल की मात्रा चार गिलास के बराबर है।",
       "cap_p5_a": "यह जग पानी से पूरा भरा हुआ है। इसका सारा पानी गिलासों में डालकर देखते हैं कि कितने गिलास भरते हैं।",
@@ -711,7 +715,7 @@
       ],
       "cap_pt_practice": [
         {
-          "t": 1040,
+          "t": 0,
           "k": "title"
         }
       ],
@@ -737,12 +741,8 @@
       ],
       "cap_p3_t": [
         {
-          "t": 3720,
+          "t": 3780,
           "k": "glasses"
-        },
-        {
-          "t": 6240,
-          "k": "cup"
         }
       ],
       "cap_p4_a": [
@@ -982,6 +982,6 @@
 </script>
 
 <!-- ============ ENGINE ============ -->
-<script src="app.js?v=202610211830"></script>
+<script src="app.js?v=202610221300"></script>
 </body>
 </html>

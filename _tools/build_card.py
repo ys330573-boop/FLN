@@ -35,7 +35,7 @@ LINES = {
   "cap_landing": ("नमस्ते दोस्त! मैं हूँ स्विफ्टी। आइए, देखते और सीखते हैं कि कौन-से बर्तन में कितना पानी है।", SWIFTEE, [("कितना पानी", "title")]),   # cue: the on-screen title appears / pops on these words
   "cap_pt_tutorial": ("ध्यान से देखिए और मेरे साथ जानिए। चलिए, शुरू करें!", SWIFTEE, [("चलिए", "title")]),   # cue: the on-screen title appears / pops on these words
   "cap_pt_guided": ("बहुत बढ़िया! अब हम साथ मिलकर शुरू करते हैं। चलिए, साथ में करें!", SWIFTEE, [("चलिए", "title")]),   # cue: the on-screen title appears / pops on these words
-  "cap_pt_practice": ("वाह! अब आपकी बारी।", SWIFTEE, [("अब आपकी", "title")]),   # cue: the on-screen title appears / pops on these words
+  "cap_pt_practice": ("वाह! अब आपकी बारी।", SWIFTEE, [("वाह", "title")]),   # cue: the on-screen title appears / pops on these words
 
   # PAGE 2 — glass or mug
   "cap_p2_q": ("यहाँ एक गिलास और एक मग दिया हुआ है। इनमें से ज़्यादा पानी किसमें आएगा? सही बर्तन पर टैप करिए।", SWIFTEE, [("गिलास", "glass"), ("मग", "mug"), ("इनमें से", "both")]),
@@ -44,8 +44,8 @@ LINES = {
   "cap_p2_wrong": ("गिलास में पानी कम आएगा, और मग में ज़्यादा। इसलिए सही बर्तन मग है।", SWIFTEE, [("और मग", "mug")]),
 
   # PAGE 3 (T4) — the jug to be measured + 4 identical glasses and a cup: the measuring vessels must be the same
-  "cap_p3_t": ("ध्यान रहें। मात्रा मापने के लिए हम हमेशा एक जैसे बर्तनों का उपयोग करते है। लेकिन यह कप अलग है।",
-               SWIFTEE, [("एक जैसे बर्तनों", "glasses"), ("लेकिन यह कप", "cup")]),
+  "cap_p3_t": ("ध्यान रहें। मात्रा मापने के लिए हम हमेशा एक जैसे बर्तनों का उपयोग करते है।",
+               SWIFTEE, [("एक जैसे बर्तनों", "glasses")]),
 
   # PAGE 4 — glasses of milk into an empty bottle
   "cap_p4_a": ("यहाँ एक खाली बोतल और चार एक जैसे दूध के गिलास हैं। दूध को बोतल में डालकर देखते हैं, यह कितने गिलास से भरती है।", SWIFTEE, [("एक खाली बोतल", "bottle"), ("चार एक जैसे", "glasses")]),
@@ -256,6 +256,7 @@ async def main():
       "version": "0.2",
       "skill_code": "MTG2A04_L03_S01", "lo_code": "MTG2A04_L03", "grade": "G2", "attribute": "A04",
       "skill_type": "CORE", "part_label": "", "theme": "toybox",
+      "phase_gate_at": {"practice": "P3"},   # the "वाह! अब आपकी बारी।" transition plays between P2 and P3 (the shop game), not before P1
       "landing_hero": {"kind": "image", "src": "assets/Images/cap_cover_v3.jpg", "title": "assets/Images/cap_cover_title.webp"},   # cover: ASSETE MAP "cover page.svg" (background + separate title layer)   # cover page: ASSETE MAP "Group 25.png"   # cover page (ASSETE MAP)   # supplied landing picture (ASSETE MAP, Oct 1)   # (animation-v2 art was never added: folder is empty)
       "title": {"hi": "कितना पानी है?", "en": "Measuring capacity in non-standard units"},
       "subtitle_hi": "भरिए · गिनिए · बताइए",

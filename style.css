@@ -4806,10 +4806,23 @@ body.cap-no-header .header-row,body.cap-no-header #swBuddy{display:none !importa
   box-shadow:0 0 0 1.5px #E3EAF1,0 6px 0 #C8D2DD,0 10px 18px rgba(20,50,90,.14);}
 .cap-opts .opt-cell .bignum-glyph{color:#012F76;}
 .cap-opts .opt-cell.cap-glow{border-color:#FFFFFF;}
-/* the आगे (Next) button pulses gently the moment it is enabled (checklist) */
-.nav-btn.active{animation:capNavPulse 1.3s ease-in-out infinite;}
-.nav-btn.active:hover,.nav-btn.active:active{animation:none;}
-@keyframes capNavPulse{0%,100%{scale:1;}50%{scale:1.07;}}
+/* the आगे (Next) button pulses the moment it is enabled - the same swell as HI02H05_L02_S02 ("navCall"):
+   translateX(-50%) is repeated inside every keyframe because .nav-btn centres itself with transform */
+@keyframes navCall{0%,100%{transform:translateX(-50%) scale(1);}50%{transform:translateX(-50%) scale(1.07);}}
+.nav-btn.active{animation:navCall 1.15s ease-in-out infinite;}
+html.no-anim .nav-btn.active{animation:none !important;}
 /* number questions, inactivity: each card gives a small bounce */
 .cap-opts .opt-cell.cap-opt-nudge{animation:capOptNudge .55s cubic-bezier(.34,1.56,.64,1);}
 @keyframes capOptNudge{0%,100%{translate:0 0;}45%{translate:0 -12px;}}
+
+/* shop: the coins are the coin art (cap_coin_1..4.svg, one coin each) instead of the drawn gold disc */
+.cap-scene.fig .cap-coin.cap-coin-art{width:90px;height:60px;background:none;box-shadow:none;border-radius:0;}
+.cap-scene.fig .cap-coin.cap-coin-art img{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 2px rgba(60,40,0,.3));}
+
+/* shop close-up: when all bottles are filled the number badges fade away (and the card settles to its plain height) */
+.cap-scene.fig .cap-mini-badge.out{animation:none;opacity:0;scale:.5;transition:opacity .35s ease,scale .35s ease;}
+.cap-scene.fig .cap-bview .cap-bv-glasses{transition:padding-top .4s ease;}
+
+/* the hand sits over its tap ripple (the ripple span comes first and is absolute) */
+#nudgeHand img{position:relative;display:block;}
+@media (prefers-reduced-motion:reduce){ #nudgeHand img,#nudgeHand .nh-tapfx i{animation:none;} }
