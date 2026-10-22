@@ -837,7 +837,7 @@ function _chainMs(srcs, gapMs){
    no reason to fetch it again and the reviewer keeps hearing the previous take. __AUDIO_V is
    stamped by the builder from the CONTENT of the audio folder, so it changes exactly when a clip
    changes and not otherwise - a fresh URL on every build would defeat caching for no reason. */
-var __AUDIO_V = "eb92d9b9cd";
+var __AUDIO_V = "3a922ea7f6";
 function _av(src){
   if(typeof src !== "string" || src.indexOf("assets/Audio/") < 0) return src;
   return src.indexOf("?") >= 0 ? src : src + "?v=" + __AUDIO_V;
