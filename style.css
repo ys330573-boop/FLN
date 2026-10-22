@@ -4800,7 +4800,7 @@ body.cap-no-header .header-row,body.cap-no-header #swBuddy{display:none !importa
 .cap-stage .cap-v.cap-wiggle > svg{transform-origin:50% 96%;animation:capWiggle .75s ease-in-out both;}
 @keyframes capWiggle{0%,100%{transform:rotate(0);}20%{transform:rotate(-7deg);}40%{transform:rotate(6deg);}60%{transform:rotate(-4deg);}80%{transform:rotate(2deg);}}
 /* panels: the warm mustard colour of the reference swatch (#E2B66D), soft edge to edge, a slightly deeper rim */
-.cap-focus,.cap-focus.cap-focus-cool,.cap-box{background:radial-gradient(120% 95% at 50% 40%,#E6BA71 0%,#E2B66D 55%,#DDB168 100%) !important;border-color:#CFA35C !important;box-shadow:0 18px 40px rgba(120,80,20,.16) !important;}
+.cap-focus,.cap-focus.cap-focus-cool,.cap-box{background:radial-gradient(120% 95% at 50% 40%,#E6BA71 0%,#E2B66D 55%,#DDB168 100%) !important;border-color:#FFFFFF !important;box-shadow:0 18px 40px rgba(120,80,20,.16) !important;}
 /* answer options (number cards): white card, white rim, soft grey-blue edge + base shadow - like the reference card */
 .cap-opts .opt-cell,.stage.thm-toybox .cap-opts .opt-cell{background:#FFFFFF;border:3px solid #FFFFFF;border-radius:22px;
   box-shadow:0 0 0 1.5px #E3EAF1,0 6px 0 #C8D2DD,0 10px 18px rgba(20,50,90,.14);}
