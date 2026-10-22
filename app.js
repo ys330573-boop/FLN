@@ -11732,7 +11732,10 @@ function capAskNumber(ctx, stage, spec, o){
     ctx.say("cap_num_" + val, null, ()=> ctx.say(okId, null, ()=>{ setSwMood("point");
       if(o.autoNext || slide.phase !== "tutorial"){ ctx.after(900, ()=>{ if(ctx.alive()) completeSlide(true); }); } else capNavOn(); }));
   };
-  spec.values.forEach(val => {
+  // the answer cards come in a fresh random order every time the question is shown (Fisher-Yates on a copy)
+  const vals = spec.values.slice();
+  for(let i = vals.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [vals[i], vals[j]] = [vals[j], vals[i]]; }
+  vals.forEach(val => {
     const c = document.createElement("div"); c.className = "opt-cell cap-num";
     c.innerHTML = `<span class="bignum-glyph">${devNumeral(val)}</span>`;
     if(val === spec.answer) rightCell = c;
@@ -12012,6 +12015,11 @@ function capArtVessel(kind, o){
   if(kind === "smallmug" && A.poly){ const g = el.querySelector("svg > g"), pth = document.createElementNS("http://www.w3.org/2000/svg", "path");
     pth.setAttribute("d", "M" + A.poly.map(q => q.join(" ")).join(" L") + " Z"); pth.setAttribute("fill", "#E4EFF8"); pth.setAttribute("opacity", ".85");
     g.insertBefore(pth, g.firstChild); }
+  /* the water glass ("water glass.svg") has an open, unfilled mouth: on the mustard panel the rim's oval showed the panel
+     through it. A pale glass tint fills that oval, behind the rim lines (empty or full, the glass reads as glass) */
+  if(kind === "wglass" && A.lipL && A.lipR){ const g = el.querySelector("svg > g"), e = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+    e.setAttribute("cx", ((A.lipL[0] + A.lipR[0]) / 2).toFixed(1)); e.setAttribute("cy", A.lipL[1]); e.setAttribute("rx", ((A.lipR[0] - A.lipL[0]) / 2 - 1).toFixed(1)); e.setAttribute("ry", "7.4");
+    e.setAttribute("fill", "#E4EFF8"); e.setAttribute("opacity", ".9"); g.insertBefore(e, g.firstChild); }
   /* shop milk bottles: the glass lip ring flared out far more on the big bottle (6 px a side vs 3.5 on the small) -
      its sides are trimmed to the neck width + 5% a side, the SAME proportion on all three; the body is untouched */
   const NECK = { shopb4: [71.25, 590, 179.88], shopb3: [49.25, 590, 360.88], shopb2: [38.75, 590, 535.38] }[kind];   // neck width, ring bottom, neck centre (art units, measured)
