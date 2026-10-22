@@ -157,7 +157,7 @@ SLIDES = [
    "data": {"layout": "pan", "capacity": 8, "sources": 10, "liquid": "milk", "demo": True, "idle_ms": 7000,
             "ask": ask(8, [1, 2, 8], 8)}},
   {"id": "P1", "phase": "practice", "eis": "enactive", "type": "CAP_TAP_SOURCE",
-   "prompt_hi": "बोतल पर टैप करिए।", "ask_prompt_hi": "इस बोतल में पानी की मात्रा कितने गिलास के बराबर है?",
+   "prompt_hi": "बोतल पर टैप करिए।", "ask_prompt_hi": "बोतल में कितने गिलास पानी है?",
    "audio": {"intro": "cap_p9_a"},
    "data": {"capacity": 3, "glasses": 4, "liquid": "water", "idle_ms": 7000, "ask": ask(9, [1, 3, 4], 3)}},
   {"id": "P2", "phase": "practice", "eis": "enactive", "type": "CAP_TAP_POUR",
