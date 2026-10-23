@@ -145,7 +145,7 @@ SLIDES = [
    "audio": {"intro": "cap_p5_a", "conclude": "cap_p5_b"},
    "data": {"count": 4, "glasses": 6, "liquid": "water"}},
   {"id": "T4", "phase": "tutorial", "eis": "iconic", "type": "CAP_SAME_UNITS",
-   "prompt_hi": "ध्यान रहें।",
+   "prompt_hi": "ध्यान रहे।",
    "audio": {"intro": "cap_p3_t"}, "data": {"glasses": 4, "cup_at": 2}},
   {"id": "G1", "phase": "guided", "eis": "enactive", "type": "CAP_JAR_DRAG",
    "prompt_hi": "जार का पूरा तेल कप में डालिए।", "ask_prompt_hi": "इस जार में कितने कप तेल है?",
