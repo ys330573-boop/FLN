@@ -12588,8 +12588,9 @@ Object.assign(SlideModules, {
       // inactivity (7 s, repeats until tapped): Swiftee repeats the prompt and both vessels pulse. BUG_04: the hand shows the RIGHT
       // option (the mug, glowing) only once the chance is used (after the wrong try) - never before
       const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;
-        if(onlyMug){ capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); }
-        else [glass, mug].forEach((v, i)=> ctx.after(i * 180, ()=> capFlash(v.el, "cap-pulse", 1400)));
+        // the right option already shown (after the wrong try): only the hand + glow again - no voice-over
+        if(onlyMug){ capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); idle.arm(); return; }
+        [glass, mug].forEach((v, i)=> ctx.after(i * 180, ()=> capFlash(v.el, "cap-pulse", 1400)));
         ctx.say(A.idle, null, ()=> idle.arm()); });
       // word-timed glow: only the vessel being named glows; the other one's glow stops at once (never both)
       let glowT = 0;
@@ -12649,8 +12650,9 @@ Object.assign(SlideModules, {
       // inactivity (7 s, repeats until tapped): Swiftee repeats the prompt and both sets give a small bounce. BUG_04: the hand shows
       // the RIGHT set (three glasses, glowing) only once the chance is used (after the wrong try) - never before
       const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;
-        if(wrongOnce){ capPoint(b1); b1.classList.add("cap-hl-loop"); }
-        else [b1, b2].forEach((b, i)=> ctx.after(i * 180, ()=>{ b.classList.remove("cap-idle-bounce"); void b.offsetWidth; b.classList.add("cap-idle-bounce"); }));
+        // the right set already shown (after the wrong try): only the hand + glow again - no voice-over
+        if(wrongOnce){ capPoint(b1); b1.classList.add("cap-hl-loop"); idle.arm(); return; }
+        [b1, b2].forEach((b, i)=> ctx.after(i * 180, ()=>{ b.classList.remove("cap-idle-bounce"); void b.offsetWidth; b.classList.add("cap-idle-bounce"); }));
         ctx.say(A.idle, null, ()=> idle.arm()); });
       b1.onclick = ()=>{ if(done || busy || !tapOn) return; done = true; idle.stop(); stopNudge(); boxOff(); glowOff();
         b1.classList.remove("cap-hl-loop", "tappable"); b2.classList.remove("tappable"); b1.classList.add("cap-ok"); b2.classList.add("cap-dim");
