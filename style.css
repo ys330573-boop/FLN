@@ -4826,3 +4826,21 @@ html.no-anim .nav-btn.active{animation:none !important;}
 /* the hand sits over its tap ripple (the ripple span comes first and is absolute) */
 #nudgeHand img{position:relative;display:block;}
 @media (prefers-reduced-motion:reduce){ #nudgeHand img,#nudgeHand .nh-tapfx i{animation:none;} }
+
+/* ===== QA bug sheet 2026-10-26 ===== */
+/* BUG_04: a wrong choice stays blurred and can't be tapped again (number cards, T1 glass, T2 set) */
+.cap-opts .opt-cell.cap-opt-wrong{filter:blur(2px) grayscale(.35);opacity:.5 !important;pointer-events:none;box-shadow:none !important;transition:filter .35s ease,opacity .35s ease;}
+.cap-v.cap-v-wrong{filter:blur(2.5px);opacity:.55;pointer-events:none;transition:filter .35s ease,opacity .35s ease;}
+.cap-box.cap-box-wrong{filter:blur(2px);opacity:.55;pointer-events:none;transition:filter .35s ease,opacity .35s ease;}
+/* idle nudge (no hand): a small bounce */
+.cap-idle-bounce{animation:capIdleBounce .55s cubic-bezier(.34,1.56,.64,1);}
+@keyframes capIdleBounce{0%,100%{translate:0 0;}40%{translate:0 -12px;}70%{translate:0 3px;}}
+/* BUG_09: nothing in the scene can be tapped while a voice-over plays - glasses, mugs, bottles, sets, the shop's
+   bottles (the engine's own option cards are already on this list). Pointer only, no visual change. */
+body.vo-lock .cap-v.tappable, body.vo-lock .cap-box.tappable, body.vo-lock .cap-bv-tap, body.vo-lock .cap-hit{pointer-events:none !important;}
+/* BUG_06 / BUG_03: the speaker while a voice-over plays = one still, light grey state (no animated waves, not the dark
+   45% dim); back to blue when it is over */
+/* the speaker while a voice-over plays: the see-through FADE (as the cover page had) AND its two sound-wave arcs animate as in
+   Hindi-game-gender-identify (arc 1, then arc 2, 1.2 s loop - .playing .wv1/.wv2 above); it can't be tapped until the
+   voice-over ends, then it is solid blue again */
+body.vo-lock .audio-chip,body.vo-lock .tut-audio,body.vo-lock .sg-vo{opacity:.45 !important;filter:grayscale(.75) !important;}

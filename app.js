@@ -1,4 +1,45 @@
 const CARD = JSON.parse(document.getElementById('cardData').textContent);
+/* ===== QA BUG_02: LEAVING THE TAB PAUSES EVERY GAME SOUND, COMING BACK RESUMES IT =====
+   The engine only paused the music bed on a hidden tab; the voice-over, the effect files and the WebAudio sounds kept
+   playing (and a 7 s reminder could even start a new line in the background). One place now owns it, for every sound:
+   - every AudioContext the game makes is registered; on hide it is suspended (a playing voice-over / effect stops exactly
+     where it is), on return it is resumed (it continues from that point) - and while hidden nobody can resume it
+   - every <audio> element (voice-over fallback, coin / error / wiggle effects, music) that is playing is paused on hide
+     and resumed on return; one asked to START while hidden waits and starts on return. */
+(function(){ "use strict";
+  if(window.__capTabAudio) return; window.__capTabAudio = true;
+  var ctxs = [], live = new Set(), held = new Set(), waiting = [];
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if(AC){
+    var _resume = AC.prototype.resume, _suspend = AC.prototype.suspend;
+    var Wrapped = function(a, b){ var c = (arguments.length ? new AC(a) : new AC()); ctxs.push(c);
+      c.resume = function(){ if(document.hidden){ c.__capResume = true; return Promise.resolve(); } return _resume.call(c); };
+      if(document.hidden){ try{ _suspend.call(c); c.__capResume = true; }catch(e){} }
+      return c; };
+    Wrapped.prototype = AC.prototype;
+    try{ Object.setPrototypeOf(Wrapped, AC); }catch(e){}
+    window.AudioContext = Wrapped; if(window.webkitAudioContext) window.webkitAudioContext = Wrapped;
+    window.__capSuspend = function(c){ try{ return _suspend.call(c); }catch(e){} };
+    window.__capResume = function(c){ try{ return _resume.call(c); }catch(e){} };
+  }
+  var _play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function(){
+    var el = this;
+    if(document.hidden){ return new Promise(function(res, rej){ waiting.push(function(){ live.add(el); _play.call(el).then(res, rej); }); }); }
+    live.add(el);
+    return _play.apply(el, arguments);
+  };
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden){
+      live.forEach(function(el){ if(!el.paused && !el.ended){ try{ el.pause(); held.add(el); }catch(e){} } else if(el.ended) live.delete(el); });
+      ctxs.forEach(function(c){ if(c.state === "running"){ c.__capResume = true; window.__capSuspend(c); } });
+    } else {
+      ctxs.forEach(function(c){ if(c.__capResume){ c.__capResume = false; window.__capResume(c); } });
+      held.forEach(function(el){ try{ var r = _play.call(el); if(r && r.catch) r.catch(function(){}); }catch(e){} }); held.clear();
+      waiting.splice(0).forEach(function(f){ try{ f(); }catch(e){} });
+    }
+  });
+})();
 /* == REF2 (Prashantkumar12345678/Hindi-game-gender-identify) FLN kit: confetti / burst / cue sounds == */
 /* ===== FLN ANIMATION KIT: preview-js BEGIN ===== */
 (function(){ "use strict";
@@ -764,7 +805,13 @@ function setPlaying(on){
   try{ if(document.body.classList.contains("is-start")){ const m = document.querySelector(".start-gate .sg-mascot");   // title: Swiftee animates only while the VO plays
     const want = "assets/UI/new_landing_swiftee_" + (on ? "anim" : "still") + ".webp"; if(m && m.getAttribute("src") !== want) m.setAttribute("src", want); } }catch(e){}
   if(on) _voStart = Date.now();   // drag VO-gate 4s safety: stamp when a VO began so a stalled clip can't soft-lock the tiles
-  document.querySelectorAll(".audio-chip, .tut-audio, .sg-vo").forEach(c => c.classList.toggle("playing", on && !isMuted));
+  /* BUG_06: the speakers go grey the moment a voice-over starts and turn blue again only when the voice-over (chain) is over:
+     a line that is followed at once by the next one (sound + praise, hint + count...) leaves a gap of a few hundred ms - the
+     400 ms grace keeps the speaker grey through it, instead of flashing blue between the lines. */
+  clearTimeout(window._chipOffT);
+  const _chips = (v)=> document.querySelectorAll(".audio-chip, .tut-audio, .sg-vo").forEach(c => c.classList.toggle("playing", v && !isMuted));
+  if(on) _chips(true); else window._chipOffT = setTimeout(()=>{ if(!isPlaying){ _chips(false); document.body.classList.remove("vo-lock"); } }, 400);
+  if(!on){ try{ _capIdlesRestart(); }catch(e){} }
   /* [30g] VO LOCK — UNTAPPABLE, ZERO VISUAL. Yasir 2026-07-30: "cards untappable when VO being
      played, you dont need to show any affect for untappable, just make it untappable."
      28u bundled a lock (pointer-events:none) with a pale board (opacity:.55). 30f removed BOTH, which
@@ -776,7 +823,7 @@ function setPlaying(on){
      fallback), so the lock can never outlive the audio and leave a slide permanently dead.
      Toggled on `on` alone, NOT `on && !isMuted` like the chips above: the tap gate keys off isPlaying
      regardless of mute, so gating this on mute would let taps land while muted and diverge from it. */
-  document.body.classList.toggle("vo-lock", !!on);
+  if(on) document.body.classList.add("vo-lock");   // (lifted by the grace timer above, BUG_06)
 }
 /* stopAudio(): hard-stop the current clip AND bump the playback generation so any in-flight
    callback (a chain's onended, a fallback timer, a cancelled TTS onend) becomes a no-op. This is
@@ -879,6 +926,21 @@ function play(src, onEnd){
       if(myGen!==_audioGen)return;                 // superseded while decoding
       const c=_resumeVoiceAudio(); if(!c){htmlFallback();return;}  /* resume, NOT _voiceContext(): a suspended
          context queues the clip SILENTLY with vo-lock held — no sound, no onended, screen soft-locked. */
+      /* QA BUG_03: resume() is only a REQUEST. Before the first tap (autoplay policy - Chrome allows it on some loads and
+         not on others) or in a hidden tab the context stays suspended, and a clip started on it was queued silently: the
+         speaker stayed grey and the ▶ button off for up to 30 s ("sometimes the game and VO load, sometimes not"). Only a
+         RUNNING context gets the clip; otherwise the element path plays it - a refusal comes back at once (handled by
+         the caller), a hidden tab holds it until the child is back. */
+      if(c.state!=="running"){
+        let settled=false;
+        const decide=()=>{ if(settled)return; settled=true; if(myGen!==_audioGen)return; if(c.state==="running")_startBuffer(c,buffer); else htmlFallback(); };
+        setTimeout(decide,300);
+        try{ const pr=c.resume(); if(pr&&pr.then)pr.then(()=>{ if(c.state==="running")decide(); },()=>{}); }catch(e){}
+        return;
+      }
+      _startBuffer(c,buffer);
+    }).catch(htmlFallback);
+    function _startBuffer(c,buffer){
       const source=c.createBufferSource(); source.buffer=buffer; source.connect(c.destination);
       source.onended=fire; currentVoiceSource=source;
       _curVoMs = (_tw ? Math.max(0, Math.min(_tw[1],buffer.duration) - Math.max(0,Math.min(_tw[0],buffer.duration))) : buffer.duration) * 1000;
@@ -889,7 +951,7 @@ function play(src, onEnd){
           source.start(0,start,dur);
         }else source.start(0);
       }catch(e){ try{source.disconnect();}catch(_){} currentVoiceSource=null; htmlFallback(); }
-    }).catch(htmlFallback);
+    }
   } else { setTimeout(fire, 800); }   // [30o] no src: silent beat, never TTS
 }
 /* playSfx(id): fire-and-forget sound effect on its OWN Audio element so it can
@@ -11708,14 +11770,14 @@ function capAskNumber(ctx, stage, spec, o){
   // incorrect options are never removed. A wrong tap only flashes red, then the card is tappable again.
   // At the REVEAL moment ("सही संख्या यह है") the incorrect cards stay on screen but are disabled.
   const hideWrong = ()=> [...col.children].forEach(x => { if(x !== rightCell){ x.classList.remove("crossed"); x.classList.add("cap-off-opt"); } });
-  const revealHand = slide.phase !== "practice";   // P1 / P2 (practice): the answer is shown by its glow only - no hand nudge
+  const revealHand = true;   // BUG_08: once every chance is used, the right card is shown by its glow AND the hand - on every screen
   h2Handlers.show = ()=>{ hideWrong(); if(rightCell){ rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); } };
   /* inactivity (7 s, checklist): the cards give a gentle bounce one by one and Swiftee repeats the question (it never
      points at the answer); once the answer has been shown (3rd wrong) the right card is pointed at again instead */
   let idleN = 0;
   const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;   // repeats every 7 s until answered
     if(onlyRight){ rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); idle.arm(); return; }
-    [...col.children].forEach((x, i)=> ctx.after(i * 160, ()=>{ x.classList.remove("cap-opt-nudge"); void x.offsetWidth; x.classList.add("cap-opt-nudge"); }));
+    [...col.children].filter(x => !x.classList.contains("cap-opt-wrong")).forEach((x, i)=> ctx.after(i * 160, ()=>{ x.classList.remove("cap-opt-nudge"); void x.offsetWidth; x.classList.add("cap-opt-nudge"); }));
     ctx.say(spec.q, null, ()=>{ if(!done && !busy) idle.arm(); }); });   // a tap during the reminder still counts
   const win = (cell, val)=>{
     done = true; stopNudge(); rightCell.classList.remove("cap-glow"); rightCell.classList.add("correct");
@@ -11740,22 +11802,27 @@ function capAskNumber(ctx, stage, spec, o){
     c.innerHTML = `<span class="bignum-glyph">${devNumeral(val)}</span>`;
     if(val === spec.answer) rightCell = c;
     c.onclick = ()=>{
-      if(done || busy || c.classList.contains("crossed")) return;
+      if(done || busy || c.classList.contains("crossed") || c.classList.contains("cap-opt-wrong")) return;
       if(onlyRight && val !== spec.answer) return;
       stopNudge(); idle.stop(); busy = true;
       if(val === spec.answer){ win(c, val); return; }
       attempts++; state.attempts = attempts; c.classList.add("crossed"); sfxWrongSoft(); setSwMood("tryagain");
-      setTimeout(()=>{ if(!c.classList.contains("cap-off-opt")) c.classList.remove("crossed"); }, 900);   // red flash only; stays tappable
+      // BUG_04: a wrong card flashes red, then stays BLURRED and can't be tapped again (it was the wrong answer)
+      setTimeout(()=>{ c.classList.remove("crossed"); c.classList.add("cap-opt-wrong"); }, 900);
       SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
       $("hintBtn").classList.add("show");
+      // every chance is used once no wrong card is left to try (3 cards: after the 2nd wrong answer)
+      const used = attempts >= spec.values.length - 1;
+      const back = ()=>{ busy = false; setSwMood("point"); idle.arm(); };   // BUG_07: Swiftee back to normal when the hint VO ends
+      const reveal = ()=>{ state.scaffoldLevel = 3; onlyRight = true;      // the answer is shown: glow + hand (BUG_08), other cards disabled
+        SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts });
+        ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); back(); }); };
       ctx.say("cap_num_" + val, null, ()=>{
-        if(attempts === 1){ state.scaffoldLevel = Math.max(state.scaffoldLevel, 2);
-          ctx.say(spec.h1, null, ()=>{ busy = false; idle.arm(); }); }
-        else if(attempts === 2 && spec.h3){ state.scaffoldLevel = 3;           // 2nd wrong: strong hint (count along), all cards still open
-          ctx.say(spec.h2, h2Handlers, ()=>{ busy = false; idle.arm(); }); }
-        else { state.scaffoldLevel = 3; onlyRight = true;                       // 3rd wrong: the answer is shown, wrong cards disabled
-          SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts });
-          ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ busy = false; hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); idle.arm(); }); }
+        if(attempts === 1 && !used){ state.scaffoldLevel = Math.max(state.scaffoldLevel, 2);
+          ctx.say(spec.h1, null, back); }
+        else if(attempts === 2 && spec.h3){ state.scaffoldLevel = 3;           // 2nd wrong: strong hint (count along)...
+          ctx.say(spec.h2, h2Handlers, ()=>{ if(used) reveal(); else back(); }); }   // ...then, if no chance is left, the reveal
+        else reveal();
       });
     };
     col.appendChild(c);
@@ -11824,8 +11891,22 @@ function capEndSwiftee(E, img){
   };
 }
 /* idle helper: after `ms` with no action, run fn (re-armed by the caller) */
+/* QA BUG_04/09: an automatic or idle HAND on an action step only in the tutorial and guided rounds (it demonstrates).
+   In practice the child is on their own: an idle nudge is a pulse on the next object + the instruction again. */
+function capHandOk(slide){ return !slide || slide.phase !== "practice"; }
+/* BUG_05: an idle reminder must never cut into a voice-over (e.g. the speaker replay): if one is playing - or the tab is
+   hidden - when the 7 s run out, it waits; and whenever a voice-over ENDS, every waiting reminder counts its 7 s again from
+   that moment (setPlaying -> _capIdlesRestart). */
+const _capIdles = new Set();
+function _capIdlesRestart(){ _capIdles.forEach(i => i._restart()); }
 function capIdle(ctx, ms, fn){ let t = null;
-  const api = { arm(){ clearTimeout(t); t = setTimeout(()=>{ if(ctx.alive()) fn(); }, ms); }, stop(){ clearTimeout(t); } };
+  const fire = ()=>{ t = null;
+    if(!ctx.alive()){ _capIdles.delete(api); return; }
+    if(isPlaying || document.hidden){ t = setTimeout(fire, ms); return; }
+    _capIdles.delete(api); fn(); };
+  const api = { arm(){ clearTimeout(t); _capIdles.add(api); t = setTimeout(fire, ms); },
+                stop(){ clearTimeout(t); t = null; _capIdles.delete(api); },
+                _restart(){ if(t == null) return; if(!ctx.alive()){ clearTimeout(t); t = null; _capIdles.delete(api); return; } clearTimeout(t); t = setTimeout(fire, ms); } };
   return api; }
 
 /* [MTG2A04_L03_S01 page 11] Figma shop art (ASSETE MAP "order view.svg" / "puring view.svg"),
@@ -12417,7 +12498,9 @@ function capPanScene(host, slide){
     srcs.push(capAdd(stage, v, 92 + c * 104, (r ? BOT : TOP) - v.h + 3)); }
   const emptied = []; let poured = 0, busy = false, open = false;
   const cues = { cups: ()=> srcs.forEach(v => capFlash(v.el, "cap-hl", 1500)), pan: ()=> capFlash(pot.el, "cap-hl", 1500) };
-  const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open) return; if(busy){ idle.arm(); return; } const nx = srcs.find(v => !v.used); if(nx) capPoint(nx.el); idle.arm(); });
+  const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open) return; if(busy){ idle.arm(); return; } const nx = srcs.find(v => !v.used); if(!nx) return;
+    if(capHandOk(slide)){ capPoint(nx.el); idle.arm(); return; }
+    capFlash(nx.el, "cap-pulse", 1400); ctx.say(A.your_turn || A.intro, null, ()=> idle.arm()); });
   const ask = ()=>{ open = false; srcs.forEach(v => v.el.classList.remove("tappable")); idle.stop(); stopNudge();
     SwiftPAL.emit("pour_done", { slide_id: slide.id, count: N });
     ctx.after(500, ()=> capAskNumber(ctx, stage, d.ask, { row: true, x: 290, y: 392, countEls: emptied })); };
@@ -12429,7 +12512,7 @@ function capPanScene(host, slide){
   srcs.forEach(v => { v.el.onclick = ()=>{ if(!open || busy || v.used || poured >= N) return; stopNudge(); idle.stop(); sfxTap(); pourOne(v, after); }; });
   const openUp = ()=>{ open = true; srcs.forEach(v => { if(!v.used) v.el.classList.add("tappable"); }); setSwMood("point");
     ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.your_turn || A.intro); };
-    const nx = srcs.find(v => !v.used); if(nx) capPoint(nx.el); idle.arm(); };
+    const nx = srcs.find(v => !v.used); if(nx && capHandOk(slide)) capPoint(nx.el); idle.arm(); };
   ctx.say(A.intro, cues, ()=>{
     if(!d.demo){ openUp(); return; }
     capPoint(srcs[0].el);   // demo: the hand taps the first cup, it pours, then "अब आप करिए"
@@ -12453,7 +12536,9 @@ function capJugScene(host, slide){
     srcs.push(capAdd(stage, v, 520 + c * 140, (r ? BOT : TOP) - v.h + 3)); }
   const emptied = []; let poured = 0, busy = false, open = false;
   const cues = { jug: ()=> capFlash(jug.el, "cap-hl", 1500), mugs: ()=> srcs.forEach(v => capFlash(v.el, "cap-hl", 1500)) };
-  const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open) return; if(busy){ idle.arm(); return; } const nx = srcs.find(v => !v.used); if(nx) capPoint(nx.el); idle.arm(); });
+  const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open) return; if(busy){ idle.arm(); return; } const nx = srcs.find(v => !v.used); if(!nx) return;
+    if(capHandOk(slide)){ capPoint(nx.el); idle.arm(); return; }
+    capFlash(nx.el, "cap-pulse", 1400); ctx.say(A.your_turn || A.intro, null, ()=> idle.arm()); });
   const ask = ()=>{ open = false; srcs.forEach(v => v.el.classList.remove("tappable")); idle.stop(); stopNudge();
     SwiftPAL.emit("pour_done", { slide_id: slide.id, count: N });
     ctx.after(500, ()=> capAskNumber(ctx, stage, d.ask, { row: true, x: 290, y: 392, countEls: emptied })); };
@@ -12464,7 +12549,7 @@ function capJugScene(host, slide){
   const after = ()=>{ if(poured >= N){ capFlash(jug.el, "cap-hl", 1400); ask(); } else idle.arm(); };
   srcs.forEach(v => { v.el.onclick = ()=>{ if(!open || busy || v.used || poured >= N) return; stopNudge(); idle.stop(); sfxTap(); pourOne(v, after); }; });
   ctx.say(A.intro, cues, ()=>{ open = true; srcs.forEach(v => v.el.classList.add("tappable")); setSwMood("point");
-    ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.intro); }; capPoint(srcs[0].el); idle.arm(); });
+    ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.intro); }; if(capHandOk(slide)) capPoint(srcs[0].el); idle.arm(); });
 }
 Object.assign(SlideModules, {
   /* PAGE 2 — "ज़्यादा पानी किसमें, गिलास या मग?"  tap the vessel that holds more. */
@@ -12500,9 +12585,12 @@ Object.assign(SlideModules, {
         wait(true); };   // VO done: both pulse gently until the child taps one   // VO done: both give a small pulse (now tappable)
       const mid = capMarker(stage, 480, 330);
       let done = false, onlyMug = false, attempts = 0, idleN = 0, busy = false;
-      // inactivity (7 s): the hand points at the RIGHT option (the mug) and the mug glows until it is tapped
-      const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;   // repeats every 7 s until tapped
-        capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); ctx.say(A.idle, null, ()=> idle.arm()); });
+      // inactivity (7 s, repeats until tapped): Swiftee repeats the prompt and both vessels pulse. BUG_04: the hand shows the RIGHT
+      // option (the mug, glowing) only once the chance is used (after the wrong try) - never before
+      const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;
+        if(onlyMug){ capPoint(mug.el); mug.el.classList.add("cap-hl-loop"); }
+        else [glass, mug].forEach((v, i)=> ctx.after(i * 180, ()=> capFlash(v.el, "cap-pulse", 1400)));
+        ctx.say(A.idle, null, ()=> idle.arm()); });
       // word-timed glow: only the vessel being named glows; the other one's glow stops at once (never both)
       let glowT = 0;
       const glowOff = ()=>{ clearTimeout(glowT); glass.el.classList.remove("cap-glow-on"); mug.el.classList.remove("cap-glow-on"); };
@@ -12519,7 +12607,7 @@ Object.assign(SlideModules, {
         state.attempts = attempts; glass.el.classList.remove("tappable"); glass.el.classList.add("cap-pulse-loop");
         sfxWrongSoft(); setSwMood("tryagain");
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
-        ctx.say(A.wrong, { mug: ()=> capPoint(mug.el) }, ()=>{ busy = false; glass.el.classList.remove("cap-pulse-loop"); wait(true, mug); capPoint(mug.el); idle.arm(); }); };
+        ctx.say(A.wrong, { mug: ()=> capPoint(mug.el) }, ()=>{ busy = false; setSwMood("point"); glass.el.classList.remove("cap-pulse-loop"); glass.el.classList.add("cap-v-wrong"); wait(true, mug); capPoint(mug.el); idle.arm(); }); };
       ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); glowOff(); ctx.say(A.prompt, cues, ()=>{ glowOff(); idle.arm(); }); } };
       ctx.say(A.prompt, cues, ()=>{ glowOff(); enableTap(); idle.arm(); });
     }
@@ -12558,9 +12646,12 @@ Object.assign(SlideModules, {
       const cues = { bowl: ()=> glow([bowl.el]), appear: ()=>{ glowOff(); appear(); },
         g3: ()=> glow(g1.map(v => v.el)), glass: ()=> glow([oneGlass.el]), plate: ()=> glow([plate]), cup: ()=> glow([cup.el]), off: glowOff };
       const enableTap = ()=>{ if(tapOn) return; tapOn = true; b1.classList.add("tappable"); b2.classList.add("tappable"); };
-      // inactivity (7 s, repeats until tapped): the hand points at the RIGHT set (three glasses) and it glows until tapped
+      // inactivity (7 s, repeats until tapped): Swiftee repeats the prompt and both sets give a small bounce. BUG_04: the hand shows
+      // the RIGHT set (three glasses, glowing) only once the chance is used (after the wrong try) - never before
       const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;
-        capPoint(b1); b1.classList.add("cap-hl-loop"); ctx.say(A.idle, null, ()=> idle.arm()); });
+        if(wrongOnce){ capPoint(b1); b1.classList.add("cap-hl-loop"); }
+        else [b1, b2].forEach((b, i)=> ctx.after(i * 180, ()=>{ b.classList.remove("cap-idle-bounce"); void b.offsetWidth; b.classList.add("cap-idle-bounce"); }));
+        ctx.say(A.idle, null, ()=> idle.arm()); });
       b1.onclick = ()=>{ if(done || busy || !tapOn) return; done = true; idle.stop(); stopNudge(); boxOff(); glowOff();
         b1.classList.remove("cap-hl-loop", "tappable"); b2.classList.remove("tappable"); b1.classList.add("cap-ok"); b2.classList.add("cap-dim");
         sfxCorrect(); confettiCannon(); setSwMood("happy");
@@ -12569,7 +12660,7 @@ Object.assign(SlideModules, {
         ctx.replayFn = ()=> ctx.say(okId);
         ctx.say(okId, null, ()=>{ setSwMood("point"); capNavOn(); }); };
       b2.onclick = ()=>{ if(done || busy || wrongOnce || !tapOn) return; attempts++; wrongOnce = true; busy = true; idle.stop(); stopNudge(); boxOff(); glowOff();
-        state.attempts = attempts; b2.classList.remove("tappable");   // the wrong set stays fully visible (not faded)
+        state.attempts = attempts; b2.classList.remove("tappable"); b2.classList.add("cap-box-wrong");   // BUG_04: the wrong set is blurred (it was the wrong choice)
         sfxWrongSoft(); setSwMood("tryagain");
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
         // the VO explains why, and on "तो सही बर्तन यह है" the right set is shown (hand + highlight); the child then taps it
@@ -12766,7 +12857,9 @@ Object.assign(SlideModules, {
       const emptied = []; let poured = 0, busy = false, open = false;
       const cues = pan ? { cups: ()=> srcs.forEach(v => capFlash(v.el, "cap-hl", 1500)), pan: ()=> capFlash(big.el, "cap-hl", 1500) }
                        : { jug: ()=> capFlash(big.el, "cap-hl", 1500), mugs: ()=> srcs.forEach(v => capFlash(v.el, "cap-hl", 1500)) };
-      const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open) return; if(busy){ idle.arm(); return; } const nx = srcs.find(v => !v.used); if(nx) capPoint(nx.el); idle.arm(); });
+      const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open) return; if(busy){ idle.arm(); return; } const nx = srcs.find(v => !v.used); if(!nx) return;
+    if(capHandOk(slide)){ capPoint(nx.el); idle.arm(); return; }
+    capFlash(nx.el, "cap-pulse", 1400); ctx.say(A.your_turn || A.intro, null, ()=> idle.arm()); });
       const ask = ()=>{ open = false; srcs.forEach(v => v.el.classList.remove("tappable")); idle.stop(); stopNudge();
         SwiftPAL.emit("pour_done", { slide_id: slide.id, count: N });
         ctx.after(400, ()=> capAskNumber(ctx, stage, d.ask, { x: 850, y: 72, countEls: emptied })); };
@@ -12777,7 +12870,7 @@ Object.assign(SlideModules, {
       const after = ()=>{ if(poured >= N){ capFlash(big.el, "cap-hl", 1200); ask(); } else idle.arm(); };
       srcs.forEach(v => { v.el.onclick = ()=>{ if(!open || busy || v.used) return; stopNudge(); idle.stop(); sfxTap(); pourOne(v, after); }; });
       const openUp = ()=>{ open = true; srcs.forEach(v => { if(!v.used) v.el.classList.add("tappable"); }); setSwMood("point");
-        ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.your_turn || A.intro); }; idle.arm(); const nx = srcs.find(v => !v.used); if(nx) ctx.after(600, ()=>{ if(open && !busy && poured === (d.demo ? 1 : 0)) capPoint(nx.el); }); };
+        ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.your_turn || A.intro); }; idle.arm(); const nx = srcs.find(v => !v.used); if(nx && capHandOk(slide)) ctx.after(600, ()=>{ if(open && !busy && poured === (d.demo ? 1 : 0)) capPoint(nx.el); }); };
       ctx.say(A.intro, cues, ()=>{
         if(!d.demo){ openUp(); return; }
         // demo: the hand taps the first cup, it pours, then "अब आप करिए"
@@ -12801,7 +12894,9 @@ Object.assign(SlideModules, {
         glasses.push(capAdd(stage, g, 320 + i * 150, BASE - g.h + 2)); }
       let open = false, used = false;
       const cues = { bottle: ()=> capFlash(bottle.el, "cap-hl", 1500), glasses: ()=> glasses.forEach(g => capFlash(g.el, "cap-hl", 1500)) };
-      const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(open && !used){ capPoint(bottle.el); idle.arm(); } });
+      const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!open || used) return;
+        if(capHandOk(slide)){ capPoint(bottle.el); idle.arm(); return; }
+        capFlash(bottle.el, "cap-pulse", 1400); ctx.say(A.intro, null, ()=> idle.arm()); });   // practice: pulse + instruction, no hand
       const ask = ()=>{ SwiftPAL.emit("pour_done", { slide_id: slide.id, count: N });
         ctx.after(400, ()=> capAskNumber(ctx, stage, d.ask, { row: true, x: 290, y: 382, countEls: glasses.slice(0, N) })); };
       // one glass at a time: lift, pour, set down. The fuller the bottle, the less it tips.
@@ -12814,7 +12909,7 @@ Object.assign(SlideModules, {
       bottle.el.onclick = ()=>{ if(!open || used) return; used = true; idle.stop(); stopNudge(); sfxTap();
         bottle.el.classList.remove("tappable"); SwiftPAL.emit("count_tap", { slide_id: slide.id, phase: slide.phase });
         bottle.cork(false); ctx.after(1000, ()=> pour(0)); };
-      ctx.say(A.intro, cues, ()=>{ open = true; bottle.el.classList.add("tappable"); setSwMood("point"); capPoint(bottle.el); idle.arm();
+      ctx.say(A.intro, cues, ()=>{ open = true; bottle.el.classList.add("tappable"); setSwMood("point"); if(capHandOk(slide)) capPoint(bottle.el); idle.arm();
         ctx.replayFn = ()=>{ if(!used) ctx.say(A.intro); }; });
     }
   },
@@ -12976,7 +13071,8 @@ Object.assign(SlideModules, {
       const measured = new Set();
       const next = ()=> d.vessels.map(s => V[s.key]).find(v => !measured.has(v.spec.key));
       const idle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(busy){ idle.arm(); return; }   // repeats every 7 s
-        if(phase === "measure"){ const n = next(); if(n){ capPoint(BV[n.spec.key] ? BV[n.spec.key].el : n.hit); idle.arm(); } }
+        if(phase === "measure"){ const n = next(); if(n){ const t = BV[n.spec.key] ? BV[n.spec.key].el : n.hit;   // BUG_09: no hand - the next bottle pulses + the instruction
+          if(capHandOk(slide)){ capPoint(t); idle.arm(); } else { capFlash(t, "cap-pulse", 1400); ctx.say(A.tap_all, null, ()=> idle.arm()); } } }
         else if(phase === "pick" && onlyRight){ capPoint(TV.hit); idle.arm(); } });
       /* ---- ZOOM to the bottles (after the last order) ----
          The counter scene smoothly zooms in on the three bottles (and softly blurs), then dissolves into the
@@ -13068,7 +13164,8 @@ Object.assign(SlideModules, {
           view.appendChild(g.el); return g.place(sl[0] - 2, sl[1] - 2); });
         const n = v.spec.glasses; let poured = 0, pouring = false, done = false;
         const nextGlass = ()=> gl.find(g => !g.used);
-        const gIdle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(!done && !pouring){ const g = nextGlass(); if(g) capPoint(g.el); gIdle.arm(); } });
+        const gIdle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(done || pouring) return; const g = nextGlass(); if(!g) return;
+          if(capHandOk(slide)){ capPoint(g.el); gIdle.arm(); } else { capFlash(g.el, "cap-pulse", 1400); ctx.say(A.tap_vessel, null, ()=> gIdle.arm()); } });
         const close = ()=>{ gIdle.stop(); view.classList.remove("show"); ctx.after(380, ()=>{ view.remove();
           v.set(1); v.top.cork(false);                                       // back at the counter the bottle is full (corked)
           // the counter keeps the same glasses card (no words) under the bottle; it shows when the close-up cards land on it
@@ -13096,8 +13193,8 @@ Object.assign(SlideModules, {
             const last = poured >= n;
             capRealPour(ctx, g, bv, { dir: -1, high: true, ceil: 200, chime: last, srcTo: 0, dstFrom: (poured - 1) / n, dstTo: poured / n, ms: 1400, tilt: [50, 100], dx: 36,   /* less tip, lip a little right of the mouth centre: the glass fits between the title and the bottle (no overlap) */
               onDone: ()=>{ pouring = false; capBadge(g, poured); capFlash(g.el, "cap-hl", 700);
-                if(last) finish(); else { const nx = nextGlass(); if(nx) capPoint(nx.el); gIdle.arm(); } } }); }; });
-        ctx.say(measured.size === 0 ? A.tap_vessel : null, null, ()=>{ if(!poured && !done){ capPoint(gl[0].el); gIdle.arm(); } });
+                if(last) finish(); else { const nx = nextGlass(); if(nx && capHandOk(slide)) capPoint(nx.el); gIdle.arm(); } } }); }; });
+        ctx.say(measured.size === 0 ? A.tap_vessel : null, null, ()=>{ if(!poured && !done){ if(capHandOk(slide)) capPoint(gl[0].el); gIdle.arm(); } });
         ctx.replayFn = ()=>{ if(!pouring && !done) ctx.say(A.tap_vessel); };
       };
       // ---- deliver: drag each FULL bottle to the customer who asked for that many glasses ----
@@ -13113,7 +13210,9 @@ Object.assign(SlideModules, {
         ctx.after(350, ()=>{ dragHand.style.transition = "left 1.2s ease-in-out, top 1.2s ease-in-out, opacity .3s"; dragHand.style.left = tx + "px"; dragHand.style.top = ty + "px"; });
         ctx.after(1800, ()=>{ dragHand.style.opacity = "0"; }); ctx.after(2200, ()=>{ dragHand.style.display = "none"; }); };
       const nextToDeliver = ()=> d.vessels.map(s => V[s.key]).find(v => !delivered.has(v.spec.key));
-      const pIdle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(phase !== "pick") return; if(busy){ pIdle.arm(); return; } const v = nextToDeliver(); if(v) showDrag(v); pIdle.arm(); });
+      const pIdle = capIdle(ctx, d.idle_ms || 7000, ()=>{ if(phase !== "pick") return; if(busy){ pIdle.arm(); return; } const v = nextToDeliver(); if(!v) return;
+        if(v.onlyTo !== undefined || capHandOk(slide)){ showDrag(v); pIdle.arm(); return; }      // answer already shown: the drag hand
+        capFlash(v.el, "cap-pulse", 1400); ctx.say(A.q, null, ()=> pIdle.arm()); });   // BUG_04: before that, no hand - a pulse + the question
       const custGlow = (ci, on)=> CUST[ci].classList.toggle("cap-target-cust", on);
       const allDone = ()=>{ phase = "done"; pIdle.stop(); stopNudge();
         sfxCorrect(); confettiCannon(); setSwMood("happy");
@@ -13174,13 +13273,13 @@ Object.assign(SlideModules, {
         springBack(); sfxWrongSoft(); setSwMood("tryagain"); capFlash(v.el, "cap-pulse", 1400);
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts: v.wrong, vessel: v.spec.key });
         busy = true;
-        if(v.wrong === 1) ctx.say(A.w1, null, ()=>{ busy = false; pIdle.arm(); });
+        if(v.wrong === 1) ctx.say(A.w1, null, ()=>{ busy = false; setSwMood("point"); pIdle.arm(); });
         else if(v.wrong === 2 && A.w3){ state.scaffoldLevel = 3;                // 2nd wrong: strong hint by voice, every customer still open
-          ctx.say(A.w2[String(v.spec.glasses)], null, ()=>{ busy = false; pIdle.arm(); }); }
+          ctx.say(A.w2[String(v.spec.glasses)], null, ()=>{ busy = false; setSwMood("point"); pIdle.arm(); }); }
         else { state.scaffoldLevel = 3; const ci = wantOf(v); v.onlyTo = ci;    // 3rd wrong: the right customer is shown; the others are closed
           SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts: v.wrong, vessel: v.spec.key });
           ctx.say(A.w3 || A.w2[String(v.spec.glasses)], { show: ()=>{ custGlow(ci, true); showDrag(v); } },
-            ()=>{ busy = false; custGlow(ci, true); showDrag(v); pIdle.arm(); }); } };
+            ()=>{ busy = false; setSwMood("point"); custGlow(ci, true); showDrag(v); pIdle.arm(); }); } };
       const makeDraggable = (v)=>{
         v.el.classList.add("draggable");
         v.el.addEventListener("pointerdown", (e)=>{
@@ -13209,7 +13308,7 @@ Object.assign(SlideModules, {
       const startPick = ()=>{ phase = "pick"; $("promptText").textContent = slide.ask_prompt_hi || slide.prompt_hi;
         d.vessels.forEach(s => { const v = V[s.key]; v.hit.style.display = "none"; makeDraggable(v); });   // bottles take the pointer now
         ctx.replayFn = ()=>{ if(!busy && phase === "pick") ctx.say(A.q); };
-        busy = true; ctx.say(A.q, null, ()=>{ busy = false; const v = nextToDeliver(); if(v) showDrag(v); pIdle.arm(); }); };
+        busy = true; ctx.say(A.q, null, ()=>{ busy = false; const v = nextToDeliver(); if(v && capHandOk(slide)) showDrag(v); pIdle.arm(); }); };
       d.vessels.forEach(spec => { const v = V[spec.key];
         v.hit.onclick = ()=>{
           if(busy) return;
@@ -13217,7 +13316,7 @@ Object.assign(SlideModules, {
         }; });
       // ---- intro: narration → the three customers ask → "tap all three vessels" ----
       const customer = (i)=>{ if(i >= 3){ ctx.after(500, ()=> zoomIn(()=> ctx.say(A.tap_all, { vessels: ()=> d.vessels.forEach(s => capFlash(BV[s.key].el, "cap-hl", 1600)) }, ()=>{
-          phase = "measure"; setSwMood("point"); const n = next(); if(n) capPoint(BV[n.spec.key].el); idle.arm();
+          phase = "measure"; setSwMood("point"); const n = next(); if(n && capHandOk(slide)) capPoint(BV[n.spec.key].el); idle.arm();
           ctx.replayFn = ()=>{ if(!busy && phase === "measure") ctx.say(A.tap_all); }; }))); return; }
         walkIn(i);   // one at a time: this customer walks in only after the previous one has ordered
         whenArrived(i, ()=>{ scene.appendChild(bubbles[i]); CUST[i].classList.add("talking"); talk(CUST[i], true);
@@ -14525,8 +14624,10 @@ function boot(){
     /* the ▶ button turns on ONLY when the greeting has really played to its end. A refused autoplay comes
        back at once (< 600 ms): the button stays off, and the child's first tap on the cover starts the
        greeting (pointerdown fallback below); the button turns on when that one ends. */
+    /* QA BUG_03: a greeting the browser refused (no tap yet) comes back at once: the ▶ button turns on RIGHT AWAY then, so
+       the game is always ready to start; the child's first tap on the cover still plays the greeting (fallback below). */
     play(landSrc, ()=>{ if(Date.now() - _t0 > 600){ _landingPlayedOk = true; setStartBtnReady(true); armStartNudge(); }
-                        else if(_landingRefused++ >= 2){ setStartBtnReady(true); armStartNudge(); } }); };   /* no sound at all (3 tries): never strand the child */
+                        else { _landingRefused++; setStartBtnReady(true); armStartNudge(); } }); };
   let _landingRefused = 0;
   const playLanding = (immediate)=>{
     if(!_onLandingNow()) return;
