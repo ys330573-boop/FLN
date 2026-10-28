@@ -4828,8 +4828,7 @@ html.no-anim .nav-btn.active{animation:none !important;}
 @media (prefers-reduced-motion:reduce){ #nudgeHand img,#nudgeHand .nh-tapfx i{animation:none;} }
 
 /* ===== QA bug sheet 2026-10-26 ===== */
-/* BUG_04: a wrong choice stays blurred and can't be tapped again (number cards, T1 glass, T2 set) */
-.cap-opts .opt-cell.cap-opt-wrong{filter:blur(2px) grayscale(.35);opacity:.5 !important;pointer-events:none;box-shadow:none !important;transition:filter .35s ease,opacity .35s ease;}
+/* BUG_04: a wrong choice stays blurred and can't be tapped again (T1 glass, T2 set) - not the number cards */
 .cap-v.cap-v-wrong{filter:blur(2.5px);opacity:.55;pointer-events:none;transition:filter .35s ease,opacity .35s ease;}
 .cap-box.cap-box-wrong{filter:blur(2px);opacity:.55;pointer-events:none;transition:filter .35s ease,opacity .35s ease;}
 /* idle nudge (no hand): a small bounce */
@@ -4844,3 +4843,8 @@ body.vo-lock .cap-v.tappable, body.vo-lock .cap-box.tappable, body.vo-lock .cap-
    Hindi-game-gender-identify (arc 1, then arc 2, 1.2 s loop - .playing .wv1/.wv2 above); it can't be tapped until the
    voice-over ends, then it is solid blue again */
 body.vo-lock .audio-chip,body.vo-lock .tut-audio,body.vo-lock .sg-vo{opacity:.45 !important;filter:grayscale(.75) !important;}
+
+/* QA BUG_06: the speaker stays GREY (faded, as before) for the whole voice-over sequence and while a page's opening voice is
+   still to come - body.spk-busy, driven by speakerState() in app.js - and takes no taps; blue only when it is all over */
+body.spk-busy .audio-chip,body.spk-busy .tut-audio,body.spk-busy .sg-vo{pointer-events:none !important;opacity:.45 !important;filter:grayscale(.75) !important;
+  transition:opacity .18s ease, filter .18s ease;}

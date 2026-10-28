@@ -796,6 +796,31 @@ function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAu
   requestAnimationFrame(tick);
   window.addEventListener("load", ()=> setTimeout(show, 4000));
 })();
+/* QA BUG_06 - the speaker is GREY until the voice-over is complete, on every screen (ported from
+   CodeWithPiyush0/HI02H11_L02_S04 r139/r145). Following each single clip (vo-lock) let it turn blue in every gap of a
+   sequence and in the silence before a page's first line. body.spk-busy covers the WHOLE sequence: any clip playing (or a
+   reveal / demo running), and it lets go only after 700 ms with none of those - that bridges the gaps between the clips.
+   A page keeps it grey from the moment it opens until its opening voice is over (spoken, then 700 ms quiet; a page that
+   says nothing lets go after 8 s). While grey the speaker takes no taps (replaySlideAudio). Blue = all voice-over done. */
+(function speakerState(){
+  let quietSince = 0, page = null, heard = false, openAt = 0, intro = false;
+  const tick = ()=>{
+    try{
+      const seq = !!((typeof isPlaying !== "undefined" && isPlaying) || (typeof state !== "undefined" && (state.revealing || state.demoRunning)) || (window.__capDemo && window.__capDemo === state.slideStart));   // a demo flag only counts on the page that set it
+      const now = performance.now();
+      const pg = (typeof state !== "undefined") ? state.slideStart : null;
+      const onCover = document.body.classList.contains("is-start");   // the cover's speaker follows its greeting only (BUG_03: never stuck grey there)
+      if(pg !== page && !onCover){ page = pg; heard = false; openAt = now; intro = page != null; }
+      if(onCover) intro = false;
+      if(seq){ quietSince = 0; heard = true; } else if(!quietSince) quietSince = now;
+      const settled = !seq && now - quietSince >= 700;
+      if(intro && ((heard && settled) || (!heard && now - openAt > 8000))) intro = false;
+      const busy = !settled || intro;
+      if(document.body && document.body.classList.contains("spk-busy") !== busy) document.body.classList.toggle("spk-busy", busy);
+    }catch(e){}
+  };
+  setInterval(tick, 80);
+})();
 function setPlaying(on){
   setTimeout(()=>{ try{ bgmUpdate(); }catch(e){} }, 0);   /* REF2: music ducks under every spoken line */
   // the dynamic Swiftie sits header-left; the audio chips pulse to signal playback. r4/F1: share the
@@ -11777,7 +11802,7 @@ function capAskNumber(ctx, stage, spec, o){
   let idleN = 0;
   const idle = capIdle(ctx, 7000, ()=>{ if(done) return; if(busy){ idle.arm(); return; } idleN++;   // repeats every 7 s until answered
     if(onlyRight){ rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); idle.arm(); return; }
-    [...col.children].filter(x => !x.classList.contains("cap-opt-wrong")).forEach((x, i)=> ctx.after(i * 160, ()=>{ x.classList.remove("cap-opt-nudge"); void x.offsetWidth; x.classList.add("cap-opt-nudge"); }));
+    [...col.children].forEach((x, i)=> ctx.after(i * 160, ()=>{ x.classList.remove("cap-opt-nudge"); void x.offsetWidth; x.classList.add("cap-opt-nudge"); }));
     ctx.say(spec.q, null, ()=>{ if(!done && !busy) idle.arm(); }); });   // a tap during the reminder still counts
   const win = (cell, val)=>{
     done = true; stopNudge(); rightCell.classList.remove("cap-glow"); rightCell.classList.add("correct");
@@ -11802,27 +11827,24 @@ function capAskNumber(ctx, stage, spec, o){
     c.innerHTML = `<span class="bignum-glyph">${devNumeral(val)}</span>`;
     if(val === spec.answer) rightCell = c;
     c.onclick = ()=>{
-      if(done || busy || c.classList.contains("crossed") || c.classList.contains("cap-opt-wrong")) return;
+      if(done || busy || c.classList.contains("crossed")) return;
       if(onlyRight && val !== spec.answer) return;
       stopNudge(); idle.stop(); busy = true;
       if(val === spec.answer){ win(c, val); return; }
       attempts++; state.attempts = attempts; c.classList.add("crossed"); sfxWrongSoft(); setSwMood("tryagain");
-      // BUG_04: a wrong card flashes red, then stays BLURRED and can't be tapped again (it was the wrong answer)
-      setTimeout(()=>{ c.classList.remove("crossed"); c.classList.add("cap-opt-wrong"); }, 900);
+      setTimeout(()=>{ if(!c.classList.contains("cap-off-opt")) c.classList.remove("crossed"); }, 900);   // red flash only; stays tappable
       SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
       $("hintBtn").classList.add("show");
-      // every chance is used once no wrong card is left to try (3 cards: after the 2nd wrong answer)
-      const used = attempts >= spec.values.length - 1;
       const back = ()=>{ busy = false; setSwMood("point"); idle.arm(); };   // BUG_07: Swiftee back to normal when the hint VO ends
-      const reveal = ()=>{ state.scaffoldLevel = 3; onlyRight = true;      // the answer is shown: glow + hand (BUG_08), other cards disabled
-        SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts });
-        ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); back(); }); };
       ctx.say("cap_num_" + val, null, ()=>{
-        if(attempts === 1 && !used){ state.scaffoldLevel = Math.max(state.scaffoldLevel, 2);
+        setSwMood("point");   // BUG_07: the wrong-answer line is over - Swiftee back to normal BEFORE the hint (not sad through it)
+        if(attempts === 1){ state.scaffoldLevel = Math.max(state.scaffoldLevel, 2);
           ctx.say(spec.h1, null, back); }
-        else if(attempts === 2 && spec.h3){ state.scaffoldLevel = 3;           // 2nd wrong: strong hint (count along)...
-          ctx.say(spec.h2, h2Handlers, ()=>{ if(used) reveal(); else back(); }); }   // ...then, if no chance is left, the reveal
-        else reveal();
+        else if(attempts === 2 && spec.h3){ state.scaffoldLevel = 3;           // 2nd wrong: strong hint (count along), all cards still open
+          ctx.say(spec.h2, h2Handlers, back); }
+        else { state.scaffoldLevel = 3; onlyRight = true;                       // 3rd wrong: the answer is shown (glow + hand, BUG_08), wrong cards disabled
+          SwiftPAL.emit("answer_revealed", { slide_id: slide.id, phase: slide.phase, attempts });
+          ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); back(); }); }
       });
     };
     col.appendChild(c);
@@ -12510,11 +12532,12 @@ function capPanScene(host, slide){
       chime: poured === N, onDone: ()=>{ busy = false; then(); } }); };
   const after = ()=>{ if(poured >= N){ capFlash(pot.el, "cap-hl", 1400); ask(); } else idle.arm(); };
   srcs.forEach(v => { v.el.onclick = ()=>{ if(!open || busy || v.used || poured >= N) return; stopNudge(); idle.stop(); sfxTap(); pourOne(v, after); }; });
-  const openUp = ()=>{ open = true; srcs.forEach(v => { if(!v.used) v.el.classList.add("tappable"); }); setSwMood("point");
+  const openUp = ()=>{ window.__capDemo = 0; open = true; srcs.forEach(v => { if(!v.used) v.el.classList.add("tappable"); }); setSwMood("point");
     ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.your_turn || A.intro); };
     const nx = srcs.find(v => !v.used); if(nx && capHandOk(slide)) capPoint(nx.el); idle.arm(); };
   ctx.say(A.intro, cues, ()=>{
     if(!d.demo){ openUp(); return; }
+    window.__capDemo = state.slideStart;   // BUG_06: grey through the demonstration pour, until "अब आप करिए" is over
     capPoint(srcs[0].el);   // demo: the hand taps the first cup, it pours, then "अब आप करिए"
     ctx.after(900, ()=>{ stopNudge(); sfxTap(); pourOne(srcs[0], ()=> ctx.say(A.your_turn, null, openUp)); });
   });
@@ -12739,13 +12762,14 @@ Object.assign(SlideModules, {
         glasses.push(capAdd(stage, g, 190 + i * 118, BASE - g.h)); }
       const FULL = 0.88;   // the bottle ends a little short of full: milk stops just below the neck (visible headroom)
       const cues = { bottle: ()=> capFlash(bottle.el, "cap-hl", 1600), glasses: ()=> glasses.forEach(g => capFlash(g.el, "cap-hl", 1600)) };
-      const count = (i)=>{ if(i >= N){ ctx.after(300, ()=> ctx.say(A.conclude, null, ()=>{ setSwMood("point"); capNavOn(); ctx.replayFn = ()=> ctx.say(A.conclude); })); return; }
+      const count = (i)=>{ if(i >= N){ ctx.after(300, ()=> ctx.say(A.conclude, null, ()=>{ window.__capDemo = 0; setSwMood("point"); capNavOn(); ctx.replayFn = ()=> ctx.say(A.conclude); })); return; }
         capFlash(glasses[i].el, "cap-pulse", 1400); capBadge(glasses[i], i + 1);
         ctx.say("cap_num_" + (i + 1), null, ()=> ctx.after(250, ()=> count(i + 1))); };
       const pour = (i)=>{ if(i >= N){ SwiftPAL.emit("pour_done", { slide_id: slide.id, count: N });
           ctx.after(250, ()=>{ bottle.cork(true); ctx.after(900, ()=> count(0)); }); return; }
         capRealPour(ctx, glasses[i], bottle, { dir: 1, behind: P4.behind, gap: P4.gap, tilt: P4.tilt || undefined, ceil: 46, arc: 70, srcTo: 0, dstFrom: FULL * i / N, dstTo: FULL * (i + 1) / N,
           onDone: ()=>{ capFlash(glasses[i].el, "cap-hl", 900); ctx.after(300, ()=> pour(i + 1)); } }); };
+      window.__capDemo = state.slideStart;   // BUG_06: the speaker stays grey through the silent pouring between the lines
       ctx.say(A.intro, cues, ()=> ctx.after(300, ()=>{ bottle.cork(false); ctx.after(1000, ()=> pour(0)); }));
     }
   },
@@ -12767,13 +12791,14 @@ Object.assign(SlideModules, {
         glasses.push(capAdd(stage, g, 330 + i * 96, BASE - g.h)); }
       const cues = { glasses: ()=> glasses.forEach(g => capFlash(g.el, "cap-hl", 1600)), jug: ()=> capFlash(jug.el, "cap-hl", 1600) };
       const finish = ()=>{ SwiftPAL.emit("pour_done", { slide_id: slide.id, count: N });   // the spare empty glasses stay (they show what is left over)
-        ctx.after(600, ()=> ctx.say(A.conclude, null, ()=>{ setSwMood("point"); capNavOn(); ctx.replayFn = ()=> ctx.say(A.conclude); })); };
+        ctx.after(600, ()=> ctx.say(A.conclude, null, ()=>{ window.__capDemo = 0; setSwMood("point"); capNavOn(); ctx.replayFn = ()=> ctx.say(A.conclude); })); };
       // one glass at a time: pick the jug up, pour, set it back down. The fuller the jug, the less it tips.
       const TILT = [[16, 38], [38, 58], [58, 76], [76, 92]];
       // one continuous pour: the jug stays in the air and moves glass to glass; it goes back only after the last one
       const pour = (i)=>{ if(i >= N){ capArtHome(ctx, jug, ()=> ctx.after(300, finish)); return; }
         capRealPour(ctx, jug, glasses[i], { dir: 1, high: true, ceil: 46, chime: true, stay: true, srcTo: 1 - (i + 1) / N, dstFrom: 0, dstTo: 1, ms: 1800, tilt: TILT[i] || TILT[3],
           onDone: ()=>{ capFlash(glasses[i].el, "cap-hl", 1000); capBadge(glasses[i], i + 1); ctx.after(150, ()=> pour(i + 1)); } }); };
+      window.__capDemo = state.slideStart;   // BUG_06: grey through the silent pouring between the lines
       ctx.say(A.intro, cues, ()=> ctx.after(300, ()=> pour(0)));
     }
   },
@@ -12871,12 +12896,12 @@ Object.assign(SlideModules, {
           busy = false; if(!pan) v.el.classList.add("cap-faint"); then(); } }); };
       const after = ()=>{ if(poured >= N){ capFlash(big.el, "cap-hl", 1200); ask(); } else idle.arm(); };
       srcs.forEach(v => { v.el.onclick = ()=>{ if(!open || busy || v.used) return; stopNudge(); idle.stop(); sfxTap(); pourOne(v, after); }; });
-      const openUp = ()=>{ open = true; srcs.forEach(v => { if(!v.used) v.el.classList.add("tappable"); }); setSwMood("point");
+      const openUp = ()=>{ window.__capDemo = 0; open = true; srcs.forEach(v => { if(!v.used) v.el.classList.add("tappable"); }); setSwMood("point");
         ctx.replayFn = ()=>{ if(open && !busy) ctx.say(A.your_turn || A.intro); }; idle.arm(); const nx = srcs.find(v => !v.used); if(nx && capHandOk(slide)) ctx.after(600, ()=>{ if(open && !busy && poured === (d.demo ? 1 : 0)) capPoint(nx.el); }); };
       ctx.say(A.intro, cues, ()=>{
         if(!d.demo){ openUp(); return; }
         // demo: the hand taps the first cup, it pours, then "अब आप करिए"
-        capPoint(srcs[0].el);
+        window.__capDemo = state.slideStart; capPoint(srcs[0].el);
         ctx.after(900, ()=>{ stopNudge(); pourOne(srcs[0], ()=> ctx.say(A.your_turn, null, openUp)); });
       });
     }
@@ -14145,6 +14170,9 @@ function mountSlide(idx){
   // reveal_seq/sort reveal runs (no stomping the one-by-one narration); while a self-driving demo
   // chain runs (a replay would gen-kill its chain); and on self-driving slides that offer no replay.
   const replaySlideAudio = ()=>{
+    /* QA BUG_06 (as HI02H11_L02_S04 r145): grey = deaf - while the speaker is grey (body.spk-busy: the page's opening voice
+       or a voice-over sequence still going) a tap does nothing */
+    if(document.body.classList.contains("spk-busy")) return;
     if(isPlaying || state.revealing || state.demoRunning || (state.ownsAudio && !state.replayAudio)) return;
     state.audioReplays++;
     SwiftPAL.emit("audio_replay", { slide_id: slide.id, phase: slide.phase, count: state.audioReplays });
