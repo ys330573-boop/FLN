@@ -807,7 +807,7 @@ function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAu
   let quietSince = 0, page = null, heard = false, openAt = 0, intro = false;
   const tick = ()=>{
     try{
-      const seq = !!((typeof isPlaying !== "undefined" && isPlaying) || (typeof state !== "undefined" && (state.revealing || state.demoRunning)) || (window.__capDemo && window.__capDemo === state.slideStart) || document.body.classList.contains("landing-wait"));   // a demo flag only counts on the page that set it
+      const seq = !!((typeof isPlaying !== "undefined" && isPlaying) || (typeof state !== "undefined" && (state.revealing || state.demoRunning)) || (window.__capDemo && window.__capDemo === state.slideStart));   // a demo flag only counts on the page that set it
       const now = performance.now();
       const pg = (typeof state !== "undefined") ? state.slideStart : null;
       const onCover = document.body.classList.contains("is-start");   // the cover's speaker follows its greeting only (BUG_03: never stuck grey there)
@@ -14652,6 +14652,7 @@ function boot(){
   let _landingPlayedOk = false;
   const _speakLanding = ()=>{ if(!_onLandingNow()) return;
     const _t0 = Date.now();
+    document.body.classList.remove("landing-wait");
     setStartBtnReady(false); disarmStartNudge();
     /* the ▶ button turns on ONLY when the greeting has really played to its end. A refused autoplay comes
        back at once (< 600 ms): the button stays off, and the child's first tap on the cover starts the
@@ -14673,6 +14674,7 @@ function boot(){
   /* never strand the child behind a clip that never ends or never starts */
   /* (only a clip that STALLS: while the greeting is still sounding the button stays off) */
   (function watch(n){ setTimeout(()=>{ if(!_onLandingNow() || !$("sgBtn") || !$("sgBtn").disabled) return;
+    if(document.body.classList.contains("landing-wait")){ watch(0); return; }   /* greeting not heard yet: the ▶ waits for it, however long */
     if(isPlaying && n < 30){ watch(n + 1); return; }
     if(_landingPlayedOk || n >= 30){ setStartBtnReady(true); armStartNudge(); } else watch(n + 1); }, 1000); })(0);
   const sgVo = $("sgVo"); if(sgVo) sgVo.onclick = (e)=>{ e.stopPropagation(); playLanding(true); };   /* true = an explicit replay never waits for the train */

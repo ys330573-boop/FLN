@@ -4848,3 +4848,5 @@ body.vo-lock .audio-chip,body.vo-lock .tut-audio,body.vo-lock .sg-vo{opacity:.45
    still to come - body.spk-busy, driven by speakerState() in app.js - and takes no taps; blue only when it is all over */
 body.spk-busy .audio-chip,body.spk-busy .tut-audio,body.spk-busy .sg-vo{pointer-events:none !important;opacity:.45 !important;filter:grayscale(.75) !important;
   transition:opacity .18s ease, filter .18s ease;}
+/* cover ▶ (reference MTG2A04_L02_S01): fully HIDDEN until the greeting VO has played to its end, then it pops in (.sg-appear) */
+.start-gate .sg-btn.sg-waiting,.start-gate .sg-card .sg-btn.sg-waiting{visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}
