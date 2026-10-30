@@ -781,6 +781,7 @@ function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAu
     if(!document.body.classList.contains("is-start") && shown) return;            // left the title screen
     const t = T();
     if(t && document.body.classList.contains("is-start")){
+      if(document.body.classList.contains("landing-wait")) show();
       if(typeof isPlaying !== "undefined" && isPlaying && !wasPlaying){ popped = false; srcT0 = 0; }   // greeting (re)starts
       wasPlaying = (typeof isPlaying !== "undefined") && isPlaying;
       if(wasPlaying){
@@ -806,7 +807,7 @@ function setMuted(m){ isMuted = m; if(m && typeof stopAudio==="function") stopAu
   let quietSince = 0, page = null, heard = false, openAt = 0, intro = false;
   const tick = ()=>{
     try{
-      const seq = !!((typeof isPlaying !== "undefined" && isPlaying) || (typeof state !== "undefined" && (state.revealing || state.demoRunning)) || (window.__capDemo && window.__capDemo === state.slideStart));   // a demo flag only counts on the page that set it
+      const seq = !!((typeof isPlaying !== "undefined" && isPlaying) || (typeof state !== "undefined" && (state.revealing || state.demoRunning)) || (window.__capDemo && window.__capDemo === state.slideStart) || document.body.classList.contains("landing-wait"));   // a demo flag only counts on the page that set it
       const now = performance.now();
       const pg = (typeof state !== "undefined") ? state.slideStart : null;
       const onCover = document.body.classList.contains("is-start");   // the cover's speaker follows its greeting only (BUG_03: never stuck grey there)
@@ -14614,6 +14615,7 @@ function boot(){
   const setStartBtnReady = (ready)=>{
     const b = $("sgBtn"); if(!b) return;
     b.disabled = !ready;
+    if(ready) document.body.classList.remove("landing-wait");
     if(ready && b.classList.contains("sg-waiting")) b.classList.add("sg-appear");   /* REF2: pops in */
     b.classList.toggle("sg-waiting", !ready);
     if(!ready) b.classList.remove("idle-pulse");
@@ -14657,7 +14659,7 @@ function boot(){
     /* QA BUG_03: a greeting the browser refused (no tap yet) comes back at once: the ▶ button turns on RIGHT AWAY then, so
        the game is always ready to start; the child's first tap on the cover still plays the greeting (fallback below). */
     play(landSrc, ()=>{ if(Date.now() - _t0 > 600){ _landingPlayedOk = true; setStartBtnReady(true); armStartNudge(); }
-                        else { _landingRefused++; setStartBtnReady(true); armStartNudge(); } }); };
+                        else { _landingRefused++; document.body.classList.add("landing-wait"); } }); };   /* live (http): sound needs a tap - wait for it, like the local cover */
   let _landingRefused = 0;
   const playLanding = (immediate)=>{
     if(!_onLandingNow()) return;
@@ -14722,7 +14724,8 @@ function boot(){
     setTimeout(ready, 30000);   // watchdog: never strand the child on the loader
   })();
   // landing VO best-effort on first interaction too (some browsers block autoplay pre-gesture)
-  window.addEventListener("pointerdown", function once(e){ window.removeEventListener("pointerdown", once);
+  window.addEventListener("pointerdown", function once(e){
+    if(_landingPlayedOk || !_onLandingNow()){ window.removeEventListener("pointerdown", once, true); return; }
     /* [30m] THE LANDING GREETING MUST NOT RESTART ON THE FIRST TAP (Yasir: "the landing VO does not
        seem fine"). This listener exists ONLY as an autoplay-policy fallback: if the browser refused
        the greeting on load, the first real user gesture is our chance to start it. But it fired
@@ -14752,7 +14755,9 @@ function boot(){
        e.target.closest("button,a,input,select,textarea,[role=button],[onclick]")) return;   /* (a) */
     if(_landingPlayedOk) return;                                                              /* (b) */
     if(typeof window.landingTrainReady === "function" && !window.__ltReady) return;           /* (c) */
-    playLanding(); }, { once:true });
+    if(!document.body.classList.contains("landing-wait")) return;                             /* only a greeting the browser refused */
+    document.body.classList.remove("landing-wait");
+    playLanding(true); }, true);   /* capture: the star mask swallows taps on the cover card before they bubble */
 
   let _starting=false;
   $("sgBtn").onclick = async()=>{
