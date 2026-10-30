@@ -11853,7 +11853,12 @@ function capAskNumber(ctx, stage, spec, o){
   stage.appendChild(col);
   $("hintBtn").onclick = ()=>{ if(done || busy) return; state.hintUsed = true; SwiftPAL.emit("hint_shown", { slide_id: slide.id, manual: true });
     busy = true; ctx.say(attempts >= 2 ? spec.h2 : spec.h1, attempts >= 2 ? h2Handlers : null, ()=>{ busy = false; }); };
-  ctx.replayFn = ()=>{ if(!busy && !done){ idle.stop(); ctx.say(spec.q, null, ()=> idle.arm()); } };
+  ctx.replayFn = ()=>{ if(busy || done) return; idle.stop();
+    // answer already revealed (every chance used): the speaker replays the most recent VO - the explanation - not the question
+    if(onlyRight){ busy = true; stopNudge();
+      ctx.say(spec.h3 || spec.h2, h2Handlers, ()=>{ hideWrong(); rightCell.classList.add("cap-glow"); if(revealHand) capPoint(rightCell); busy = false; idle.arm(); });
+      return; }
+    ctx.say(spec.q, null, ()=> idle.arm()); };
   // options come in ONE BY ONE, each with a soft pop (checklist); the question is asked once they are all there
   const cells = [...col.children], GAP = 380;
   cells.forEach((c, i)=> ctx.after(150 + i * GAP, ()=>{ c.classList.add("cap-opt-in"); try{ capSfxPop(true); }catch(e){} }));
@@ -12632,7 +12637,7 @@ Object.assign(SlideModules, {
         state.attempts = attempts; glass.el.classList.remove("tappable"); glass.el.classList.add("cap-pulse-loop");
         sfxWrongSoft(); setSwMood("tryagain");
         SwiftPAL.emit("answer_wrong", { slide_id: slide.id, phase: slide.phase, attempts });
-        ctx.say(A.wrong, { mug: ()=> capPoint(mug.el) }, ()=>{ busy = false; setSwMood("point"); glass.el.classList.remove("cap-pulse-loop"); glass.el.classList.add("cap-v-wrong"); wait(true, mug); capPoint(mug.el); idle.arm(); }); };
+        ctx.say(A.wrong, null, ()=>{ busy = false;   /* the hand comes on the mug only when this VO has finished ("...सही बर्तन मग है।") */ setSwMood("point"); glass.el.classList.remove("cap-pulse-loop"); glass.el.classList.add("cap-v-wrong"); wait(true, mug); capPoint(mug.el); idle.arm(); }); };
       ctx.replayFn = ()=>{ if(!done && !busy){ stopNudge(); glowOff(); ctx.say(A.prompt, cues, ()=>{ glowOff(); idle.arm(); }); } };
       ctx.say(A.prompt, cues, ()=>{ glowOff(); enableTap(); idle.arm(); });
     }
@@ -14653,7 +14658,8 @@ function boot(){
   const _speakLanding = ()=>{ if(!_onLandingNow()) return;
     const _t0 = Date.now();
     document.body.classList.remove("landing-wait");
-    setStartBtnReady(false); disarmStartNudge();
+    if(!_landingPlayedOk) setStartBtnReady(false);   /* a speaker REPLAY after the greeting has finished keeps ▶ on screen */
+    disarmStartNudge();
     /* the ▶ button turns on ONLY when the greeting has really played to its end. A refused autoplay comes
        back at once (< 600 ms): the button stays off, and the child's first tap on the cover starts the
        greeting (pointerdown fallback below); the button turns on when that one ends. */
