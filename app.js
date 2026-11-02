@@ -11682,11 +11682,18 @@ function capCtx(slide, root){
     root, slide, replayFn: null,
     alive(){ return state.idx === idx && document.body.contains(root); },
     after(ms, fn){ setTimeout(()=>{ if(ctx.alive()) fn(); }, ms); },
-    say(id, handlers, onEnd){ if(!ctx.alive()) return; capSay(id, handlers, ()=>{ if(ctx.alive() && onEnd) onEnd(); }); }
+    say(id, handlers, onEnd){ if(!ctx.alive()) return; if(id) ctx.lastSay = { id, handlers }; capSay(id, handlers, ()=>{ if(ctx.alive() && onEnd) onEnd(); }); },
+    lastSay: null
   };
   state.ownsAudio = true;
   _idleVoFired = true; stopIdleVo();
-  state.replayAudio = ()=>{ if(ctx.replayFn && ctx.alive()) ctx.replayFn(); };   // no-op while a demo runs (never breaks a chain)
+  /* the speaker replays the MOST RECENT voice-over of this screen (question, hint, explanation, praise...) with its word-timed
+     glows; never its end-of-line action (that already happened). Cues that START something (a demo, the customers walking in)
+     are not replayed. Before any VO has played, the screen's own replay is used. */
+  state.replayAudio = ()=>{ if(!ctx.alive()) return;
+    const L = ctx.lastSay;
+    if(L){ const h = L.handlers && !("demo" in L.handlers) && !("people" in L.handlers) ? L.handlers : null; capSay(L.id, h, null); return; }
+    if(ctx.replayFn) ctx.replayFn(); };
   return ctx;
 }
 /* capSay: play a VO clip and fire its word-timed cues (CARD.assets.audio_cues) as the words are spoken. */
