@@ -11976,6 +11976,9 @@ const CAP_SHOP_FIG = {"chars": {"man": [683, 266, 339, 765], "woman": [1155, 298
 /* [page 11] a FULL shop bottle is filled up to the bottom of its neck (was: only to the shoulder) — just a
    small empty space is left near the neck */
 ["shopb4", "shopb3", "shopb2"].forEach(k => { if(CAP_SHOP_ART[k]) CAP_SHOP_ART[k].yFill = 604; });
+/* [page 11] the grey-blue base shape at the foot of each shop bottle read as a little water left inside an EMPTY bottle -
+   removed, so an empty bottle is fully empty */
+["shopb4", "shopb3", "shopb2"].forEach(k => { const A = CAP_SHOP_ART[k]; if(A && A.back) A.back = A.back.replace(/<path [^>]*fill="#97AAA3"\s*\/>/, ""); });
 /* the man stood a little high (his bubble touched the title banner) — he stands 42px lower */
 if(CAP_SHOP_FIG.chars.man) CAP_SHOP_FIG.chars.man[1] += 42;
 (function(){
