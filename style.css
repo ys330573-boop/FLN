@@ -4850,3 +4850,5 @@ body.spk-busy .audio-chip,body.spk-busy .tut-audio,body.spk-busy .sg-vo{pointer-
   transition:opacity .18s ease, filter .18s ease;}
 /* cover ▶ (reference MTG2A04_L02_S01): fully HIDDEN until the greeting VO has played to its end, then it pops in (.sg-appear) */
 .start-gate .sg-btn.sg-waiting,.start-gate .sg-card .sg-btn.sg-waiting{visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}
+/* P3 shop: while the glasses card under a just-filled bottle counts up, the other bottles take no taps */
+.cap-bview.cap-counting .cap-bv-tap{pointer-events:none !important;cursor:default !important;}

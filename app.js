@@ -13214,17 +13214,21 @@ Object.assign(SlideModules, {
           // the counter keeps the same glasses card (no words) under the bottle; it shows when the close-up cards land on it
           const chip = glassCard(v.spec, 34, false); chip.classList.add("cap-chip", "cap-counter-card", v.spec.key); chip.setAttribute("aria-label", v.spec.label);
           chip.style.left = (v.x + v.w / 2) + "px"; chip.style.top = (v.y + v.h + 10) + "px"; chip.style.visibility = zl ? "hidden" : ""; (zl || scene).appendChild(chip);
-          measured.add(v.spec.key); busy = false;
+          measured.add(v.spec.key);
+          // the glasses card under the filled bottle counts up one glass at a time: the other bottles stay locked (busy) until
+          // that sequence has finished - a tap in the middle of it does nothing
+          const countMs = Math.round((0.2 + (v.spec.glasses - 1) * 0.38 + 0.12 + 0.35) * 1000);
+          if(bview) bview.classList.add("cap-counting");
           const b = BV[v.spec.key]; if(b){ b.set(1); b.top.cork(false); b.el.classList.remove("cap-bv-tap"); capFlash(b.el, "cap-ok", 900);
             // under the filled bottle: a card with as many identical glasses of milk as it took (side by side)
             const card = glassCard(v.spec, 50, true); b.card = card;
             card.style.left = (b.x + b.w / 2) + "px"; card.style.top = (b.y + b.h + 16) + "px"; bview.appendChild(card); }
           // all filled: once the last card has counted up, wait 1 s, the number badges fade away, then back to the counter
-          if(measured.size === d.vessels.length){ const countMs = Math.round((0.2 + (v.spec.glasses - 1) * 0.38 + 0.12 + 0.35) * 1000);
+          if(measured.size === d.vessels.length){
             ctx.after(countMs + 1000, ()=>{ if(bview) bview.querySelectorAll(".cap-mini-badge").forEach(bd => bd.classList.add("out"));
               ctx.after(450, ()=>{ if(bview) bview.querySelectorAll(".cap-mini-badge").forEach(bd => bd.remove());
                 ctx.after(450, ()=> zoomOut(()=>{ capFlash(v.el, "cap-ok", 900); ctx.after(300, startPick); })); }); }); }
-          else idle.arm(); }); };
+          else ctx.after(countMs, ()=>{ if(bview) bview.classList.remove("cap-counting"); busy = false; idle.arm(); }); }); };
         const finish = ()=>{ done = true; stopNudge();
           gl.forEach(g => { g.el.classList.remove("tappable"); if(!g.used) g.el.classList.add("cap-spare"); });   // these did not fit
           capFlash(bv.el, "cap-hl", 1200); ctx.after(250, ()=> bvTop.cork(true));   // full: the cork goes in
