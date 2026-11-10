@@ -4852,3 +4852,17 @@ body.spk-busy .audio-chip,body.spk-busy .tut-audio,body.spk-busy .sg-vo{pointer-
 .start-gate .sg-btn.sg-waiting,.start-gate .sg-card .sg-btn.sg-waiting{visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}
 /* P3 shop: while the glasses card under a just-filled bottle counts up, the other bottles take no taps */
 .cap-bview.cap-counting .cap-bv-tap{pointer-events:none !important;cursor:default !important;}
+/* ===== responsive display: no pinch / double-tap zoom, "rotate your phone" screen, bigger speaker tap area on touch ===== */
+html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#rotateGate{display:none;position:fixed;inset:0;z-index:2147483000;flex-direction:column;align-items:center;justify-content:center;gap:28px;
+  padding:24px;background:linear-gradient(180deg,#8FD3FF 0%,#4DB5F5 100%);text-align:center;touch-action:none;}
+body.need-rotate #rotateGate{display:flex;}
+#rotateGate .rg-phone{width:clamp(70px,14vmin,130px);height:clamp(114px,23vmin,212px);border:clamp(6px,1.1vmin,10px) solid #FFFFFF;border-radius:clamp(14px,3vmin,26px);position:relative;box-shadow:0 8px 22px rgba(0,40,90,.25);
+  animation:rgTurn 2.4s ease-in-out infinite;}
+#rotateGate .rg-phone i{position:absolute;left:50%;bottom:8px;width:16px;height:4px;margin-left:-8px;border-radius:2px;background:#FFFFFF;}
+#rotateGate .rg-text{margin:0;font-family:var(--font-hi);font-weight:800;font-size:clamp(22px,4.6vmin,44px);line-height:1.35;color:#0B3D91;max-width:min(90vw,560px);}
+@keyframes rgTurn{0%,20%{transform:rotate(0deg);}50%,75%{transform:rotate(-90deg);}100%{transform:rotate(0deg);}}
+@media (prefers-reduced-motion:reduce){ #rotateGate .rg-phone{animation:none;transform:rotate(-90deg);} }
+@media (pointer:coarse){
+  .audio-chip::after,.tut-audio::after,.sg-vo::after{content:"";position:absolute;inset:-14px;border-radius:50%;}
+}

@@ -447,9 +447,18 @@ try{ document.addEventListener("pointerdown", function(e){
 const $ = id => document.getElementById(id);
 
 /* ---------- 1. SCALE THE 1333x750 STAGE ---------- */
+/* the screen size the game fits to. A pinch-zoom (iOS Safari ignores user-scalable=no) shrinks the VISUAL viewport: the
+   game must not re-fit to it (that made it jump and shrink while zoomed) - it keeps the last size until the zoom is back to 1 */
+let _vpLast = null;
+function _vpSize(){
+  const v = window.visualViewport;
+  if(v && v.scale > 1.01 && _vpLast) return _vpLast;
+  const w = (v && v.scale <= 1.01 ? v.width : 0) || document.documentElement.clientWidth || window.innerWidth;
+  const h = (v && v.scale <= 1.01 ? v.height : 0) || document.documentElement.clientHeight || window.innerHeight;
+  _vpLast = { w, h }; return _vpLast;
+}
 function fit(){
-  const vw = (window.visualViewport ? window.visualViewport.width  : document.documentElement.clientWidth)  || window.innerWidth;
-  const vh = (window.visualViewport ? window.visualViewport.height : document.documentElement.clientHeight) || window.innerHeight;
+  const { w: vw, h: vh } = _vpSize();
   // contain-fit, scaling UP to fill the screen (no 1× cap, no margin) so a 16:9
   // viewport is covered edge-to-edge. Any leftover bars on non-16:9 are blue, not white.
   const s = Math.min(vw/1333, vh/750);
@@ -14973,10 +14982,56 @@ window.FLN_OWN_SCALE = true;
 (function(){
   if(window.FLN_OWN_SCALE) return;
   function fit(){
-    var vw = (window.visualViewport ? window.visualViewport.width  : document.documentElement.clientWidth)  || window.innerWidth;
-    var vh = (window.visualViewport ? window.visualViewport.height : document.documentElement.clientHeight) || window.innerHeight;
+    var vp = (typeof _vpSize === "function") ? _vpSize() : { w: window.innerWidth, h: window.innerHeight }, vw = vp.w, vh = vp.h;
     document.documentElement.style.setProperty("--scale", Math.min(vw / 1333, vh / 750));
   }
   fit(); window.addEventListener("resize", fit);
   if(window.visualViewport) window.visualViewport.addEventListener("resize", fit);
+})();
+
+/* ===== RESPONSIVE DISPLAY (phone / tablet / desktop) - display only, the game itself is untouched =====
+   1. no zoom: iOS Safari ignores user-scalable=no, so its pinch gestures are cancelled here; on a computer ctrl+wheel /
+      trackpad pinch and ctrl + / - / 0 are blocked (a zoom from the browser menu still just re-fits the game)
+   2. a phone (or small tablet) held UPRIGHT shows "फ़ोन घुमाइए": the 16:9 game would be a thin strip there. While that
+      screen is up the game is paused exactly like a hidden tab (voice-over, music, reminders) and it continues on rotate
+   3. on a touch device the ▶ tap opens the game full screen (the browser bars hide) and locks it to landscape where allowed */
+(function responsiveDisplay(){
+  const touch = (window.matchMedia && matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
+  // ---- 1. no zoom ----
+  ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  document.addEventListener("touchmove", e => { if(e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  window.addEventListener("wheel", e => { if(e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
+  window.addEventListener("keydown", e => { if((e.ctrlKey || e.metaKey) && ["+", "-", "=", "_", "0"].includes(e.key)) e.preventDefault(); });
+  // ---- 2. rotate screen (pauses the game like a hidden tab) ----
+  const D = Object.getOwnPropertyDescriptor(Document.prototype, "hidden"), V = Object.getOwnPropertyDescriptor(Document.prototype, "visibilityState");
+  let upright = false;
+  if(D && D.get && V && V.get){
+    Object.defineProperty(document, "hidden", { configurable: true, get(){ return upright || D.get.call(document); } });
+    Object.defineProperty(document, "visibilityState", { configurable: true, get(){ return upright ? "hidden" : V.get.call(document); } });
+  }
+  const gate = document.createElement("div"); gate.id = "rotateGate"; gate.setAttribute("aria-live", "polite");
+  gate.innerHTML = '<div class="rg-phone" aria-hidden="true"><i></i></div><p class="rg-text">बेहतर खेलने के लिए फ़ोन घुमाइए</p>';
+  document.body.appendChild(gate);
+  const check = ()=>{
+    const vp = _vpSize(), s = Math.min(vp.w / 1333, vp.h / 750);
+    const on = !!(touch && vp.h > vp.w && s < 0.62);          // upright phone / small tablet: the game would be tiny
+    if(on === upright) return;
+    upright = on; document.body.classList.toggle("need-rotate", on);
+    document.dispatchEvent(new Event("visibilitychange"));     // the tab-audio manager, music and reminders pause / resume
+  };
+  check();
+  window.addEventListener("resize", check);
+  window.addEventListener("orientationchange", ()=> setTimeout(check, 250));
+  if(window.visualViewport) window.visualViewport.addEventListener("resize", check);
+  // ---- 3. full screen + landscape on the ▶ tap (touch devices) ----
+  const sb = $("sgBtn");
+  if(sb && touch) sb.addEventListener("click", ()=>{
+    try{
+      const el = document.documentElement, rf = el.requestFullscreen || el.webkitRequestFullscreen;
+      if(!rf || document.fullscreenElement || document.webkitFullscreenElement) return;
+      const p = rf.call(el, { navigationUI: "hide" });
+      const lock = ()=>{ try{ if(screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(()=>{}); }catch(e){} };
+      if(p && p.then) p.then(lock).catch(()=>{}); else lock();
+    }catch(e){}
+  }, true);
 })();
