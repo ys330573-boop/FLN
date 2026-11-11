@@ -4866,3 +4866,12 @@ body.need-rotate #rotateGate{display:flex;}
 @media (pointer:coarse){
   .audio-chip::after,.tut-audio::after,.sg-vo::after{content:"";position:absolute;inset:-14px;border-radius:50%;}
 }
+/* responsive: the section-transition screen (full window, outside the stage) is sized and placed against the scaled
+   stage, so it keeps the laptop look on every screen (was fixed px / vh: on a short screen Swiftee filled it and the
+   title fell off the bottom). Laptop 1366x768 (scale 1.024) is unchanged: Swiftee 230px, title 96px at 271px. */
+.phase-gate{padding-bottom:var(--stage-y,0px);}
+.phase-gate #phaseGateImg,.phase-gate #phaseGateImg.pg-card{height:calc(225px * var(--scale,1));}
+.pg-title{top:calc(var(--stage-y,0px) + 265px * var(--scale,1));font-size:calc(94px * var(--scale,1));-webkit-text-stroke:calc(9.8px * var(--scale,1)) #FFFFFF;}
+/* the loading screen scales down on short / small screens too */
+.boot-loader{gap:clamp(10px,3.6vmin,28px);}
+.boot-loader img{width:clamp(70px,22vmin,150px);height:clamp(70px,22vmin,150px);}

@@ -463,6 +463,11 @@ function fit(){
   // viewport is covered edge-to-edge. Any leftover bars on non-16:9 are blue, not white.
   const s = Math.min(vw/1333, vh/750);
   document.documentElement.style.setProperty("--scale", s);
+  /* where the scaled stage sits in the window: the full-window layers (section-transition screen) place and size their
+     pieces against the STAGE with these, so they look exactly as on a laptop at any screen size */
+  const sx = Math.max(0, (vw - 1333 * s) / 2), sy = Math.max(0, (vh - 750 * s) / 2);
+  document.documentElement.style.setProperty("--stage-x", sx + "px");
+  document.documentElement.style.setProperty("--stage-y", sy + "px");
   _fitSkyHole();
 }
 /* [r28] THE HOLE IN THE SKY HAS TO SIT ON THE CARD, NOT IN THE MIDDLE OF THE WINDOW.
